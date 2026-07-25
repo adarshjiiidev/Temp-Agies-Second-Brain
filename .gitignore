@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+.venv/
+venv/
+
+# Rust
+Cargo.lock
+target/
+
+# AEGIS runtime data (NEVER commit)
+data/*
+!data/.gitkeep
+.aegis/
+~/.aegis/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Secrets / environment
+.env
+.env.local
+*.pem
+*.key
+
+# Lockfiles (keep
+# uv.lock is committed; keep line below intentional for alternates
+# package-lock.json

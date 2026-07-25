@@ -1,0 +1,40 @@
+# AEGIS Example Configuration
+# Prompt 02 — Core Runtime only. All values are defaults unless overridden.
+# No future subsystem keys are listed as an example — ignore them at runtime.
+aegis:
+  app_name: "AEGIS Core Runtime Example"
+  environment: "development"
+  instance_id: "example-001"
+
+  data_dir: "./data/aegis_example"
+
+logging:
+  level: "INFO"
+  format: "development"  # "json" | "development"
+  include_correlation_id: true
+  redact_secrets: true
+  file_output: null  # or "./data/aegis.log"
+
+event_bus:
+  durable: true
+  sqlite_path: "./data/aegis_example/events.db"
+  wal_mode: true
+  dead_letter_topic: "system.dlq"
+
+health:
+  check_interval_seconds: 30
+  timeout_per_check_seconds: 5
+  degraded_threshold_failed: 1
+
+runtime:
+  shutdown_timeout_seconds: 10
+  startup_timeout_seconds: 30
+  supervisor_watchdog_interval_ms: 500
+
+feature_flags:
+  enable_rust_ffi: false   # disabled by default; enabled only if compiled
+  enable_durable_events: true
+  enable_background_tasks: true
+
+# secret_ref_example:
+#   api_key: "secret://llm_provider_keys/demo_key"

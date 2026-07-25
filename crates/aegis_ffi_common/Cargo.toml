@@ -1,0 +1,8 @@
+[package]
+name = "aegis_ffi_common"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "aegis_ffi_common"
+path = "src/lib.rs"
