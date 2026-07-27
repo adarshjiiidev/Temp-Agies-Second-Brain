@@ -2,11 +2,12 @@
 Prompt 02 scope: local in-memory; no Prometheus push/pull, no OTLP export yet.
 Interface is OTel-compatible so later prompt can drop exporters without code changes.
 """
+
 from __future__ import annotations
 
 import threading
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 
@@ -69,10 +70,23 @@ class Histogram:
     """Fixed-bucket histogram. Default buckets follow common millisecond response times scaled to seconds."""
 
     DEFAULT_BUCKETS: tuple[float, ...] = (
-        0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, float("inf")
+        0.005,
+        0.01,
+        0.025,
+        0.05,
+        0.1,
+        0.25,
+        0.5,
+        1.0,
+        2.5,
+        5.0,
+        10.0,
+        float("inf"),
     )
 
-    def __init__(self, name: str, description: str = "", *, buckets: tuple[float, ...] | None = None) -> None:
+    def __init__(
+        self, name: str, description: str = "", *, buckets: tuple[float, ...] | None = None
+    ) -> None:
         self.name = name
         self.description = description
         self.buckets = tuple(sorted(buckets or self.DEFAULT_BUCKETS))
@@ -113,7 +127,9 @@ class MetricsRegistry:
         with self._lock:
             return self.gauges.setdefault(name, Gauge(name, description))
 
-    def histogram(self, name: str, description: str = "", *, buckets: tuple[float, ...] | None = None) -> Histogram:
+    def histogram(
+        self, name: str, description: str = "", *, buckets: tuple[float, ...] | None = None
+    ) -> Histogram:
         with self._lock:
             if name not in self.histograms:
                 self.histograms[name] = Histogram(name, description, buckets=buckets)

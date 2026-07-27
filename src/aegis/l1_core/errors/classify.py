@@ -1,5 +1,6 @@
 """L1 Error classifier.
 Maps arbitrary caught exceptions → (severity, retry_hint, suggested AegisError class)."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

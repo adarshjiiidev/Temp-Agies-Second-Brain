@@ -2,14 +2,16 @@
 Prompt 02 scope: no vendor export, no span batching, no network.
 Keeps the correct public API surface so future prompts can plug OTel SDK without call-site changes.
 """
+
 from __future__ import annotations
 
 import contextlib
 import threading
 import time
 import uuid
+from collections.abc import Iterator
 from dataclasses import dataclass, field
-from typing import Any, Iterator
+from typing import Any
 from uuid import UUID
 
 from aegis.l2_foundation.telemetry.context import CorrelationContext
@@ -31,11 +33,11 @@ class Span:
     def is_recording(self) -> bool:  # Prompt 02: always record locally; no sampler
         return True
 
-    def set_attribute(self, key: str, value: Any) -> None:  # noqa: ANN401
+    def set_attribute(self, key: str, value: Any) -> None:
         if self.is_recording():
             self.attributes[key] = value
 
-    def add_event(self, name: str, **attrs: Any) -> None:  # noqa: ANN401
+    def add_event(self, name: str, **attrs: Any) -> None:
         if self.is_recording():
             self.events.append({"name": name, "time": time.time(), "attrs": dict(attrs)})
 
@@ -92,11 +94,11 @@ class Tracer:
         return span
 
     @contextlib.contextmanager
-    def span(self, name: str, **kwargs: Any) -> Iterator[Span]:  # noqa: ANN401
+    def span(self, name: str, **kwargs: Any) -> Iterator[Span]:
         span = self.start_span(name, **kwargs)
         try:
             yield span
-        except BaseException as exc:  # noqa: BLE001
+        except BaseException as exc:
             span.record_exception(exc)
             raise
         finally:

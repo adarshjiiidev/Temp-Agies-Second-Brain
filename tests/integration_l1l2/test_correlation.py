@@ -1,4 +1,5 @@
 """Prompt 02 tests: Correlation context propagation (sync + async-safe)."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,7 +7,6 @@ import uuid
 
 import pytest
 
-import aegis
 from aegis import CorrelationContext, new_correlation
 
 
@@ -52,9 +52,7 @@ async def test_propagation_through_asyncio_gather():
 
 
 def test_as_dict_roundtrip():
-    c = CorrelationContext.new(
-        request_id=uuid.uuid4(), task_id=uuid.uuid4(), metadata={"x": 1}
-    )
+    c = CorrelationContext.new(request_id=uuid.uuid4(), task_id=uuid.uuid4(), metadata={"x": 1})
     d = c.as_dict(stringify=True)
     assert d["correlation_id"] == str(c.correlation_id)
     assert d["request_id"] == str(c.request_id)

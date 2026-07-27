@@ -10,6 +10,7 @@ Prompt 02 scope: secrets stored via file:// references (`.env.aegis` inside data
 no HashiCorp Vault, no AWS KMS. External vault providers can be added later because
 ConfigSnapshot only carries `secret://scope/key` references, never plaintext.
 """
+
 from __future__ import annotations
 
 import copy
@@ -90,6 +91,22 @@ _ENV_PREFIX = "AEGIS_"
 # -------- Immutable Snapshot (validated, frozen via deepcopy) --------------
 
 
+_DICT_FIELDS = frozenset(
+    {
+        "aegis",
+        "paths",
+        "logging",
+        "event_bus",
+        "health",
+        "tasks",
+        "recovery",
+        "plugins",
+        "feature_flags",
+        "extra_sections",
+    }
+)
+
+
 @dataclass(frozen=True)
 class ImmutableConfigSnapshot:
     """Frozen, validated configuration. All lookups are deep-copied out to enforce immutability.
@@ -113,9 +130,15 @@ class ImmutableConfigSnapshot:
         default_factory=dict, repr=False, compare=False
     )
 
+    def __getattribute__(self, name: str) -> Any:
+        if name in _DICT_FIELDS:
+            raw = object.__getattribute__(self, name)
+            return copy.deepcopy(raw)
+        return object.__getattribute__(self, name)
+
     # -------- public accessors --------
 
-    def get(self, section: str, key: str | None = None, default: Any = None) -> Any:  # noqa: ANN401
+    def get(self, section: str, key: str | None = None, default: Any = None) -> Any:
         data = self.as_dict_raw()
         section_obj = data.get(section)
         if not key:
@@ -127,7 +150,7 @@ class ImmutableConfigSnapshot:
     def has_feature(self, flag: str) -> bool:
         return bool(self.feature_flags.get(flag))
 
-    def feature(self, flag: str, default: Any = False) -> Any:  # noqa: ANN401
+    def feature(self, flag: str, default: Any = False) -> Any:
         return self.feature_flags.get(flag, default)
 
     def log_level(self) -> LogLevel:
@@ -149,7 +172,7 @@ class ImmutableConfigSnapshot:
             )
         return self._secrets_store[key]
 
-    def resolve(self, ref_or_value: Any) -> Any:  # noqa: ANN401
+    def resolve(self, ref_or_value: Any) -> Any:
         """If value is `secret://scope/id` returns the plaintext; else returns value unchanged."""
         if isinstance(ref_or_value, str) and is_secret_ref(ref_or_value):
             _, _, path = ref_or_value.partition("secret://")
@@ -177,7 +200,7 @@ class ImmutableConfigSnapshot:
     # -------- Redacted serialization (safe for logs) --------
 
     def as_dict_safe(self) -> dict[str, Any]:
-        def _walk(obj: Any) -> Any:  # noqa: ANN401
+        def _walk(obj: Any) -> Any:
             if isinstance(obj, str) and is_secret_ref(obj):
                 return "<SECRET_REF>"
             if isinstance(obj, dict):
@@ -187,6 +210,7 @@ class ImmutableConfigSnapshot:
             if isinstance(obj, tuple):
                 return tuple(_walk(v) for v in obj)
             return obj
+
         return _walk(self.as_dict_raw())
 
 
@@ -249,7 +273,7 @@ class ConfigLoader:
 
     # -------- override management --------
 
-    def set_runtime_override(self, dotted_path: str, value: Any) -> None:  # noqa: ANN401
+    def set_runtime_override(self, dotted_path: str, value: Any) -> None:
         """Set runtime override. Accepts dotted paths like `logging.level`."""
         with self._lock:
             parts = dotted_path.split(".")
@@ -286,9 +310,12 @@ class ConfigLoader:
             data_dir = str(Path.home() / ".aegis")
         paths["data_dir"] = str(Path(data_dir).expanduser().resolve())
         data_path = Path(paths["data_dir"])
-        paths.setdefault("config_dir", str(data_path / "config"))
-        paths.setdefault("log_dir", str(data_path / "logs"))
-        paths.setdefault("cache_dir", str(data_path / "cache"))
+        if not paths.get("config_dir"):
+            paths["config_dir"] = str(data_path / "config")
+        if not paths.get("log_dir"):
+            paths["log_dir"] = str(data_path / "logs")
+        if not paths.get("cache_dir"):
+            paths["cache_dir"] = str(data_path / "cache")
         for key in ("config_dir", "log_dir", "cache_dir"):
             paths[key] = str(Path(paths[key]).expanduser().resolve())
         # instance id
@@ -385,7 +412,7 @@ class ConfigLoader:
         ll = merged.get("logging", {}).get("level")
         try:
             parse_level(ll)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             raise ValidationError(ErrorCode.E20104, f"logging.level invalid: {ll!r}") from exc
         fmt = merged.get("logging", {}).get("format")
         if fmt not in ("development", "json"):

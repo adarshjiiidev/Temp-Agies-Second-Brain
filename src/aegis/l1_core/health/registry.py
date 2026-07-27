@@ -1,14 +1,16 @@
 """L1 Health monitoring.
 Exactly 4 states per Prompt 02 §13: HEALTHY / DEGRADED / UNHEALTHY / UNKNOWN.
 Every HealthProvider feeds the HealthAggregator, which produces aggregated HealthReports."""
+
 from __future__ import annotations
 
 import asyncio
 import time
 import uuid
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Awaitable, Callable
+from typing import Any
 from uuid import UUID
 
 from aegis.l1_core.errors.base import TimeoutError as AegisTimeoutError
@@ -146,7 +148,7 @@ class HealthAggregator:
                 latency_ms=int((time.perf_counter() - t0) * 1000),
                 checked_at=time.time(),
             )
-        except (TimeoutError, asyncio.TimeoutError) as exc:
+        except TimeoutError as exc:
             return ComponentHealth(
                 component=check.component,
                 state=HealthState.UNHEALTHY,
@@ -155,7 +157,7 @@ class HealthAggregator:
                 error=type(AegisTimeoutError).__name__ + ": " + str(exc),
                 checked_at=time.time(),
             )
-        except Exception as exc:  # noqa: BLE001 - classify
+        except Exception as exc:
             return ComponentHealth(
                 component=check.component,
                 state=HealthState.UNHEALTHY,
@@ -165,18 +167,29 @@ class HealthAggregator:
                 checked_at=time.time(),
             )
 
-    async def check_all(self) -> HealthReport:
+    async def check_all(self, aggregate_timeout: float | None = None) -> HealthReport:
         t0 = time.perf_counter()
-        components: dict[str, ComponentHealth] = {}
+        components_by_id: dict[str, ComponentHealth] = {}
         tasks = [self.run_check(c) for c in self._checks.values()]
-        results = await asyncio.gather(*tasks) if tasks else []
+        if tasks:
+            if aggregate_timeout is not None:
+                try:
+                    async with asyncio.timeout(aggregate_timeout):  # type: ignore[attr-defined]
+                        results = await asyncio.gather(*tasks)
+                except TimeoutError:
+                    results = []
+            else:
+                results = await asyncio.gather(*tasks)
+        else:
+            results = []
         for r in results:
-            components[r.component] = r
+            components_by_id[r.component] = r
+        components_list = list(components_by_id.values())
         return HealthReport(
             report_id=uuid.uuid4(),
             generated_at=time.time(),
-            overall=_aggregate([c.state for c in components.values()]),
-            components=components,
+            overall=_aggregate([c.state for c in components_list]),
+            components=components_list,
             duration_ms=int((time.perf_counter() - t0) * 1000),
         )
 

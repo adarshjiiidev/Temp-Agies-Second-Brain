@@ -1,0 +1,48 @@
+{
+  "project": "AEGIS",
+  "project_full_name": "Adaptive Executive Governance & Intelligence System",
+  "current_milestone": "Prompt 02 - Core Runtime",
+  "status": "implemented_and_verified",
+  "verification": {
+    "python_environment": "venv",
+    "tests": {
+      "command": "python -m pytest tests/ --tb=no -q",
+      "result": "46 passed in 1.33s"
+    },
+    "example": {
+      "command": "python examples/runtime_lifecycle.py",
+      "result": "completed successfully with success banner"
+    },
+    "import_check": {
+      "command": "python -c \"import aegis; print('OK', len(dir(aegis)))\"",
+      "result": "OK 87"
+    }
+  },
+  "implemented_modules": [
+    "l1_core.runtime",
+    "l1_core.di.container",
+    "l1_core.errors",
+    "l1_core.health",
+    "l1_core.supervisor",
+    "l2_foundation.config.loader",
+    "l2_foundation.telemetry.logger",
+    "l2_foundation.telemetry.context",
+    "l2_foundation.event_bus.core",
+    "l2_foundation.crypto.redact",
+    "l2_foundation.crypto.vault",
+    "l2_foundation.scheduler.background",
+    "l2_foundation.persistence.sql",
+    "l2_foundation.plugin_loader.loader"
+  ],
+  "deferred_or_scaffolded": [
+    "l3_intelligence.ai_kernel",
+    "l4_memory",
+    "l5_capability",
+    "l6_cognitive",
+    "l7_hci"
+  ],
+  "notes": [
+    "The test suite required the anyio and pytest-anyio packages to be installed in the environment before collection would succeed.",
+    "Rust crates are present but not yet verified with cargo because the Rust toolchain was not available on this host."
+  ]
+}

@@ -1,17 +1,14 @@
 """Prompt 02 tests: Structured logging + redaction."""
+
 from __future__ import annotations
 
 import io
 import json
 
-import pytest
-
 import aegis
 from aegis import (
-    JSONFormatter,
     LogLevel,
     Redactor,
-    StructuredLogger,
     redact_value,
 )
 
@@ -22,10 +19,14 @@ def _build_logger_sink():
     if sink is None:
         # Reach in via the logger module directly
         from aegis.l2_foundation.telemetry.logger import StreamSink
+
         sink = StreamSink
     stream_sink = sink(buf)
-    from aegis.l2_foundation.telemetry.logger import StructuredLogger, JSONFormatter
-    log = StructuredLogger("test.sink", sinks=[stream_sink], level=LogLevel.DEBUG, formatter=JSONFormatter())
+    from aegis.l2_foundation.telemetry.logger import JSONFormatter, StructuredLogger
+
+    log = StructuredLogger(
+        "test.sink", sinks=[stream_sink], level=LogLevel.DEBUG, formatter=JSONFormatter()
+    )
     return log, buf
 
 

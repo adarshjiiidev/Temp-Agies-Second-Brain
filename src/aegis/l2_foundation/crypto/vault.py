@@ -6,6 +6,7 @@ Prompt 02 SCOPE:
     Otherwise the Python fallback runs transparently. ADR-P02-001 records the pure-Python fallback.
   - No key-management / KMS / networked vaults: those are Prompt 09+.
 """
+
 from __future__ import annotations
 
 import base64
@@ -15,10 +16,8 @@ import json
 import os
 import secrets
 import threading
-import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 from aegis.l1_core.errors import ErrorCode, NotFoundError, ValidationError
 
@@ -26,8 +25,9 @@ from aegis.l1_core.errors import ErrorCode, NotFoundError, ValidationError
 # in the event the user installs without extras.
 try:
     from cryptography.hazmat.primitives.ciphers.aead import AESGCM  # type: ignore[import-untyped]
+
     _HAS_CRYPTO = True
-except Exception:  # noqa: BLE001
+except Exception:
     _HAS_CRYPTO = False
 
 
@@ -158,7 +158,7 @@ class FileSecretVault:
         aes = AESGCM(self._master)
         try:
             return aes.decrypt(nonce, ciphertext, aad)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             raise ValidationError(ErrorCode.E20502, f"Decryption failed: {exc}") from exc
 
     # ---------- public API ----------
@@ -173,7 +173,9 @@ class FileSecretVault:
         with self._lock:
             data: dict[str, dict[str, str]] = {}
             if path.exists():
-                data = json.loads(self._unpack(path.read_bytes(), path.name.encode("utf-8")).decode("utf-8"))
+                data = json.loads(
+                    self._unpack(path.read_bytes(), path.name.encode("utf-8")).decode("utf-8")
+                )
             data[identifier] = base64.b64encode(raw).decode("ascii")
             plaintext = json.dumps(data).encode("utf-8")
             path.write_bytes(self._pack(plaintext, path.name.encode("utf-8")))
@@ -183,7 +185,9 @@ class FileSecretVault:
         with self._lock:
             if not path.exists():
                 raise NotFoundError(ErrorCode.E20501, f"secret scope {scope!r} not found")
-            data = json.loads(self._unpack(path.read_bytes(), path.name.encode("utf-8")).decode("utf-8"))
+            data = json.loads(
+                self._unpack(path.read_bytes(), path.name.encode("utf-8")).decode("utf-8")
+            )
         if identifier not in data:
             raise NotFoundError(ErrorCode.E20501, f"secret {scope}/{identifier} not found")
         return base64.b64decode(data[identifier]).decode("utf-8")
@@ -193,7 +197,9 @@ class FileSecretVault:
         with self._lock:
             if not path.exists():
                 return False
-            data = json.loads(self._unpack(path.read_bytes(), path.name.encode("utf-8")).decode("utf-8"))
+            data = json.loads(
+                self._unpack(path.read_bytes(), path.name.encode("utf-8")).decode("utf-8")
+            )
             if identifier not in data:
                 return False
             data.pop(identifier)
@@ -205,14 +211,14 @@ class FileSecretVault:
         return True
 
     def scopes(self) -> list[str]:
-        return sorted(
-            p.stem[len("scope."):] for p in self._dir.glob("scope.*.bin")
-        )
+        return sorted(p.stem[len("scope.") :] for p in self._dir.glob("scope.*.bin"))
 
     def list(self, scope: str) -> list[str]:
         path = self._scope_path(scope)
         if not path.exists():
             return []
         with self._lock:
-            data = json.loads(self._unpack(path.read_bytes(), path.name.encode("utf-8")).decode("utf-8"))
+            data = json.loads(
+                self._unpack(path.read_bytes(), path.name.encode("utf-8")).decode("utf-8")
+            )
         return sorted(data.keys())

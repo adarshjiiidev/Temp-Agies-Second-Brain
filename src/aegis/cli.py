@@ -1,5 +1,6 @@
 """Prompt 02: minimal CLI skeleton only.
 Full Typer-based CLI ships in later prompts; here we only expose info."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -9,15 +9,15 @@ We provide:
 Plugin sandbox code, T3 cgroups, deny-by-default signatures, dynamic import gates are EXPLICITLY
 deferred to Prompt 10+.
 """
+
 from __future__ import annotations
 
 import enum
-import importlib.util
 import json
 import threading
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from aegis.l1_core.errors import ErrorCode, InitializationError, NotFoundError, ValidationError
 from aegis.l2_foundation.telemetry.logger import get_logger
@@ -47,7 +47,7 @@ class PluginManifest:
     integrity_sha256: str | None = None  # deny-by-default integrity pin (Prompt 10+)
 
     @classmethod
-    def from_dict(cls, d: dict) -> "PluginManifest":
+    def from_dict(cls, d: dict) -> PluginManifest:
         tier_raw = d.get("security_boundary", "T1")
         try:
             tier = SandboxTier(tier_raw)
@@ -99,7 +99,7 @@ class PluginLoader:
             for p in self._paths:
                 try:
                     self.scan_directory(p)
-                except Exception as exc:  # noqa: BLE001
+                except Exception as exc:
                     raise InitializationError(
                         ErrorCode.E20601,
                         f"Failed to scan plugin path {p}: {exc}",
@@ -120,7 +120,7 @@ class PluginLoader:
                 with self._lock:
                     if manifest.plugin_id not in self._plugins:
                         self._plugins[manifest.plugin_id] = _PluginStub(manifest)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 log.warning("plugin manifest skipped", path=str(manifest_path), error=str(exc))
         return discovered
 

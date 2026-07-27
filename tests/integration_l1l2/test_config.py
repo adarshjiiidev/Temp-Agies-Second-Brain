@@ -1,12 +1,11 @@
 """Prompt 02 tests: Config layered loading, validation, immutability, env overrides, secrets refs."""
+
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import pytest
 
-import aegis
 from aegis import ConfigLoader, ValidationError, secret_ref
 
 

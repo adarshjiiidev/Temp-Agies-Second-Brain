@@ -1,11 +1,11 @@
 """Prompt 02 tests: Watchdog / Recovery primitives (Supervisor, exponential backoff, max attempts)."""
+
 from __future__ import annotations
 
 import asyncio
 
 import pytest
 
-import aegis
 from aegis import CoreRuntime, ServiceInfo, Supervisor
 from aegis.l1_core.interfaces.base import ServiceState
 from aegis.l1_core.supervisor import RestartPolicy, RestartPolicyKind

@@ -1,5 +1,6 @@
 """L1 Forward-declared Memory Store interface.
 Prompt 02: Protocol ONLY — concrete 9-tier implementation ships in Prompt 04 (Memory Engine)."""
+
 from __future__ import annotations
 
 from abc import abstractmethod

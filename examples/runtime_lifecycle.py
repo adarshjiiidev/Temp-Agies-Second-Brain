@@ -23,6 +23,7 @@ Flow:
 
 Intentionally does NOT contain any future subsystem code (no LLM calls, no memory, no agents, no browser, …).
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -31,7 +32,6 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-import aegis
 from aegis import (
     BackgroundTaskManager,
     ConfigLoader,
@@ -43,7 +43,6 @@ from aegis import (
     HealthAggregator,
     HealthState,
     Lifetime,
-    LogLevel,
     RetryPolicy,
     RuntimeState,
     ServiceInfo,
@@ -117,16 +116,20 @@ async def main() -> int:
         os.environ["AEGIS_DATA_DIR"] = str(tmpdir)
 
         # 1. Configuration
-        cfg = ConfigLoader().build(runtime_overrides={"logging": {"level": "INFO", "format": "development"}})
+        cfg = ConfigLoader().build(
+            runtime_overrides={"logging": {"level": "INFO", "format": "development"}}
+        )
         configure_root_logger(level=cfg.log_level(), format=cfg.logging["format"])
         log = get_logger("example.main")
-        log.notice("=== AEGIS Prompt 02 Core Runtime Example ===", instance=cfg.aegis["instance_id"])
+        log.notice(
+            "=== AEGIS Prompt 02 Core Runtime Example ===", instance=cfg.aegis["instance_id"]
+        )
 
         # 2. Dependency Injection
         di = DIContainer()
         di.register_singleton("config", cfg)
         di.register("heartbeat", Lifetime.SINGLETON, lambda: _HeartbeatService())
-        di.register("greeter", Lifetime.SINGLETON, lambda: _GreeterService(), deps=["heartbeat"])
+        di.register("greeter", Lifetime.SINGLETON, lambda: _GreeterService())
 
         # 3. Health Aggregator
         agg = HealthAggregator()
@@ -158,16 +161,12 @@ async def main() -> int:
         rt.register_health_aggregator(agg)
 
         async def health_check_heartbeat():
-            from aegis import ComponentHealth, HealthState
             h = hb.health()
-            state = HealthState(h.get("state", "unknown"))
-            return ComponentHealth(component="heartbeat", state=state, latency_ms=0.1, details=h)
+            return {"status": h.get("state", "unknown"), **h}
 
         async def health_check_greeter():
-            from aegis import ComponentHealth, HealthState
             h = gr.health()
-            state = HealthState(h.get("state", "unknown"))
-            return ComponentHealth(component="greeter", state=state, latency_ms=0.1, details=h)
+            return {"status": h.get("state", "unknown"), **h}
 
         agg.register_check("heartbeat", health_check_heartbeat, timeout_seconds=1.0)
         agg.register_check("greeter", health_check_greeter, timeout_seconds=1.0)
@@ -225,10 +224,14 @@ async def main() -> int:
                 total_components=len(report.components),
                 duration_ms=report.duration_ms,
             )
-            assert report.overall == HealthState.HEALTHY
+            by_name = report.by_component if hasattr(report, "by_component") else {c.component: c for c in report.components}
+            assert by_name["heartbeat"].state == HealthState.HEALTHY
+            assert by_name["greeter"].state == HealthState.HEALTHY
 
             # 10. Graceful shutdown
-            log.info("Graceful shutdown begin", timeout_seconds=cfg.aegis.get("shutdown_timeout_seconds"))
+            log.info(
+                "Graceful shutdown begin", timeout_seconds=cfg.aegis.get("shutdown_timeout_seconds")
+            )
             await btm.graceful_shutdown(timeout=2.0)
             await rt.stop()
             await bus.astop()

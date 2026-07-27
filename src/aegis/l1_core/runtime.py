@@ -13,6 +13,7 @@ Behavior guarantees:
   5. shutdown_timeout is enforced overall.
   6. HealthAggregator receives every service that implements HealthProvider.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -20,12 +21,12 @@ import contextlib
 import threading
 import time
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 from uuid import UUID
 
-from aegis.l1_core.di.container import DIContainer, Lifetime, Scope
+from aegis.l1_core.di.container import DIContainer, Scope
 from aegis.l1_core.errors.base import (
     AegisError,
     ErrorContext,
@@ -38,9 +39,7 @@ from aegis.l1_core.errors.base import (
 )
 from aegis.l1_core.health.registry import HealthAggregator, HealthReport, HealthState
 from aegis.l1_core.interfaces.base import (
-    AbstractService,
     HealthProvider,
-    ModuleLifecycle,
     Service,
     ServiceInfo,
     ServiceState,
@@ -97,8 +96,8 @@ def _topological(slots: dict[str, ServiceSlot]) -> list[str]:
                 ready.append(nxt)
     if len(order) != len(slots):
         raise LifecycleError(
-            "Circular dependency detected in service graph: " +
-            ", ".join(s for s in slots if s not in order),
+            "Circular dependency detected in service graph: "
+            + ", ".join(s for s in slots if s not in order),
             error_code="E10109",
             context=ErrorContext(component="runtime", operation="topological_sort"),
         )
@@ -163,10 +162,14 @@ class CoreRuntime:
                     f"Cannot register service in state {self.state}",
                     context=ErrorContext(component="runtime", operation="register_service"),
                 )
-            service_info = info or getattr(service, "info", None) or ServiceInfo(
-                service_id=type(service).__name__.lower(),
-                name=type(service).__name__,
-                depends_on=depends_on,
+            service_info = (
+                info
+                or getattr(service, "info", None)
+                or ServiceInfo(
+                    service_id=type(service).__name__.lower(),
+                    name=type(service).__name__,
+                    depends_on=depends_on,
+                )
             )
             sid = service_info.service_id
             if sid in self.slots:
@@ -175,6 +178,14 @@ class CoreRuntime:
                     context=ErrorContext(component="runtime", operation="register_service"),
                 )
             deps = depends_on or service_info.depends_on
+            # Validate dependency existence AT REGISTRATION TIME (E10110) — tests expect early failure
+            for d in deps:
+                if d not in self.slots:
+                    raise NotFoundError(
+                        f"Service '{sid}' depends on unknown service '{d}'",
+                        error_code="E10110",
+                        context=ErrorContext(component="runtime", operation="register_service"),
+                    )
             self.slots[sid] = ServiceSlot(
                 info=service_info,
                 service=service,
@@ -212,7 +223,7 @@ class CoreRuntime:
                         await init(context)
                     except AegisError:
                         raise
-                    except Exception as exc:  # noqa: BLE001
+                    except Exception as exc:
                         raise InitializationError(
                             f"initialize failed for service {sid}: {type(exc).__name__}: {exc!s}",
                             cause=exc,
@@ -222,7 +233,7 @@ class CoreRuntime:
                     slot.initialized_completed = True
                     slot.state = ServiceState.INITIALIZED
                     init_done_reversed.insert(0, sid)
-        except (TimeoutError, asyncio.TimeoutError) as exc:
+        except TimeoutError as exc:
             self.state = RuntimeState.PARTIALLY_INITIALIZED
             raise StartupTimeoutError(
                 f"initialize timed out after {self.startup_timeout}s",
@@ -262,7 +273,8 @@ class CoreRuntime:
         except (AegisError, StartupTimeoutError) as init_error:
             # On partial init, stop exactly those that initialized, in reverse
             reversed_init = [
-                sid for sid in reversed(_topological(self.slots))
+                sid
+                for sid in reversed(_topological(self.slots))
                 if self.slots[sid].initialized_completed and not self.slots[sid].stopped_completed
             ]
             with contextlib.suppress(Exception):
@@ -284,7 +296,7 @@ class CoreRuntime:
                         await slot.service.start()
                     except AegisError:
                         raise
-                    except Exception as exc:  # noqa: BLE001
+                    except Exception as exc:
                         raise LifecycleError(
                             f"start failed for service {sid}: {type(exc).__name__}: {exc!s}",
                             cause=exc,
@@ -294,7 +306,7 @@ class CoreRuntime:
                     slot.started_completed = True
                     slot.state = ServiceState.RUNNING
                     started.append(sid)
-        except (TimeoutError, asyncio.TimeoutError) as exc:
+        except TimeoutError as exc:
             # rollback stops in reverse of started
             await self._run_stops(list(reversed(started)), reason="rollback-start")
             self.state = RuntimeState.FAILED
@@ -340,7 +352,7 @@ class CoreRuntime:
                             slot.service.stop(timeout=self.service_stop_timeout),
                             timeout=self.service_stop_timeout,
                         )
-                    except Exception as exc:  # noqa: BLE001 - stop failures never abort shutdown
+                    except Exception as exc:
                         slot.error = LifecycleError(
                             f"stop failed for {sid}: {type(exc).__name__}: {exc!s}",
                             error_code="E10107",
@@ -349,12 +361,14 @@ class CoreRuntime:
                         )
                     try:
                         await slot.service.close()
-                    except Exception:  # noqa: BLE001
+                    except Exception:
                         pass
                     slot.stopped_completed = True
                     slot.state = ServiceState.STOPPED
-        except (TimeoutError, asyncio.TimeoutError) as exc:
-            self.state = RuntimeState.FAILED if self.state != RuntimeState.STOPPING else RuntimeState.FAILED
+        except TimeoutError as exc:
+            self.state = (
+                RuntimeState.FAILED if self.state != RuntimeState.STOPPING else RuntimeState.FAILED
+            )
             raise ShutdownTimeoutError(
                 f"shutdown timed out after {self.shutdown_timeout}s",
                 cause=exc,
@@ -379,7 +393,7 @@ class CoreRuntime:
     async def health_report(self) -> HealthReport:
         return await self.health.check_all()
 
-    def overall_health(self) -> HealthState:
+    async def overall_health(self) -> HealthState:
         states = []
         for s in self.slots.values():
             if s.state == ServiceState.RUNNING:

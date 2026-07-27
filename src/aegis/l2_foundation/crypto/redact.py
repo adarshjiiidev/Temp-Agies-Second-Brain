@@ -3,16 +3,20 @@ Prompt 02 §8 / §05 Security Boundary SB06: Secrets never appear in logs, trace
 Pattern-based redactor covers API keys, tokens, passwords, private keys, credit cards, Aadhaar, PAN,
 custom user-provided patterns, and `secret_ref` wrappers.
 """
+
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Any, Iterable, Pattern
+from re import Pattern
+from typing import Any
 
 # Default patterns: label → compiled regex. Matches common secret formats seen in the wild.
 DEFAULT_PATTERNS: dict[str, Pattern[str]] = {
     # API key style prefixes
-    "api_key_generic": re.compile(r"(?i)\b(?:api[_-]?key|apikey)\s*[:=]\s*['\"]?([A-Za-z0-9_\-]{16,})['\"]?"),
+    "api_key_generic": re.compile(
+        r"(?i)\b(?:api[_-]?key|apikey)\s*[:=]\s*['\"]?([A-Za-z0-9_\-]{16,})['\"]?"
+    ),
     # Bearer token
     "bearer_token": re.compile(r"(?i)\bbearer\s+([A-Za-z0-9\-._~+/]+=*)"),
     # Private keys (RSA/EC/SSH/PEM) — capture the PEM block
@@ -26,7 +30,9 @@ DEFAULT_PATTERNS: dict[str, Pattern[str]] = {
     # JSON web token (JWT)
     "jwt": re.compile(r"\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b"),
     # Password assignment
-    "password_assign": re.compile(r"(?i)\b(?:password|passwd|pwd)\s*[:=]\s*['\"]?([^\s,]{4,})['\"]?"),
+    "password_assign": re.compile(
+        r"(?i)\b(?:password|passwd|pwd)\s*[:=]\s*['\"]?([^\s,]{4,})['\"]?"
+    ),
     # Credit card — loose 13-19 digits with optional separators
     "credit_card": re.compile(r"\b(?:\d[ -]*?){13,19}\b"),
     # Aadhaar (India): 4-4-4 format or 12 digits
@@ -42,8 +48,10 @@ def _redact_str(value: str, patterns: dict[str, Pattern[str]]) -> str:
     out = value
     # Pattern 1: replace entire match for private key
     for lbl, pat in patterns.items():
-        def _sub(m: re.Match[str], label: str = lbl) -> str:  # noqa: D401 - closure
+
+        def _sub(m: re.Match[str], label: str = lbl) -> str:
             return REDACT_PLACEHOLDER.format(label)
+
         out = pat.sub(_sub, out)
     return out
 
@@ -54,7 +62,7 @@ def secret_ref(scope: str, identifier: str) -> str:
     return f"secret://{scope}/{identifier}"
 
 
-def is_secret_ref(value: Any) -> bool:  # noqa: ANN401
+def is_secret_ref(value: Any) -> bool:
     return isinstance(value, str) and value.startswith("secret://")
 
 
@@ -72,7 +80,7 @@ class Redactor:
 
     # -------- public --------
 
-    def redact(self, value: Any, *, max_depth: int = 5, _depth: int = 0) -> Any:  # noqa: ANN401
+    def redact(self, value: Any, *, max_depth: int = 5, _depth: int = 0) -> Any:
         if _depth > max_depth:
             return REDACT_PLACEHOLDER.format("MAXDEPTH")
         if value is None or isinstance(value, (int, float, complex, bool)):
@@ -87,13 +95,18 @@ class Redactor:
         if isinstance(value, dict):
             result: dict[str, Any] = {}
             for k, v in value.items():
-                if any(s in str(k).lower() for s in ("secret", "password", "token", "api_key", "private", "credential")):
+                if any(
+                    s in str(k).lower()
+                    for s in ("secret", "password", "token", "api_key", "private", "credential")
+                ):
                     result[str(k)] = REDACT_PLACEHOLDER.format("KEY_" + str(k))
                 else:
                     result[str(k)] = self.redact(v, max_depth=max_depth, _depth=_depth + 1)
             return result
         if isinstance(value, (list, tuple, set, frozenset)):
-            return type(value)(self.redact(x, max_depth=max_depth, _depth=_depth + 1) for x in value)  # type: ignore[call-arg]
+            return type(value)(
+                self.redact(x, max_depth=max_depth, _depth=_depth + 1) for x in value
+            )  # type: ignore[call-arg]
         # Fallback: convert to repr, redact as string
         return _redact_str(repr(value), self._compiled)
 
@@ -109,6 +122,6 @@ def get_default_redactor() -> Redactor:
     return _DEFAULT_REDACTOR
 
 
-def redact_value(value: Any) -> Any:  # noqa: ANN401
+def redact_value(value: Any) -> Any:
     """Convenience using the default redactor singleton."""
     return get_default_redactor().redact(value)

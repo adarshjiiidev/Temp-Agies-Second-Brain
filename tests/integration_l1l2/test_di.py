@@ -1,14 +1,15 @@
 """Prompt 02 tests: DI container, lifetimes, circular dep detection, cleanup."""
+
 from __future__ import annotations
 
 import pytest
 
 import aegis
-from aegis import DIContainer, Lifetime, Scope
+from aegis import DIContainer, Lifetime
 
 
 class _A:
-    def __init__(self, b: "_B" = None) -> None:  # type: ignore[valid-type]
+    def __init__(self, b: _B = None) -> None:  # type: ignore[valid-type]
         self.b = b
         self.closed = False
 

@@ -1,15 +1,14 @@
 """Prompt 02 tests: Health monitoring."""
+
 from __future__ import annotations
 
 import asyncio
 
 import pytest
 
-import aegis
 from aegis import (
     ComponentHealth,
     HealthAggregator,
-    HealthCheck,
     HealthReport,
     HealthState,
 )

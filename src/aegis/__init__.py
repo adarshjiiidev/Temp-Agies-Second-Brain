@@ -18,11 +18,10 @@ Public API (L1 + L2 Foundation per Prompt 02):
   - SQLiteKVStore / SQLiteDocStore + NoOp* stubs
   - FileSecretVault / Hasher / redaction
 """
+
 from __future__ import annotations
 
-from aegis.l1_core.runtime import CoreRuntime, RuntimeState
-from aegis.l1_core.supervisor import Supervisor
-from aegis.l1_core.interfaces.base import HealthProvider, ModuleLifecycle, Pluggable, Service, ServiceInfo
+from aegis.l1_core.di.container import DIContainer, Lifetime, Scope
 from aegis.l1_core.errors.base import (
     AegisError,
     ConfigurationError,
@@ -50,20 +49,16 @@ from aegis.l1_core.health import (
     HealthReport,
     HealthState,
 )
-from aegis.l1_core.di.container import DIContainer, Lifetime, Scope
-
-from aegis.l2_foundation.config import ConfigLoader, ImmutableConfigSnapshot, load_config
-from aegis.l2_foundation.telemetry.logger import (
-    DevelopmentFormatter,
-    FileSink,
-    JSONFormatter,
-    LogLevel,
-    StreamSink,
-    StructuredLogger,
-    configure_root_logger,
-    get_logger,
+from aegis.l1_core.interfaces.base import (
+    HealthProvider,
+    ModuleLifecycle,
+    Pluggable,
+    Service,
+    ServiceInfo,
 )
-from aegis.l2_foundation.telemetry.context import CorrelationContext, new_correlation
+from aegis.l1_core.runtime import CoreRuntime, RuntimeState
+from aegis.l1_core.supervisor import Supervisor
+from aegis.l2_foundation.config import ConfigLoader, ImmutableConfigSnapshot, load_config
 from aegis.l2_foundation.crypto import (
     FileSecretVault,
     Hasher,
@@ -73,6 +68,7 @@ from aegis.l2_foundation.crypto import (
 )
 from aegis.l2_foundation.event_bus import (
     CRITICAL,
+    DEFAULT_TOPIC,
     HIGH,
     LOW,
     NORMAL,
@@ -80,8 +76,14 @@ from aegis.l2_foundation.event_bus import (
     EventEnvelope,
     Priority,
     Topic,
-    DEFAULT_TOPIC,
 )
+from aegis.l2_foundation.persistence import (
+    NoOpGraphStore,
+    NoOpVectorStore,
+    SQLiteDocStore,
+    SQLiteKVStore,
+)
+from aegis.l2_foundation.plugin_loader import PluginLoader, PluginManifest, SandboxTier
 from aegis.l2_foundation.scheduler import (
     BackgroundTaskManager,
     RetryPolicy,
@@ -89,12 +91,16 @@ from aegis.l2_foundation.scheduler import (
     TaskState,
     run_with_retry,
 )
-from aegis.l2_foundation.plugin_loader import PluginLoader, PluginManifest, SandboxTier
-from aegis.l2_foundation.persistence import (
-    NoOpGraphStore,
-    NoOpVectorStore,
-    SQLiteDocStore,
-    SQLiteKVStore,
+from aegis.l2_foundation.telemetry.context import CorrelationContext, new_correlation
+from aegis.l2_foundation.telemetry.logger import (
+    DevelopmentFormatter,
+    FileSink,
+    JSONFormatter,
+    LogLevel,
+    StreamSink,
+    StructuredLogger,
+    configure_root_logger,
+    get_logger,
 )
 
 __all__ = [

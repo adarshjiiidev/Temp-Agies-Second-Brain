@@ -2,12 +2,14 @@
 Prompt 02: Protocol signatures ONLY — absolutely no concrete code here.
 Implementations live in L3 ai_kernel.providers.{ollama,openrouter,groq,vllm} and ship in Prompt 03.
 The code in this file CANNOT reference concrete provider names. It does not."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import AsyncIterator, Iterable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, AsyncIterator, Iterable, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 from uuid import UUID
 
 

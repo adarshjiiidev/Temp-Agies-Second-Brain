@@ -1,12 +1,13 @@
 """L1 Events interface — forward-declared Protocol.
 Concrete EventBus implementation in l2_foundation.event_bus.bus.
 Every module-to-module notification goes through this interface; never direct method calls."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from enum import IntEnum
-from typing import Any, Awaitable, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 from uuid import UUID
 
 

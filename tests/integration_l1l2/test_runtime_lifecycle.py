@@ -1,7 +1,7 @@
 """Prompt 02 tests: Runtime lifecycle, failure propagation, dependency ordering."""
+
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 import pytest
@@ -10,11 +10,8 @@ import aegis
 from aegis import (
     AegisError,
     CoreRuntime,
-    ErrorCode,
     LifecycleError,
-    ModuleLifecycle,
     RuntimeState,
-    Service,
     ServiceInfo,
 )
 
@@ -82,8 +79,12 @@ async def test_runtime_created_to_running_to_stopped():
     rec = _Recorder()
     a = _CountingService("a", rec)
     b = _CountingService("b", rec)
-    rt.register_service(a, depends_on=[], info=ServiceInfo(service_id="a", name="a", version="0.0.1"))
-    rt.register_service(b, depends_on=["a"], info=ServiceInfo(service_id="b", name="b", version="0.0.1"))
+    rt.register_service(
+        a, depends_on=[], info=ServiceInfo(service_id="a", name="a", version="0.0.1")
+    )
+    rt.register_service(
+        b, depends_on=["a"], info=ServiceInfo(service_id="b", name="b", version="0.0.1")
+    )
     await rt.start()
     assert rt.state == RuntimeState.RUNNING
     # Dependency order
@@ -103,7 +104,9 @@ async def test_dependency_topological_missing_raises():
     b = object()
     with pytest.raises(AegisError) as excinfo:
         rt.register_service(
-            b, depends_on=["nonexistent"], info=ServiceInfo(service_id="b", name="b", version="0.0.1")
+            b,
+            depends_on=["nonexistent"],
+            info=ServiceInfo(service_id="b", name="b", version="0.0.1"),
         )
     assert excinfo.value.error_code == "E10110"
 

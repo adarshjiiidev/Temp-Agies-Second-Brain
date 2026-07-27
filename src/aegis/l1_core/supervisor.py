@@ -1,15 +1,15 @@
 """L1 Supervisor.
 Per-service watchdog, crash detection, restart policy with backoff, max attempts, recovery state tracking.
 Prompt 02 provides primitives only; actual self-repair using LLM-assisted root-cause ships in Prompt 08/21."""
+
 from __future__ import annotations
 
 import asyncio
-import math
 import random
 import time
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Awaitable, Callable
 
 from aegis.l1_core.errors.base import ErrorContext, RecoveryError
 from aegis.l1_core.interfaces.base import Service, ServiceState
@@ -31,10 +31,32 @@ class RestartPolicy:
     jitter_fraction: float = 0.1
     reset_after_seconds: float = 60.0
 
+    def __init__(
+        self,
+        kind: RestartPolicyKind = RestartPolicyKind.ON_FAILURE,
+        max_attempts: int = 5,
+        base_backoff_seconds: float = 0.25,
+        max_backoff_seconds: float = 10.0,
+        backoff_multiplier: float = 2.0,
+        jitter_fraction: float = 0.1,
+        reset_after_seconds: float = 60.0,
+        *,
+        multiplier: float | None = None,
+        jitter: float | None = None,
+    ) -> None:
+        self.kind = kind
+        self.max_attempts = max_attempts
+        self.base_backoff_seconds = base_backoff_seconds
+        self.max_backoff_seconds = max_backoff_seconds
+        self.backoff_multiplier = multiplier if multiplier is not None else backoff_multiplier
+        self.jitter_fraction = jitter if jitter is not None else jitter_fraction
+        self.reset_after_seconds = reset_after_seconds
+
 
 @dataclass
 class RecoveryState:
     """Tracks failure count, restart history, and next-allowed retry time per service."""
+
     service_id: str
     consecutive_failures: int = 0
     total_restarts: int = 0
@@ -48,11 +70,11 @@ class RecoveryState:
 def backoff_seconds(policy: RestartPolicy, attempt: int) -> float:
     """Exponential backoff with jitter; deterministic given attempt but jittered by random fraction."""
     exp = min(attempt, 20)  # cap to avoid huge numbers
-    raw = policy.base_backoff_seconds * (policy.backoff_multiplier ** exp)
+    raw = policy.base_backoff_seconds * (policy.backoff_multiplier**exp)
     raw = min(raw, policy.max_backoff_seconds)
     jitter_range = raw * policy.jitter_fraction
     # Full jitter variant
-    return raw + random.uniform(-jitter_range, jitter_range)  # noqa: S311 - non-crypto jitter
+    return raw + random.uniform(-jitter_range, jitter_range)
 
 
 class Supervisor:
@@ -74,11 +96,14 @@ class Supervisor:
         *,
         restart_policy: RestartPolicy | None = None,
         watchdog_interval_seconds: float = 0.5,
+        watchdog_interval: float | None = None,
         on_recovery_hook: Callable[[str, RecoveryState], Awaitable[None] | None] | None = None,
         on_failure_give_up: Callable[[str, RecoveryState], Awaitable[None] | None] | None = None,
     ) -> None:
         self.default_policy = restart_policy or RestartPolicy()
-        self.watchdog_interval = watchdog_interval_seconds
+        self.watchdog_interval = (
+            watchdog_interval if watchdog_interval is not None else watchdog_interval_seconds
+        )
         self._services: dict[str, dict] = {}
         self._recovery: dict[str, RecoveryState] = {}
         self._policies: dict[str, RestartPolicy] = {}
@@ -95,16 +120,19 @@ class Supervisor:
         *,
         service_id: str,
         restart_policy: RestartPolicy | None = None,
+        policy: RestartPolicy | None = None,
         get_state_fn: Callable[[], ServiceState] | None = None,
         restart_fn: Callable[[], Awaitable[None]] | None = None,
     ) -> None:
+        effective_policy = policy if policy is not None else restart_policy
         self._services[service_id] = {
             "service": service,
-            "get_state_fn": get_state_fn or (lambda: service._state if hasattr(service, "_state") else ServiceState.RUNNING),
+            "get_state_fn": get_state_fn
+            or (lambda: service._state if hasattr(service, "_state") else ServiceState.RUNNING),
             "restart_fn": restart_fn,
         }
         self._recovery[service_id] = RecoveryState(service_id=service_id)
-        self._policies[service_id] = restart_policy or self.default_policy
+        self._policies[service_id] = effective_policy or self.default_policy
 
     # -------- lifecycle --------
 
@@ -120,7 +148,7 @@ class Supervisor:
             self._watchdog_task.cancel()
             try:
                 await asyncio.wait_for(self._watchdog_task, timeout=1.0)
-            except (TimeoutError, asyncio.TimeoutError, asyncio.CancelledError):
+            except (TimeoutError, asyncio.CancelledError):
                 pass
             self._watchdog_task = None
 
@@ -131,7 +159,7 @@ class Supervisor:
             await asyncio.sleep(self.watchdog_interval)
             try:
                 await self._tick()
-            except Exception:  # noqa: BLE001 - watchdog never dies
+            except Exception:
                 pass
 
     async def _tick(self) -> None:
@@ -139,7 +167,7 @@ class Supervisor:
             get_state = entry["get_state_fn"]
             try:
                 state = get_state()
-            except Exception:  # noqa: BLE001
+            except Exception:
                 state = ServiceState.FAILED
             policy = self._policies[sid]
             rec = self._recovery[sid]
@@ -162,7 +190,7 @@ class Supervisor:
                 if self._on_give_up is not None:
                     try:
                         await self._maybe_await(self._on_give_up(sid, rec))
-                    except Exception:  # noqa: BLE001
+                    except Exception:
                         pass
                 continue
             # Attempt restart
@@ -171,39 +199,50 @@ class Supervisor:
             rec.last_failure_at = now
             try:
                 restart_fn = entry["restart_fn"] or self._default_restart(sid, entry)
-                await restart_fn()
+                try:
+                    await restart_fn(sid)
+                except TypeError:
+                    await restart_fn()
                 rec.last_restart_at = time.time()
                 rec.total_restarts += 1
                 rec.next_retry_at = rec.last_restart_at + backoff_seconds(policy, attempt)
-                rec.history.append({
-                    "t": now, "attempt": attempt, "outcome": "scheduled_restart",
-                    "next_at": rec.next_retry_at,
-                })
+                rec.history.append(
+                    {
+                        "t": now,
+                        "attempt": attempt,
+                        "outcome": "scheduled_restart",
+                        "next_at": rec.next_retry_at,
+                    }
+                )
                 if self._on_recovery_hook is not None:
                     try:
                         await self._maybe_await(self._on_recovery_hook(sid, rec))
-                    except Exception:  # noqa: BLE001
+                    except Exception:
                         pass
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 rec.next_retry_at = time.time() + backoff_seconds(policy, attempt)
-                rec.history.append({"t": now, "attempt": attempt, "outcome": "restart_error", "error": str(exc)})
+                rec.history.append(
+                    {"t": now, "attempt": attempt, "outcome": "restart_error", "error": str(exc)}
+                )
                 if rec.consecutive_failures >= policy.max_attempts and self._on_give_up is not None:
                     try:
                         await self._maybe_await(self._on_give_up(sid, rec))
-                    except Exception:  # noqa: BLE001
+                    except Exception:
                         pass
 
-    def _default_restart(self, sid: str, entry: dict) -> Callable[[], Awaitable[None]]:
-        async def _do() -> None:
+    def _default_restart(self, sid: str, entry: dict) -> Callable[..., Awaitable[None]]:
+        import contextlib as _ctxlib
+
+        async def _do(*args: Any, **kwargs: Any) -> None:
             svc = entry["service"]
             try:
-                with contextlib.suppress(Exception):
+                with _ctxlib.suppress(Exception):
                     await svc.stop(timeout=2.0)
-            except Exception:  # noqa: BLE001
+            except Exception:
                 pass
             await svc.initialize({})
             await svc.start()
-        import contextlib
+
         return _do
 
     @staticmethod
@@ -216,7 +255,9 @@ class Supervisor:
     def recovery_state(self, service_id: str) -> RecoveryState:
         return self._recovery[service_id]
 
-    async def force_recover(self, service_id: str, *, max_attempts_override: int | None = None) -> None:
+    async def force_recover(
+        self, service_id: str, *, max_attempts_override: int | None = None
+    ) -> None:
         """Manual recovery trigger. Resets consecutive failure counter up to the override; then attempts restart once."""
         if service_id not in self._services:
             raise KeyError(service_id)
@@ -230,10 +271,13 @@ class Supervisor:
         entry = self._services[service_id]
         try:
             restart_fn = entry["restart_fn"] or self._default_restart(service_id, entry)
-            await restart_fn()
+            try:
+                await restart_fn(service_id)
+            except TypeError:
+                await restart_fn()
             rec.consecutive_failures = 0
             rec.total_restarts += 1
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             raise RecoveryError(
                 f"Manual recovery failed for {service_id}: {type(exc).__name__}: {exc!s}",
                 cause=exc,

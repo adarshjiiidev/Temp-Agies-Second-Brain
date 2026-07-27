@@ -6,22 +6,20 @@ Future layers can swap-in networked stores without breaking contracts.
 Prompt 02 SCOPE: VectorStore / GraphStore are NOT implemented (they require embeddings/ML).
 We provide typed NoOp* classes with typed NotImplementedError so L3+ can replace them cleanly.
 """
+
 from __future__ import annotations
 
-import asyncio
 import json
-import os
 import sqlite3
 import threading
 import time
-import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterable, Iterator
+from typing import Any
 
 import aiosqlite
 
-from aegis.l1_core.errors import ErrorCode, NotFoundError, StoreError
+from aegis.l1_core.errors import ErrorCode, NotFoundError
 from aegis.l2_foundation.telemetry.logger import get_logger
 
 log = get_logger(__name__)
@@ -30,6 +28,7 @@ log = get_logger(__name__)
 @dataclass
 class DocRecord:
     """SQLiteDocStore local document (synchronous mirror of L1 DocStore semantics)."""
+
     doc_id: str
     uri: str | None = None
     title: str | None = None
@@ -121,10 +120,10 @@ class SQLiteKVStore:
         assert self._sync_conn is not None
         return self._sync_conn
 
-    def _serialize(self, value: Any) -> bytes:  # noqa: ANN401
+    def _serialize(self, value: Any) -> bytes:
         return json.dumps(value, default=str, ensure_ascii=False).encode("utf-8")
 
-    def _deserialize(self, raw: bytes) -> Any:  # noqa: ANN401
+    def _deserialize(self, raw: bytes) -> Any:
         return json.loads(raw.decode("utf-8"))
 
     # ---------- sync API ----------
@@ -168,9 +167,7 @@ class SQLiteKVStore:
     def delete(self, key: str, *, namespace: str = "default") -> None:
         conn = self._ensure_sync()
         with self._lock:
-            conn.execute(
-                "DELETE FROM kv_store WHERE namespace=? AND k=?", (namespace, key)
-            )
+            conn.execute("DELETE FROM kv_store WHERE namespace=? AND k=?", (namespace, key))
 
     def keys(self, *, namespace: str = "default") -> list[str]:
         conn = self._ensure_sync()
@@ -247,9 +244,9 @@ class SQLiteDocStore:
 
     # ---- sync API ----
     def put(self, doc: DocRecord, *, namespace: str = "default") -> None:
-        conn = self._kv._ensure_sync()  # noqa: SLF001 - internal access to same DB
+        conn = self._kv._ensure_sync()
         now = time.time()
-        with self._kv._lock:  # noqa: SLF001
+        with self._kv._lock:
             conn.execute(
                 """INSERT INTO doc_store(
                     namespace, doc_id, uri, title, content, content_type,
@@ -274,8 +271,8 @@ class SQLiteDocStore:
             )
 
     def get(self, doc_id: str, *, namespace: str = "default") -> DocRecord:
-        conn = self._kv._ensure_sync()  # noqa: SLF001
-        with self._kv._lock:  # noqa: SLF001
+        conn = self._kv._ensure_sync()
+        with self._kv._lock:
             row = conn.execute(
                 "SELECT * FROM doc_store WHERE namespace=? AND doc_id=?", (namespace, doc_id)
             ).fetchone()
@@ -284,16 +281,18 @@ class SQLiteDocStore:
         return self._row_to_record(row)
 
     def delete(self, doc_id: str, *, namespace: str = "default") -> None:
-        conn = self._kv._ensure_sync()  # noqa: SLF001
-        with self._kv._lock:  # noqa: SLF001
+        conn = self._kv._ensure_sync()
+        with self._kv._lock:
             conn.execute(
                 "DELETE FROM doc_store WHERE namespace=? AND doc_id=?", (namespace, doc_id)
             )
 
-    def search_by_tag(self, tag: str, *, namespace: str = "default", limit: int = 100) -> list[DocRecord]:
-        conn = self._kv._ensure_sync()  # noqa: SLF001
+    def search_by_tag(
+        self, tag: str, *, namespace: str = "default", limit: int = 100
+    ) -> list[DocRecord]:
+        conn = self._kv._ensure_sync()
         like = f"%{tag}%"
-        with self._kv._lock:  # noqa: SLF001
+        with self._kv._lock:
             rows = conn.execute(
                 """SELECT * FROM doc_store
                    WHERE namespace=? AND (title LIKE ? OR content LIKE ? OR metadata_json LIKE ?)
@@ -303,8 +302,8 @@ class SQLiteDocStore:
         return [self._row_to_record(r) for r in rows]
 
     def recent(self, *, namespace: str = "default", limit: int = 100) -> list[DocRecord]:
-        conn = self._kv._ensure_sync()  # noqa: SLF001
-        with self._kv._lock:  # noqa: SLF001
+        conn = self._kv._ensure_sync()
+        with self._kv._lock:
             rows = conn.execute(
                 "SELECT * FROM doc_store WHERE namespace=? ORDER BY created_at DESC LIMIT ?",
                 (namespace, int(limit)),
@@ -314,22 +313,23 @@ class SQLiteDocStore:
 
 # Prompt 02 FUTURE stores: explicit NotImplementedError subclasses so L3+ replacement is clean
 
+
 class NoOpVectorStore:
     """Not implemented — Prompt 07+ only. Raises NotImplementedError on every call."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         self._reason = "VectorStore requires embeddings; deferred to Prompt 07+"
 
-    async def add(self, *args: Any, **kwargs: Any) -> list[str]:  # noqa: ANN401
+    async def add(self, *args: Any, **kwargs: Any) -> list[str]:
         raise NotImplementedError(self._reason)
 
-    async def delete(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
+    async def delete(self, *args: Any, **kwargs: Any) -> None:
         raise NotImplementedError(self._reason)
 
-    async def search(self, *args: Any, **kwargs: Any) -> list[tuple[str, float]]:  # noqa: ANN401
+    async def search(self, *args: Any, **kwargs: Any) -> list[tuple[str, float]]:
         raise NotImplementedError(self._reason)
 
-    async def aclose(self) -> None:  # noqa: D401 - stub
+    async def aclose(self) -> None:
         pass
 
 
@@ -339,17 +339,17 @@ class NoOpGraphStore:
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         self._reason = "GraphStore requires KG schema; deferred to Prompt 08+"
 
-    async def add_node(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
+    async def add_node(self, *args: Any, **kwargs: Any) -> None:
         raise NotImplementedError(self._reason)
 
-    async def add_edge(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
+    async def add_edge(self, *args: Any, **kwargs: Any) -> None:
         raise NotImplementedError(self._reason)
 
-    async def delete_node(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
+    async def delete_node(self, *args: Any, **kwargs: Any) -> None:
         raise NotImplementedError(self._reason)
 
-    async def shortest_path(self, *args: Any, **kwargs: Any) -> list[str]:  # noqa: ANN401
+    async def shortest_path(self, *args: Any, **kwargs: Any) -> list[str]:
         raise NotImplementedError(self._reason)
 
-    async def aclose(self) -> None:  # noqa: D401 - stub
+    async def aclose(self) -> None:
         pass

@@ -1,12 +1,13 @@
 """L1 Base interfaces — Service lifecycle, Health, Pluggable.
 Everything in AEGIS that participates in the runtime lifecycle implements ModuleLifecycle.
 Naming conventions per Prompt 01 §02: initialize / start / stop / health / close."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Awaitable, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 
 class ServiceState(str, Enum):
@@ -127,9 +128,13 @@ class AbstractService:
     async def health(self, timeout: float | None = None) -> dict[str, Any]:  # noqa: ARG002
         return {
             "status": (
-                "healthy" if self._state == ServiceState.RUNNING else
-                "degraded" if self._state == ServiceState.DEGRADED else
-                "unhealthy" if self._state == ServiceState.FAILED else "unknown"
+                "healthy"
+                if self._state == ServiceState.RUNNING
+                else "degraded"
+                if self._state == ServiceState.DEGRADED
+                else "unhealthy"
+                if self._state == ServiceState.FAILED
+                else "unknown"
             ),
             "component": self.info.service_id,
             "state": self._state.value,

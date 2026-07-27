@@ -10,6 +10,7 @@ Prompt 02 scope: local asyncio-based task manager with:
 
 Not implemented: Celery, Temporal, Taskiq, Kafka, RabbitMQ, distributed queues.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -17,11 +18,13 @@ import enum
 import threading
 import time
 import uuid
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import Any, Awaitable, Callable
+from typing import Any
 
-from aegis.l1_core.errors import ErrorCode, ExecutionError, TimeoutError as AegisTimeoutError
-from aegis.l1_core.interfaces.events import NORMAL, EventEnvelope
+from aegis.l1_core.errors import ErrorCode, ExecutionError
+from aegis.l1_core.errors import TimeoutError as AegisTimeoutError
+from aegis.l1_core.interfaces.events import NORMAL
 from aegis.l2_foundation.event_bus.core import CoreEventBus
 from aegis.l2_foundation.telemetry.context import CorrelationContext
 from aegis.l2_foundation.telemetry.logger import get_logger
@@ -52,7 +55,7 @@ class RetryPolicy:
     def backoff_seconds(self, attempt: int) -> float:
         """Exponential backoff with full jitter, bounded."""
         attempt = max(0, int(attempt))
-        base = min(self.max_backoff_seconds, self.base_backoff_seconds * (self.multiplier ** attempt))
+        base = min(self.max_backoff_seconds, self.base_backoff_seconds * (self.multiplier**attempt))
         # full jitter in range [base*(1-jitter), base*(1+jitter)]
         jitter_span = base * self.jitter
         lo = max(0.0, base - jitter_span)
@@ -237,7 +240,7 @@ class BackgroundTaskManager:
         args: tuple[Any, ...],
         kwargs: dict[str, Any],
         policy: RetryPolicy | None,
-    ) -> Any:  # noqa: ANN401
+    ) -> Any:
         info.state = TaskState.RUNNING
         info.started_at = time.time()
         info.attempts = 0
@@ -267,7 +270,7 @@ class BackgroundTaskManager:
                 self._m_cancelled.inc()
                 self._emit_event(info, "runtime.task.cancelled")
                 raise
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 last_error = exc
                 info.last_error = f"{type(exc).__name__}: {exc}"
                 info.error = exc
@@ -300,7 +303,7 @@ class BackgroundTaskManager:
         for hook in hooks:
             try:
                 hook(info)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 log.error("task success hook raised", exc=exc)
 
     def _run_failure_hooks(self, info: TaskInfo) -> None:
@@ -309,7 +312,7 @@ class BackgroundTaskManager:
         for hook in hooks:
             try:
                 hook(info)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 log.error("task failure hook raised", exc=exc)
 
     def _emit_event(self, info: TaskInfo, event_type: str) -> None:
@@ -328,9 +331,13 @@ class BackgroundTaskManager:
                 payload,
                 priority=NORMAL,
                 source="aegis.tasks",
-                metadata={"correlation_id": str(info.correlation.correlation_id) if info.correlation else None},
+                metadata={
+                    "correlation_id": str(info.correlation.correlation_id)
+                    if info.correlation
+                    else None
+                },
             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             log.debug("emit_event failed", exc=exc)
 
 
@@ -341,7 +348,7 @@ async def run_with_retry(
     policy: RetryPolicy | None = None,
     timeout_per_attempt: float | None = None,
     **kwargs: Any,
-) -> Any:  # noqa: ANN401
+) -> Any:
     """Independent helper: useful for synchronous-ish callers wanting retry.
     Does not register anywhere; aegis.tasks BackgroundTaskManager provides registration/shutdown/cancellation.
     """
@@ -359,14 +366,14 @@ async def run_with_retry(
             last_exc = e
             if attempt + 1 >= pol.max_attempts:
                 raise
-        except asyncio.TimeoutError as e:
+        except TimeoutError as e:
             last_exc = e
             if attempt + 1 >= pol.max_attempts:
                 raise AegisTimeoutError(
                     ErrorCode.E10103,
                     f"Operation timed out after {attempt + 1} attempts",
                 ) from e
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             last_exc = e
             if attempt + 1 >= pol.max_attempts:
                 raise ExecutionError(

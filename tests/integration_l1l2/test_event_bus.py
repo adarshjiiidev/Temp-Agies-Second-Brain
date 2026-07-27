@@ -1,14 +1,12 @@
 """Prompt 02 tests: Event Bus - publish/subscribe, async handlers, DLQ, replay, SQLite durability."""
+
 from __future__ import annotations
 
-import asyncio
 from pathlib import Path
-from typing import Any
 
 import pytest
 
-import aegis
-from aegis import CoreEventBus, EventEnvelope, HIGH, NORMAL, Topic, get_logger
+from aegis import CoreEventBus, EventEnvelope, Topic, get_logger
 
 log = get_logger(__name__)
 

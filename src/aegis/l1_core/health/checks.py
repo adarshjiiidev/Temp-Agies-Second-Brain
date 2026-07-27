@@ -1,8 +1,10 @@
 """L1 Standard health check helpers."""
+
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Awaitable, Callable, Iterable
+from collections.abc import Awaitable, Callable, Iterable
+from typing import Any
 
 
 async def health_check_timeout(
@@ -15,14 +17,18 @@ async def health_check_timeout(
     try:
         async with asyncio.timeout(timeout_seconds):  # type: ignore[attr-defined]
             result = await fn()
-    except (TimeoutError, asyncio.TimeoutError):
+    except TimeoutError:
         return {
             "status": "unhealthy",
             "details": {"timeout_seconds": timeout_seconds, **(default_details or {})},
             "error": "timeout",
         }
-    except Exception as exc:  # noqa: BLE001
-        return {"status": "unhealthy", "details": default_details or {}, "error": f"{type(exc).__name__}: {exc!s}"}
+    except Exception as exc:
+        return {
+            "status": "unhealthy",
+            "details": default_details or {},
+            "error": f"{type(exc).__name__}: {exc!s}",
+        }
     return result
 
 

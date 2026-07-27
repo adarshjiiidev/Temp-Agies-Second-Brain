@@ -15,6 +15,7 @@ Implements:
 
 Prompt 01 boundary: single-process only (no network brokers).
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -26,11 +27,12 @@ import threading
 import time
 import uuid
 from collections import defaultdict
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Awaitable, Callable
+from typing import Any
 
-from aegis.l1_core.errors import ErrorCode, EventBusError, NotFoundError
+from aegis.l1_core.errors import ErrorCode, EventBusError
 from aegis.l1_core.interfaces.events import (
     CRITICAL,
     HIGH,
@@ -56,8 +58,8 @@ class _HandlerRegistration:
     order: int = field(default=0, compare=True)
     topic: Topic = field(compare=False, default=DEFAULT_TOPIC)
     handler: EventHandler = field(compare=False, repr=False, default=lambda ev: None)
-    filter: Callable[[EventEnvelope], bool] = field(  # noqa: A003
-        compare=False, repr=False, default_factory=lambda: (lambda _ev: True)
+    filter: Callable[[EventEnvelope], bool] = field(
+        compare=False, repr=False, default_factory=lambda: lambda _ev: True
     )
     handler_id: str = field(compare=False, default_factory=lambda: uuid.uuid4().hex)
 
@@ -318,7 +320,7 @@ class CoreEventBus:
         correlation: CorrelationContext | None = None,
     ) -> EventEnvelope:
         ctx = correlation or CorrelationContext.get_current_or_none()
-        now = datetime.datetime.now(tz=datetime.timezone.utc).timestamp()
+        now = datetime.datetime.now(tz=datetime.UTC).timestamp()
         return EventEnvelope(
             event_id=uuid.uuid4(),
             event_type=event_type,
@@ -345,7 +347,7 @@ class CoreEventBus:
     def publish(
         self,
         event_type: str,
-        payload: Any,  # noqa: ANN401
+        payload: Any,
         *,
         topic: Topic | str = DEFAULT_TOPIC,
         priority: Priority = NORMAL,
@@ -354,7 +356,9 @@ class CoreEventBus:
     ) -> EventEnvelope:
         """Sync publish. Returns the (enriched) EventEnvelope."""
         self._ensure_started()
-        topic_obj = Topic(name=topic, version=1, durable=self._durable) if isinstance(topic, str) else topic
+        topic_obj = (
+            Topic(name=topic, version=1, durable=self._durable) if isinstance(topic, str) else topic
+        )
         env = self._enrich_envelope(
             event_type,
             payload,
@@ -380,14 +384,14 @@ class CoreEventBus:
                 result = reg.handler(env)
                 if asyncio.iscoroutine(result):
                     sync_futures.append(result)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 self._handler_failure(env, topic_obj.name, reg.handler_id, exc)
         for sub in subscribers:
             try:
                 result = sub.handle_event(env, topic_obj)
                 if asyncio.iscoroutine(result):
                     sync_futures.append(result)
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 self._handler_failure(env, topic_obj.name, f"sub:{type(sub).__name__}", exc)
         if sync_futures:
             loop = self._get_loop()
@@ -397,7 +401,10 @@ class CoreEventBus:
             else:
                 asyncio.get_event_loop_policy().get_event_loop().run_until_complete(
                     asyncio.gather(
-                        *[self._safe_await(env, topic_obj.name, "async_handler", f) for f in sync_futures],
+                        *[
+                            self._safe_await(env, topic_obj.name, "async_handler", f)
+                            for f in sync_futures
+                        ],
                         return_exceptions=True,
                     )
                 )
@@ -406,7 +413,7 @@ class CoreEventBus:
     async def publish_async(
         self,
         event_type: str,
-        payload: Any,  # noqa: ANN401
+        payload: Any,
         *,
         topic: Topic | str = DEFAULT_TOPIC,
         priority: Priority = NORMAL,
@@ -414,7 +421,9 @@ class CoreEventBus:
         metadata: dict[str, Any] | None = None,
     ) -> EventEnvelope:
         self._ensure_started()
-        topic_obj = Topic(name=topic, version=1, durable=self._durable) if isinstance(topic, str) else topic
+        topic_obj = (
+            Topic(name=topic, version=1, durable=self._durable) if isinstance(topic, str) else topic
+        )
         env = self._enrich_envelope(
             event_type,
             payload,
@@ -433,9 +442,16 @@ class CoreEventBus:
         for reg in regs:
             if not reg.filter(env):
                 continue
-            await self._safe_await(env, topic_obj.name, reg.handler_id, _invoke_any(reg.handler, env))
+            await self._safe_await(
+                env, topic_obj.name, reg.handler_id, _invoke_any(reg.handler, env)
+            )
         for sub in subscribers:
-            await self._safe_await(env, topic_obj.name, f"sub:{type(sub).__name__}", _invoke_any(sub.handle_event, env, topic_obj))
+            await self._safe_await(
+                env,
+                topic_obj.name,
+                f"sub:{type(sub).__name__}",
+                _invoke_any(sub.handle_event, env, topic_obj),
+            )
         return env
 
     # -------- subscribe / unsubscribe --------
@@ -510,7 +526,11 @@ class CoreEventBus:
         return results
 
     def dead_letter_count(self, topic: Topic | str | None = None) -> int:
-        topic_name = topic.name if topic and isinstance(topic, Topic) else (topic if isinstance(topic, str) else None)
+        topic_name = (
+            topic.name
+            if topic and isinstance(topic, Topic)
+            else (topic if isinstance(topic, str) else None)
+        )
         if self._sql_log is not None:
             return self._sql_log.dlq_count(topic_name)
         if topic_name:
@@ -536,7 +556,7 @@ class CoreEventBus:
     ) -> None:
         try:
             await coro
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             self._handler_failure(env, topic_name, handler_id, exc)
 
     def _handler_failure(
@@ -570,7 +590,7 @@ class CoreEventBus:
 
 
 # Utility: invoke handler which may be sync or async
-async def _invoke_any(fn: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
+async def _invoke_any(fn: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
     result = fn(*args, **kwargs)
     if asyncio.iscoroutine(result):
         return await result
@@ -578,14 +598,14 @@ async def _invoke_any(fn: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
 
 
 __all__ = [
-    "CoreEventBus",
+    "CRITICAL",
     "DEFAULT_TOPIC",
-    "Priority",
+    "HIGH",
     "LOW",
     "NORMAL",
-    "HIGH",
-    "CRITICAL",
-    "Topic",
+    "CoreEventBus",
     "EventEnvelope",
+    "Priority",
     "Subscriber",
+    "Topic",
 ]

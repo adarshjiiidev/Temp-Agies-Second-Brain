@@ -1,5 +1,6 @@
 """L1 Forward-declared Execution Kernel interfaces.
 Prompt 02: Protocols ONLY. Concrete implementations in Prompt 05."""
+
 from __future__ import annotations
 
 from abc import abstractmethod

@@ -1,10 +1,12 @@
 """L1 Storage interfaces — PROTOCOLS ONLY.
 Concrete implementations live in L2 persistence module (SQLite default per Prompt 01 §03).
 These are stable contracts that future backends (Postgres, Neo4j, Redis plugins…) implement."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Any, AsyncIterator, Iterable, Protocol, runtime_checkable
+from collections.abc import AsyncIterator
+from typing import Any, Protocol, runtime_checkable
 
 
 @runtime_checkable
@@ -61,8 +63,9 @@ class VectorStore(Protocol):
     Qdrant local-mode integration ships in Prompt 04 (Memory Engine milestone)."""
 
     @abstractmethod
-    async def upsert(self, id: str, vector: Vector, metadata: dict[str, Any] | None = None) -> None:
-        ...
+    async def upsert(
+        self, id: str, vector: Vector, metadata: dict[str, Any] | None = None
+    ) -> None: ...
 
     @abstractmethod
     async def search(
@@ -77,7 +80,12 @@ class GraphStore(Protocol):
 
     @abstractmethod
     async def add_node(
-        self, node_id: str, kind: str, key: str, attrs: dict[str, Any] | None = None, label: str = ""
+        self,
+        node_id: str,
+        kind: str,
+        key: str,
+        attrs: dict[str, Any] | None = None,
+        label: str = "",
     ) -> None: ...
 
     @abstractmethod

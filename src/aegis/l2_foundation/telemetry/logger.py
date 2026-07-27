@@ -5,6 +5,7 @@ metadata, exception info (when provided). Sensitive values are redacted BEFORE s
 
 Never use bare print() in core runtime code. Always use get_logger(__name__).
 """
+
 from __future__ import annotations
 
 import abc
@@ -73,7 +74,9 @@ class LogRecord:
     def as_dict(self) -> dict[str, Any]:
         d: dict[str, Any] = {
             "ts": self.timestamp,
-            "iso": datetime.datetime.fromtimestamp(self.timestamp, tz=datetime.timezone.utc).isoformat(),
+            "iso": datetime.datetime.fromtimestamp(
+                self.timestamp, tz=datetime.UTC
+            ).isoformat(),
             "level": self.level.name,
             "logger": self.logger,
             "msg": self.message,
@@ -108,7 +111,7 @@ class JSONFormatter(Formatter):
 
 class DevelopmentFormatter(Formatter):
     def format(self, record: LogRecord) -> str:
-        iso = datetime.datetime.fromtimestamp(record.timestamp, tz=datetime.timezone.utc).strftime(
+        iso = datetime.datetime.fromtimestamp(record.timestamp, tz=datetime.UTC).strftime(
             "%H:%M:%S.%f"
         )[:-3]
         parts = [f"{iso} {record.level.name:<8} [{record.logger}]"]
@@ -164,13 +167,13 @@ class FileSink(Sink):
         with self._lock:
             self._fp.flush()
 
-    def close(self) -> None:  # noqa: D401 - handler
+    def close(self) -> None:
         with self._lock:
             self._fp.close()
 
 
 _LOGGER_REGISTRY_LOCK = threading.RLock()
-_LOGGER_REGISTRY: dict[str, "StructuredLogger"] = {}
+_LOGGER_REGISTRY: dict[str, StructuredLogger] = {}
 
 
 class StructuredLogger:
@@ -223,7 +226,9 @@ class StructuredLogger:
     ) -> None:
         if not self.is_enabled(level):
             return
-        ctx = correlation or (CorrelationContext.get_current_or_none() if self.include_correlation else None)
+        ctx = correlation or (
+            CorrelationContext.get_current_or_none() if self.include_correlation else None
+        )
         red_meta = self.redactor.redact(metadata or {})
         exc_str: str | None = None
         if exc_info is not None:
@@ -232,7 +237,7 @@ class StructuredLogger:
                 type(exc_info), exc_info, exc_info.__traceback__, limit=10, file=buf
             )
             exc_str = self.redactor.redact(buf.getvalue())
-        ts = datetime.datetime.now(tz=datetime.timezone.utc).timestamp()
+        ts = datetime.datetime.now(tz=datetime.UTC).timestamp()
         record = LogRecord(
             timestamp=ts,
             level=level,
@@ -250,19 +255,19 @@ class StructuredLogger:
             try:
                 sink.write(line)
                 sink.flush()
-            except Exception:  # noqa: BLE001 - sink failure must NOT break caller
+            except Exception:
                 pass
 
-    def debug(self, message: str, **meta: Any) -> None:  # noqa: ANN401
+    def debug(self, message: str, **meta: Any) -> None:
         self._log(LogLevel.DEBUG, message, metadata=meta or None)
 
-    def info(self, message: str, **meta: Any) -> None:  # noqa: ANN401
+    def info(self, message: str, **meta: Any) -> None:
         self._log(LogLevel.INFO, message, metadata=meta or None)
 
-    def notice(self, message: str, **meta: Any) -> None:  # noqa: ANN401
+    def notice(self, message: str, **meta: Any) -> None:
         self._log(LogLevel.NOTICE, message, metadata=meta or None)
 
-    def warning(self, message: str, **meta: Any) -> None:  # noqa: ANN401
+    def warning(self, message: str, **meta: Any) -> None:
         self._log(LogLevel.WARNING, message, metadata=meta or None)
 
     warn = warning
@@ -272,7 +277,7 @@ class StructuredLogger:
         message: str,
         *,
         exc: BaseException | None = None,
-        **meta: Any,  # noqa: ANN401
+        **meta: Any,
     ) -> None:
         self._log(LogLevel.ERROR, message, metadata=meta or None, exc_info=exc)
 
@@ -281,7 +286,7 @@ class StructuredLogger:
         message: str,
         *,
         exc: BaseException | None = None,
-        **meta: Any,  # noqa: ANN401
+        **meta: Any,
     ) -> None:
         self._log(LogLevel.CRITICAL, message, metadata=meta or None, exc_info=exc)
 
@@ -290,7 +295,7 @@ class StructuredLogger:
         message: str,
         *,
         exc: BaseException | None = None,
-        **meta: Any,  # noqa: ANN401
+        **meta: Any,
     ) -> None:
         self._log(LogLevel.FATAL, message, metadata=meta or None, exc_info=exc)
 
@@ -299,7 +304,7 @@ class StructuredLogger:
         message: str,
         *,
         exc: BaseException | None = None,
-        **meta: Any,  # noqa: ANN401
+        **meta: Any,
     ) -> None:
         if exc is None:
             exc = sys.exc_info()[1]  # type: ignore[assignment]

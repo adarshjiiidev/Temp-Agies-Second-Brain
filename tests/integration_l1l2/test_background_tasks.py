@@ -1,8 +1,8 @@
 """Prompt 02 tests: Background task manager (startup/cancellation/graceful shutdown/retry)."""
+
 from __future__ import annotations
 
 import asyncio
-import uuid
 
 import pytest
 
