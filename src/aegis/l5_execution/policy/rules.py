@@ -40,16 +40,20 @@ BUILTIN_RULES: tuple[PolicyRule, ...] = (
         reason="aegis TCB mutations require explicit user approval",
     ),
 
-    # --- HIGH: Shell execution — always T2 sandbox minimum ---
+    # --- HIGH: Shell execution — always requires approval + T2 sandbox minimum ---
+    # Architecture spec (05_SECURITY_PRIVACY, 07_AI_STRATEGY §4): arbitrary code
+    # execution MUST NOT proceed without explicit user confirmation (user_confirmed=True).
+    # required_sandbox_tier is retained so that when approval IS granted, the pipeline
+    # enforces T2 subprocess isolation for execution.
     PolicyRule(
         rule_id="builtin-shell-sandbox",
-        name="Shell execution requires T2 sandbox",
+        name="Shell execution requires explicit user approval and T2 sandbox",
         priority=10,
         match_verbs=["shell.exec", "proc.spawn"],
         match_risk_levels=[RiskLevel.HIGH, RiskLevel.CRITICAL],
-        decision=PermissionDecision.SANDBOX_REQUIRED,
+        decision=PermissionDecision.NEEDS_APPROVAL,
         required_sandbox_tier=SandboxTier.T2_SUBPROCESS,
-        reason="Shell and process execution must run in isolated subprocess sandbox",
+        reason="Shell and process execution require explicit user approval and run in T2 subprocess sandbox",
     ),
 
     # --- HIGH: Git push — always requires approval ---

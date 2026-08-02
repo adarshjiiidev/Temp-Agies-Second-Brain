@@ -53,7 +53,12 @@ async def test_deny_by_default_no_grant(pipeline):
 
 @pytest.mark.asyncio
 async def test_approval_required_for_critical_without_confirm(pipeline):
-    """CRITICAL-risk action without user_confirmed → APPROVAL_REQUIRED."""
+    """Shell exec without user_confirmed → APPROVAL_REQUIRED (regression: B-L5-001).
+
+    Root cause: builtin-shell-sandbox rule was SANDBOX_REQUIRED (allowed execution
+    to proceed) instead of NEEDS_APPROVAL. Fixed so that shell.exec at HIGH risk
+    always blocks until user explicitly confirms via user_confirmed=True.
+    """
     await pipeline.permission_engine.grant(
         subject="system:planner",
         verbs=["shell"],
@@ -67,8 +72,45 @@ async def test_approval_required_for_critical_without_confirm(pipeline):
         user_confirmed=False,
     )
     result = await pipeline.execute(action)
-    # Shell is HIGH risk → policy should block or require approval
-    assert result.status in (ExecutionStatus.APPROVAL_REQUIRED, ExecutionStatus.DENIED)
+    # Shell is HIGH risk → policy gate must block until user confirms
+    assert result.status in (ExecutionStatus.APPROVAL_REQUIRED, ExecutionStatus.DENIED), (
+        f"Expected APPROVAL_REQUIRED or DENIED, got {result.status!r}. "
+        "Shell execution without user_confirmed=True must not proceed."
+    )
+    assert len(result.audit_entry_ids) >= 2
+
+
+@pytest.mark.asyncio
+async def test_shell_exec_always_blocked_by_policy_regardless_of_confirmed(pipeline):
+    """Regression (B-L5-001 complement): policy gate fires unconditionally for shell.exec.
+
+    The builtin-shell-sandbox rule is a direct NEEDS_APPROVAL decision — it fires
+    regardless of action.user_confirmed. The user_confirmed field only bypasses the
+    force_approval_on_critical override (which elevates ALLOW→NEEDS_APPROVAL for
+    CRITICAL risk when user_confirmed=False).
+
+    A direct NEEDS_APPROVAL rule always produces APPROVAL_REQUIRED, even with
+    user_confirmed=True. This matches the existing pattern in test_fs_delete_with_confirmed.
+    Real approval flow: the orchestrator re-queues the action after the user confirms
+    in the UI — at which point the action carries an approval_token (future feature).
+    """
+    await pipeline.permission_engine.grant(
+        subject="system:planner",
+        verbs=["shell"],
+        resources=["*"],
+        granted_by="user:primary",
+    )
+    action = make_action(
+        ActionKind.SHELL_EXEC,
+        resource="proc:bash",
+        parameters={"cmd": ["echo", "hello"]},
+        user_confirmed=True,  # does NOT bypass direct NEEDS_APPROVAL rules
+    )
+    result = await pipeline.execute(action)
+    # Policy gate is unconditional for direct NEEDS_APPROVAL rules
+    assert result.status == ExecutionStatus.APPROVAL_REQUIRED, (
+        f"Expected APPROVAL_REQUIRED (policy gate is unconditional), got {result.status!r}"
+    )
     assert len(result.audit_entry_ids) >= 2
 
 

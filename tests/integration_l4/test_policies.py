@@ -23,7 +23,7 @@ from aegis.l4_memory.policies import (
 from aegis.l4_memory.types import ProvenanceKind
 
 
-pytestmark = pytest.mark.asyncio
+# Note: Only test_policy_applied_in_manager is async. Mark is applied directly below.
 
 
 # ---------------------------------------------------------------------------
@@ -272,6 +272,7 @@ def test_memory_policy_strict_privacy():
     assert pol.access.max_cloud_privacy_tier == "P0"
 
 
+@pytest.mark.asyncio
 async def test_policy_applied_in_manager(manager: MemoryManager, make_record):
     """Policy is applied by MemoryManager on store."""
     # T5 personal should be blocked without is_draft

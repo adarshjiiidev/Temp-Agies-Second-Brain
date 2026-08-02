@@ -34,7 +34,7 @@ from aegis.l4_memory.search import SearchQuery
 from aegis.l4_memory.types import ProvenanceKind, SearchMode
 
 
-pytestmark = pytest.mark.asyncio
+# Note: Async tests have @pytest.mark.asyncio applied individually below.
 
 
 def _p0_record(key: str = "p0/private", content: str = "SECRET P0 DATA") -> MemoryRecord:
@@ -125,6 +125,7 @@ def test_access_policy_all_tiers_blocked_when_p0_only():
 # Test 2: ContextBuilder — P0 excluded for cloud target
 # ---------------------------------------------------------------------------
 
+@pytest.mark.asyncio
 async def test_context_builder_excludes_p0_from_cloud_target(manager: MemoryManager):
     """P0 records MUST NOT appear in ContextPackage when target is P2 (cloud)."""
     await _store_and_activate_p0(manager)
@@ -142,6 +143,7 @@ async def test_context_builder_excludes_p0_from_cloud_target(manager: MemoryMana
         f"PRIVACY VIOLATION: {len(p0_in_context)} P0 records found in cloud context package!"
 
 
+@pytest.mark.asyncio
 async def test_context_builder_p0_included_for_local_target(manager: MemoryManager):
     """P0 records MAY appear in ContextPackage when target is P0 (local model)."""
     await _store_and_activate_p0(manager)
@@ -158,6 +160,7 @@ async def test_context_builder_p0_included_for_local_target(manager: MemoryManag
     assert len(p0_records) >= 1
 
 
+@pytest.mark.asyncio
 async def test_context_package_renders_no_p0_content_for_cloud(manager: MemoryManager):
     """Rendered system block must NOT contain P0 record content for cloud targets."""
     await _store_and_activate_p0(manager)
@@ -178,6 +181,7 @@ async def test_context_package_renders_no_p0_content_for_cloud(manager: MemoryMa
 # Test 3: SearchEngine — P0 excluded via exclude_privacy_tiers
 # ---------------------------------------------------------------------------
 
+@pytest.mark.asyncio
 async def test_search_excludes_p0_with_exclusion_filter(manager: MemoryManager):
     """Search must not return P0 records when exclude_privacy_tiers=["P0"]."""
     await _store_and_activate_p0(manager)
@@ -192,6 +196,7 @@ async def test_search_excludes_p0_with_exclusion_filter(manager: MemoryManager):
         f"PRIVACY VIOLATION: {len(p0_results)} P0 records returned in cloud search!"
 
 
+@pytest.mark.asyncio
 async def test_search_includes_p0_for_local_query(manager: MemoryManager):
     """Search with no exclusion should be able to find P0 records (local use)."""
     await _store_and_activate_p0(manager)
@@ -208,6 +213,7 @@ async def test_search_includes_p0_for_local_query(manager: MemoryManager):
 # Test 4: P0 excluded_p0_count audit field
 # ---------------------------------------------------------------------------
 
+@pytest.mark.asyncio
 async def test_context_package_audit_counts_p0_exclusions(manager: MemoryManager):
     """ContextPackage.excluded_p0_count must accurately count excluded P0 records."""
     # Store 2 P0 records and 1 P2 record
@@ -230,6 +236,7 @@ async def test_context_package_audit_counts_p0_exclusions(manager: MemoryManager
 # Test 5: MemoryPolicy.strict_privacy blocks everything from cloud
 # ---------------------------------------------------------------------------
 
+@pytest.mark.asyncio
 async def test_strict_privacy_policy_never_allows_cloud():
     """strict_privacy policy sets max_cloud_privacy_tier='P0'.
     With >= ordinal semantics, P0(0)>=0=True, P1(1)>=0=True.
