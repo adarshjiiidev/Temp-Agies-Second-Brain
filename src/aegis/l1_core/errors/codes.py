@@ -239,6 +239,41 @@ class ErrorCode:
         "E30607", "In-flight AI request was cancelled", retryable=False
     )
 
+    # L6 Planning — Goal & Intent (E601xx)
+    PLAN_GOAL_INVALID = ErrorCodeEntry(
+        "E60101", "Goal text is empty or invalid", retryable=False
+    )
+    PLAN_AMBIGUOUS_INTENT = ErrorCodeEntry(
+        "E60102", "Intent is ambiguous — clarification required", default_severity="low", retryable=False
+    )
+
+    # L6 Planning — Decomposition (E602xx)
+    PLAN_CIRCULAR_DEPENDENCY = ErrorCodeEntry(
+        "E60201", "Circular dependency detected in task graph", default_severity="high", retryable=False
+    )
+    PLAN_DECOMPOSITION_FAILED = ErrorCodeEntry(
+        "E60202", "Goal could not be decomposed into tasks", default_severity="high", retryable=False
+    )
+
+    # L6 Planning — Strategy & Decision (E603xx)
+    PLAN_NO_VIABLE_STRATEGY = ErrorCodeEntry(
+        "E60301", "No viable planning strategy found for constraints", retryable=False
+    )
+    PLAN_CONSTRAINT_VIOLATED = ErrorCodeEntry(
+        "E60302", "Plan violates one or more hard constraints", default_severity="high", retryable=False
+    )
+
+    # L6 Planning — Planner Service (E605xx)
+    PLAN_NOT_FOUND = ErrorCodeEntry(
+        "E60501", "Plan ID not found in active session", default_severity="low", retryable=False
+    )
+    PLAN_ALREADY_CANCELLED = ErrorCodeEntry(
+        "E60502", "Plan is already cancelled", default_severity="low", retryable=False
+    )
+    PLAN_SESSION_EXPIRED = ErrorCodeEntry(
+        "E60503", "Planning session has expired", retryable=False
+    )
+
     # Generic / Uncategorized (E000xx)
     INTERNAL_ERROR = ErrorCodeEntry(
         "E00001", "Internal error — details in context", default_severity="high", retryable=False
