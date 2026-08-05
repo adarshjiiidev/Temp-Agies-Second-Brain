@@ -56,13 +56,17 @@ class TestReflectionEngine:
     def test_cycle_in_graph_creates_error(self, engine, decomposer, reflection_engine, simple_goal):
         mission = engine.create_mission(simple_goal)
         decomp = decomposer.decompose(mission)
-        graph = DependencyGraph.from_dict(decomp.graph)
-        # Manually create a cycle
-        nodes = list(graph._nodes.keys())
-        if len(nodes) >= 2:
-            graph.add_edge(nodes[-1], nodes[0])
-            report = reflection_engine.review(mission, decomp.tasks, graph)
-            assert not report.passed
+        # Build a fresh graph with a guaranteed explicit 3-node cycle so the test
+        # is not sensitive to whether the decomposed graph has parallel (disconnected) nodes.
+        cycle_graph = DependencyGraph()
+        cycle_graph.add_node("a", "Task A")
+        cycle_graph.add_node("b", "Task B")
+        cycle_graph.add_node("c", "Task C")
+        cycle_graph.add_edge("a", "b")   # b depends on a
+        cycle_graph.add_edge("b", "c")   # c depends on b
+        cycle_graph.add_edge("c", "a")   # a depends on c → cycle: a→b→c→a
+        report = reflection_engine.review(mission, decomp.tasks, cycle_graph)
+        assert not report.passed
 
     def test_complexity_score_in_range(self, engine, decomposer, reflection_engine, simple_goal):
         mission = engine.create_mission(simple_goal)
@@ -74,14 +78,16 @@ class TestReflectionEngine:
     def test_confidence_delta_negative_on_errors(self, engine, decomposer, reflection_engine, simple_goal):
         mission = engine.create_mission(simple_goal)
         decomp = decomposer.decompose(mission)
-        graph = DependencyGraph.from_dict(decomp.graph)
-        # Force a cycle to cause errors
-        nodes = list(graph._nodes.keys())
-        if len(nodes) >= 2:
-            graph.add_edge(nodes[-1], nodes[0])
-        report = reflection_engine.review(mission, decomp.tasks, graph)
-        if not report.passed:
-            assert report.confidence_delta < 0
+        # Build an explicit cycle graph — same reasoning as test_cycle_in_graph_creates_error.
+        cycle_graph = DependencyGraph()
+        cycle_graph.add_node("x", "Task X")
+        cycle_graph.add_node("y", "Task Y")
+        cycle_graph.add_edge("x", "y")
+        cycle_graph.add_edge("y", "x")   # 2-node cycle
+        report = reflection_engine.review(mission, decomp.tasks, cycle_graph)
+        # A cycle creates an error → passed=False → confidence_delta < 0
+        assert not report.passed
+        assert report.confidence_delta < 0
 
     def test_report_has_all_fields(self, engine, decomposer, reflection_engine, simple_goal):
         mission = engine.create_mission(simple_goal)

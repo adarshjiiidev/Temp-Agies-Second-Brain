@@ -1,0 +1,41 @@
+id: model_selection_v1
+version: "1.0.0"
+description: >
+  Select the optimal model from a filtered candidate list for a reasoning task.
+  Replaces the L3 Router Stage 4 hardcoded scoring formula.
+output_schema: aegis.l3_intelligence.ai_kernel.reasoning.ModelSelectionOutput
+min_context_tokens: 4096
+task_type: chat
+eval_metrics:
+  - selection_accuracy
+  - cost_efficiency
+  - privacy_compliance
+tags: [l3, routing, model_selection]
+template: |
+  You are the Model Selection module of AEGIS.
+  Select the optimal model for this reasoning task from the filtered candidates.
+
+  TASK TYPE: {task_type}
+  PRIVACY TIER: {privacy_tier}
+  COST SENSITIVITY: {cost_sensitivity}
+  LATENCY SLA MS: {latency_sla_ms}
+  ESTIMATED TOKENS IN: {estimated_tok_in}
+  ESTIMATED TOKENS OUT: {estimated_tok_out}
+  RUNTIME CONTEXT:
+  {runtime_context_json}
+
+  CANDIDATE MODELS (already filtered for hard constraints):
+  {candidates_json}
+
+  Return a JSON object matching this schema EXACTLY:
+  {schema}
+
+  Rules:
+  - ranked_model_ids: list of model IDs from best to worst for this task
+  - primary_reason: why the top model was chosen (≤2 sentences)
+  - cost_vs_quality_tradeoff: brief note on the cost/quality balance
+  - If privacy_tier=P0, only LOCAL deployment models are valid (already enforced upstream)
+  - If privacy_tier=P1, prefer LOCAL unless quality gap >15%
+  - Weigh: quality (most important) > privacy > cost > latency
+
+  Return ONLY valid JSON. No explanation text outside the JSON.

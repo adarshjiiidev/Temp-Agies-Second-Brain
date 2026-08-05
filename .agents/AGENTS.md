@@ -26,12 +26,14 @@ Architecture: 7 strict downward-only dependency layers (L1 → L7). Nothing jump
 
 ```
 L7  HCI / UI               🔲 Not started
-L6  Planning / Agents      🔲 Not started  ← NEXT milestone (Prompt 06)
-L5  Execution Engine       ✅ Complete     ← LAST completed
+L6  Planning / Agents      ✅ Complete     ← LAST completed (P06)
+L5  Execution Engine       ✅ Complete
 L4  Memory & Knowledge     ✅ Complete
 L3  AI Kernel              ✅ Complete
 L2  Foundation             ✅ Complete
 L1  Core Runtime           ✅ Complete
+
+🔷 ACTIVE DIRECTIVE: AI-Native Redesign (Architectural overhaul — awaiting approval)
 ```
 
 ---
@@ -44,10 +46,11 @@ L1  Core Runtime           ✅ Complete
 | P02 | L1 Core Runtime + L2 Foundation | ✅ DONE | 57/57 | 15 bugs fixed |
 | P03 | L3 AI Kernel | ✅ DONE | 131/131 | — |
 | P04 | L4 Memory & Knowledge | ✅ DONE | 238/238 | — |
-| P05 | L5 Execution Engine | ✅ DONE | **546/546** | Bug B-L5-001 fixed; 1 regression test added |
-| P06 | L6 Planning / Agents | 🔲 NOT STARTED | — | Awaiting directive |
+| P05 | L5 Execution Engine | ✅ DONE | 546/546 | Bug B-L5-001 fixed |
+| P06 | L6 Planning / Agents | ✅ DONE | **726/726** | 180 L6 tests added; 2 bugs fixed (intent domain, cycle detection) |
+| REDESIGN | AI-Native Architectural Overhaul | 🔷 PLAN PRODUCED | — | Migration plan awaiting user approval |
 
-> **Current verified test count: 546 passing, 0 failing, 0 skipped.**
+> **Current verified test count: 726 passing, 0 failing, 0 skipped.**
 > Run: `python -m pytest tests/ --tb=short -q`
 
 ---
@@ -59,14 +62,19 @@ AGIES/
 ├── src/aegis/
 │   ├── l1_core/              Runtime FSM, DI, Errors, Health, Supervisor
 │   ├── l2_foundation/        Config, Logging, EventBus, Crypto, Scheduler, Persistence, PluginLoader
-│   ├── l3_kernel/            ModelRouter, ProviderRegistry, Accounting, Cache, StructuredOutput, Scrubber, Keys
+│   ├── l3_intelligence/      ModelRouter, ProviderRegistry, Accounting, Cache, StructuredOutput, Scrubber, Keys
 │   ├── l4_memory/            MemoryManager, SearchEngine, ContextBuilder, Policies, Markdown loader
-│   └── l5_execution/         Pipeline, Permission, Policy, Risk, Audit, Sandbox, Executors, Rollback, Verify
+│   ├── l5_execution/         Pipeline, Permission, Policy, Risk, Audit, Sandbox, Executors, Rollback, Verify
+│   └── l6_planning/          GoalEngine, TaskDecomposer, DependencyGraph, DecisionEngine, PlannerService,
+│                             ReflectionEngine, VerificationPlanner, RecoveryPlanner, Metrics
+│                             (11 subpackages: intent, planning, decomposition, reasoning, orchestration,
+│                              strategy, reflection, state, verification, recovery, metrics)
 ├── tests/
 │   ├── integration_l1l2/     57 tests
 │   ├── integration_l3/       131 tests
 │   ├── integration_l4/       238 tests (includes P0 privacy invariant tests)
-│   └── integration_l5/       120 tests
+│   ├── integration_l5/       120 tests
+│   └── integration_l6/       180 tests
 ├── docs/
 │   ├── PROJECT_AEGIS_CURRENT_STATE.md   ← Full state (components, bugs, ADRs, verification)
 │   ├── 00_VISION.md through 10_RISKS.md ← Architecture foundation (P01 deliverables)
@@ -164,10 +172,12 @@ Append to the bottom of §8. Then update §2 (milestone status) if a prompt mile
 |------|---------------|--------------|---------------|-------|
 | 2026-08-02 | **P01** | Architecture docs, ADRs, 21-prompt roadmap written | `docs/00_VISION.md` → `docs/10_RISKS.md`, `docs/09_ROADMAP.md` | N/A |
 | 2026-08-02 | **P02** | L1 Core Runtime + L2 Foundation implemented. 15 bugs (B1–B15) fixed. | `src/aegis/l1_core/`, `src/aegis/l2_foundation/`, `tests/integration_l1l2/`, `examples/` | 57/57 ✅ |
-| 2026-08-02 | **P03** | L3 AI Kernel: model router, provider registry, accounting, cache, structured output, scrubber, key manager. | `src/aegis/l3_kernel/`, `tests/integration_l3/` | 131/131 ✅ |
+| 2026-08-02 | **P03** | L3 AI Kernel: model router, provider registry, accounting, cache, structured output, scrubber, key manager. | `src/aegis/l3_intelligence/`, `tests/integration_l3/` | 131/131 ✅ |
 | 2026-08-02 | **P04** | L4 Memory & Knowledge: MemoryManager (T0–T8), SearchEngine, ContextBuilder, Policies, Markdown loader, P0 privacy invariant. | `src/aegis/l4_memory/`, `tests/integration_l4/` | 238/238 ✅ |
 | 2026-08-02 | **P05** | L5 Execution Engine: 7-stage pipeline, PermissionEngine, PolicyEngine, RiskAnalyzer, AuditChain, SandboxManager, 10 executors, RollbackEngine, PostExecVerifier. | `src/aegis/l5_execution/`, `tests/integration_l5/` | 545/545 ✅ (before fix) |
 | 2026-08-02 | **P05 Recovery** (B-L5-001) | Fixed `builtin-shell-sandbox` policy rule: `SANDBOX_REQUIRED` → `NEEDS_APPROVAL`. Added 2 regression tests. Removed 30 spurious asyncio marks from L4 sync tests. Updated `PROJECT_AEGIS_CURRENT_STATE.md`. | `src/aegis/l5_execution/policy/rules.py`, `tests/integration_l5/test_pipeline.py`, `tests/integration_l4/test_policies.py`, `tests/integration_l4/test_privacy_p0.py`, `docs/PROJECT_AEGIS_CURRENT_STATE.md`, `.agents/AGENTS.md` | **546/546 ✅** |
+| 2026-08-04 | **P06** | L6 Planning Engine: GoalEngine, TaskDecomposer, DependencyGraph, DecisionEngine, ScoringEngine, PlannerService, ReflectionEngine, VerificationPlanner, RecoveryPlanner, IntentParser, AmbiguityDetector, RequirementExtractor. 11 subpackages. Fixed syntax bug in ambiguity_detector.py (f-string !r in generator). Fixed 2 test failures (browser domain keyword, cycle detection). | `src/aegis/l6_planning/` (all 11 subpackages), `tests/integration_l6/` (180 tests), `src/aegis/l1_core/errors/codes.py` (L6 error codes) | **726/726 ✅** |
+| 2026-08-04 | **Architectural Redesign Directive** | Full repo audit performed. Migration plan produced: 27 files require redesign, 3 new component directories to create (prompts/, reasoning/, capabilities/). 6 migration phases (A–F). Awaiting user approval before implementation. | `.agents/AGENTS.md` (this file), `docs/PROJECT_AEGIS_CURRENT_STATE.md` | 726/726 ✅ (no code changes) |
 
 ---
 
@@ -176,18 +186,24 @@ Append to the bottom of §8. Then update §2 (milestone status) if a prompt mile
 ### Before doing ANYTHING:
 1. Read this file.
 2. Read `docs/PROJECT_AEGIS_CURRENT_STATE.md` for full component detail.
-3. Run `python -m pytest tests/ --tb=short -q` and confirm it matches the test count in §2.
-4. Read the user's directive carefully. Do NOT begin a new milestone without explicit authorisation.
+3. Run `python -m pytest tests/ --tb=short -q` and confirm **726 tests pass**.
+4. Read the user's directive carefully. Do NOT begin implementation without explicit authorisation.
 
-### If you are asked to start Prompt 06 (L6 Planning / Agents):
-- Read `docs/09_ROADMAP.md` section on P06.
-- Scope: L6 Planning layer only. No changes to L1–L5.
-- Add tests to `tests/integration_l6/`.
-- Update §2 and §8 of this file when complete.
+### Active Directive: AI-Native Architectural Redesign
+- Full migration plan is in `.agents/AGENTS.md §8` (session log) and the implementation plan artifact.
+- **DO NOT implement anything until the user explicitly approves the migration plan.**
+- The plan is a 6-phase migration (A→F). Phase A is lowest risk (scaffolding only).
+- Key decisions still open (see implementation plan §Open Questions):
+  - Which LLM to use for L6 reasoning calls?
+  - Where to store prompts (`src/aegis/prompts/` vs top-level `prompts/`)?
+  - Approved migration order (L6 first → L4 → L3 → L5 → L1/L2)?
+  - MockReasoningProvider for tests — approved?
 
 ### Architecture red lines (never cross without explicit ADR):
-- L-layer dependencies must be downward only (L5 may import from L4 and below; never upward)
+- L-layer dependencies must be downward only (L6 imports L5 and below; never upward)
 - No LLM calls in L1/L2/L5
 - No cloud data transmission of P0/P1 data
-- All actions through the 7-stage pipeline — no shortcuts
+- All actions through the L5 7-stage pipeline — no shortcuts
 - All errors must be `AegisError` subclasses with proper error codes
+- AI reasoning results must be validated against deterministic safety floors (especially L5 risk assessment)
+- Every AI reasoning module must have a deterministic offline fallback

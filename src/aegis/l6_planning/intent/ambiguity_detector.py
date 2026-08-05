@@ -120,7 +120,7 @@ class AmbiguityDetector:
         vague = [w for w in ["something", "stuff", "things", "some"] if w in intent.raw_text.lower().split()]
         if vague:
             questions.append(ClarificationQuestion(
-                question=f"Your goal contains vague terms ({', '.join(vague!r for vague in vague)}). Could you be more specific?",
+                question=f"Your goal contains vague terms ({', '.join(repr(w) for w in vague)}). Could you be more specific?",
                 context="Precise goals lead to better plans.",
                 options=[],
                 required=False,

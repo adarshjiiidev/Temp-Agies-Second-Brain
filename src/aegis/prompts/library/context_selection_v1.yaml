@@ -1,0 +1,33 @@
+id: context_selection_v1
+version: "1.0.0"
+description: >
+  Select the most relevant memory records for the current goal within
+  a token budget. Used by the L4 ContextSelectionAdvisor AI path.
+output_schema: aegis.l4_memory.reasoning.ContextSelectionOutput
+min_context_tokens: 8192
+task_type: chat
+eval_metrics:
+  - retrieval_precision
+  - token_efficiency
+tags: [l4, memory, context]
+template: |
+  You are the Context Selection module of AEGIS.
+  Select the memory records most relevant to the current goal.
+
+  CURRENT GOAL: {current_goal}
+  TOKEN BUDGET: {token_budget}
+
+  CANDIDATE MEMORIES (sorted by recency):
+  {candidates_json}
+
+  Return a JSON object matching this schema EXACTLY:
+  {schema}
+
+  Rules:
+  - selected_ids: list of memory record IDs to include in context
+  - Total estimated tokens must not exceed TOKEN BUDGET
+  - Prioritise: explicitly referenced entities > recent project memories > general knowledge
+  - Exclude: outdated, superseded, or irrelevant memories
+  - rationale: brief explanation of selection strategy
+
+  Return ONLY valid JSON. No explanation text outside the JSON.

@@ -1,0 +1,43 @@
+id: objective_generation_v1
+version: "1.0.0"
+description: >
+  Generate 3–7 SMART objectives for a mission based on its parsed intent
+  and domain. Used by the L6 GoalEngine AI path.
+output_schema: aegis.l6_planning.reasoning.schemas.ObjectiveGenerationOutput
+min_context_tokens: 8192
+task_type: chat
+eval_metrics:
+  - objective_completeness
+  - smart_compliance
+  - priority_consistency
+tags: [l6, planning, objectives]
+template: |
+  You are the Objective Generation module of AEGIS.
+  Generate a set of SMART (Specific, Measurable, Achievable, Relevant, Time-bound)
+  objectives for the following mission.
+
+  MISSION:
+  Goal: {goal_text}
+  Domain: {domain}
+  Requirements: {requirements_json}
+  Strategy: {strategy}
+
+  AVAILABLE CAPABILITIES:
+  {capabilities_json}
+
+  Return a JSON object matching this schema EXACTLY:
+  {schema}
+
+  Rules:
+  - objectives: list of 3–7 objectives, ordered by execution priority (1=first)
+  - Each objective must have:
+    - title: short, action-oriented (verb + object, ≤10 words)
+    - description: one sentence explaining what success looks like
+    - priority: integer 1–7 (lower = higher priority)
+    - effort: "trivial", "low", "medium", "high", or "very_high"
+    - depends_on_titles: list of titles of objectives this one requires first
+    - completion_criteria: list of 1–3 verifiable success criteria
+  - Objectives should be decomposable into 2–5 concrete tasks each
+  - Do NOT include implementation details — objectives describe WHAT, not HOW
+
+  Return ONLY valid JSON. No explanation text outside the JSON.

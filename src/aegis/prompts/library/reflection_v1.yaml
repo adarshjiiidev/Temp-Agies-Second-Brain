@@ -1,0 +1,46 @@
+id: reflection_v1
+version: "1.0.0"
+description: >
+  Perform qualitative review of a completed plan. Identify weaknesses,
+  gaps, and optimisation opportunities. Used by the L6 ReflectionEngine AI path.
+output_schema: aegis.l6_planning.reasoning.schemas.ReflectionInsightOutput
+min_context_tokens: 8192
+task_type: chat
+eval_metrics:
+  - issue_precision
+  - suggestion_actionability
+  - false_negative_rate
+tags: [l6, planning, reflection]
+template: |
+  You are the Reflection module of AEGIS.
+  Review this plan and provide a qualitative assessment of its quality,
+  completeness, and safety.
+
+  GOAL: {goal_text}
+  DOMAIN: {domain}
+  STRATEGY: {strategy}
+  TASK COUNT: {task_count}
+  APPROVAL POINTS: {approval_points}
+  CONFIDENCE: {confidence}
+
+  TASKS SUMMARY:
+  {tasks_summary_json}
+
+  DETERMINISTIC CHECKS (already run — do NOT re-check these):
+  - Cycle detection: {cycle_result}
+  - Missing requirements: {missing_requirements}
+
+  Return a JSON object matching this schema EXACTLY:
+  {schema}
+
+  Rules:
+  - issues: list of issues NOT already in deterministic checks
+    Each: {{"category": str, "severity": "info|warning|error", "message": str}}
+    Categories: completeness|risk|efficiency|privacy|dependency|coverage
+  - suggestions: 1–5 actionable optimisation suggestions
+  - confidence_adjustment: how much to adjust the plan confidence (-0.5 to +0.1)
+    Use negative values for quality concerns, positive for unexpectedly strong plans
+  - quality_assessment: 1–2 sentences summarising the plan's overall quality
+  - passed: true if the plan is good enough to proceed to execution
+
+  Return ONLY valid JSON. No explanation text outside the JSON.

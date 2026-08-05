@@ -1,0 +1,40 @@
+id: verification_criteria_v1
+version: "1.0.0"
+description: >
+  Generate concrete verification criteria for each task in a plan.
+  Defines what success looks like and how to check it.
+  Used by the L6 VerificationPlanner AI path.
+output_schema: aegis.l6_planning.reasoning.schemas.VerificationCriteriaOutput
+min_context_tokens: 8192
+task_type: chat
+eval_metrics:
+  - criterion_specificity
+  - automation_rate
+  - severity_calibration
+tags: [l6, planning, verification]
+template: |
+  You are the Verification Planning module of AEGIS.
+  Define concrete verification criteria for each task in this plan.
+  Verification happens AFTER task execution to confirm success.
+
+  GOAL: {goal_text}
+  STRATEGY: {strategy}
+
+  TASKS:
+  {tasks_json}
+
+  Return a JSON object matching this schema EXACTLY:
+  {schema}
+
+  Rules:
+  - criteria: one or more verification criteria per task
+  - Each criterion:
+    - task_title: must exactly match a task title from the TASKS list
+    - check_description: concrete, testable description (not "check if it works")
+    - check_type: output_exists|assertion|manual_review|idempotency|performance|security
+    - severity: info|warning|error|critical (critical = plan fails if check fails)
+    - automated: true if this can be checked programmatically
+  - overall_strategy: brief description of how to verify the whole plan end-to-end
+  - At minimum, every task with risk_level>=high must have a critical criterion
+
+  Return ONLY valid JSON. No explanation text outside the JSON.

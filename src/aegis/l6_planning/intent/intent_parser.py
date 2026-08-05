@@ -40,8 +40,9 @@ _DOMAIN_KEYWORDS: list[tuple[IntentDomain, list[str]]] = [
     ]),
     (IntentDomain.BROWSER, [
         "browse", "website", "web page", "url", "navigate", "search online",
-        "download from", "fill form", "click", "scrape", "crawl",
+        "download from", "fill form", "click", "scrape", "crawl", "web",
     ]),
+
     (IntentDomain.FILESYSTEM, [
         "file", "folder", "directory", "path", "move", "copy", "rename",
         "delete file", "organize", "organise", "vault", "obsidian",

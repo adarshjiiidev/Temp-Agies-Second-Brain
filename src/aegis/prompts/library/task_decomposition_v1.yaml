@@ -1,0 +1,52 @@
+id: task_decomposition_v1
+version: "1.0.0"
+description: >
+  Decompose a set of objectives into concrete, executable tasks with
+  dependencies, action types, risk levels, and time estimates.
+  Used by the L6 TaskDecomposer AI path.
+output_schema: aegis.l6_planning.reasoning.schemas.TaskDecompositionOutput
+min_context_tokens: 8192
+task_type: chat
+eval_metrics:
+  - task_granularity
+  - action_hint_accuracy
+  - risk_calibration
+  - dependency_soundness
+tags: [l6, planning, decomposition]
+template: |
+  You are the Task Decomposition module of AEGIS.
+  Decompose the following objectives into concrete, executable tasks.
+
+  MISSION GOAL: {goal_text}
+  DOMAIN: {domain}
+  STRATEGY: {strategy}
+
+  OBJECTIVES:
+  {objectives_json}
+
+  REQUIREMENTS:
+  {requirements_json}
+
+  AVAILABLE CAPABILITIES:
+  {capabilities_json}
+
+  Return a JSON object matching this schema EXACTLY:
+  {schema}
+
+  Rules:
+  - tasks: list of 2–5 tasks PER objective (total 6–30 tasks)
+  - Each task must have:
+    - title: short, imperative (verb + object, ≤12 words)
+    - action_hint: L5 action kind prefix (fs.read, fs.write, shell.exec,
+      network.http, docker.run, git.commit, code.analyse, browser.navigate,
+      file.search, data.transform, report.generate)
+    - estimated_seconds: realistic time estimate (60–7200)
+    - risk_level: low|medium|high|critical
+      (critical=irreversible; high=shell/docker; medium=write; low=read)
+    - requires_approval: true only if risk is high or critical
+    - can_run_parallel: true if this task has no dependency on others
+  - dependency_order: list of task titles in recommended execution order
+  - Tasks should map to real L5 executor capabilities
+  - Do NOT include tasks that require human input beyond approval points
+
+  Return ONLY valid JSON. No explanation text outside the JSON.
