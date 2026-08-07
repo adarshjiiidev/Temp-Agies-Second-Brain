@@ -1,5 +1,10 @@
 # Project AEGIS — Master Audit Report
 
+> ## ⚠️ SUPERSEDED (2026-08-07)
+> This report reflects the repository at Prompt 02 (L1/L2). The repository now implements **L1–L6 plus
+> redesign packages**. The full suite also currently **hangs at L5**. For the current truth see
+> [`AEGIS_MASTER_AUDIT.md`](./AEGIS_MASTER_AUDIT.md). Retained for historical record.
+
 ## Executive summary
 
 Project AEGIS currently contains a working Prompt 02 core runtime foundation for the Python package, with L1/L2 modules implemented and exercised by integration tests. The repository is not yet a full autonomous AI operating system; it is a solid runtime scaffold with lifecycle, DI, error handling, health, recovery, eventing, telemetry, configuration, persistence stubs, and plugin-loader primitives.

@@ -1,5 +1,9 @@
 # AEGIS — Continuation Handoff (Prompt 02 → Next Session)
 
+> ## ⚠️ HISTORICAL — PROMPT 02 SCOPE ONLY
+> The repository has since advanced to **L1–L6 + redesign pkgs**, and the full test suite **hangs at L5**.
+> For current truth see [`AEGIS_MASTER_AUDIT.md`](./AEGIS_MASTER_AUDIT.md).
+
 _Use this document to start work without conversation context. All info needed is below._
 
 ---

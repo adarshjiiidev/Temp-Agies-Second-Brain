@@ -219,6 +219,41 @@ async def test_fs_delete_with_confirmed(pipeline, tmp_path):
         ExecutionStatus.DENIED,
     )
 
+@pytest.mark.asyncio
+async def test_fs_search_respects_max_results(pipeline, tmp_path):
+    """FS_SEARCH must stop collecting after max_results matches (lazy walk fix)."""
+    await _grant_all(pipeline)
+    # Create 20 .txt files in tmp_path
+    for i in range(20):
+        (tmp_path / f"file_{i}.txt").write_text(f"content {i}")
+
+    result = await pipeline.execute(make_action(
+        ActionKind.FS_SEARCH,
+        resource=f"fs:{tmp_path}",
+        parameters={"root": str(tmp_path), "pattern": "*.txt", "max_results": 5, "recursive": False},
+    ))
+    assert result.succeeded, result.error
+    assert result.output["count"] == 5
+    assert len(result.output["matches"]) == 5
+    assert result.output["truncated"] is True
+
+
+@pytest.mark.asyncio
+async def test_fs_search_large_root_terminates(pipeline, tmp_path):
+    """FS_SEARCH on an empty dir must complete immediately (termination guarantee)."""
+    await _grant_all(pipeline)
+    empty_dir = tmp_path / "empty_search_dir"
+    empty_dir.mkdir()
+
+    result = await pipeline.execute(make_action(
+        ActionKind.FS_SEARCH,
+        resource=f"fs:{empty_dir}",
+        parameters={"root": str(empty_dir), "pattern": "*.txt", "max_results": 5, "recursive": False},
+    ))
+    assert result.succeeded, result.error
+    assert result.output["count"] == 0
+    assert result.output["truncated"] is False
+
 
 # -----------------------------------------------------------------------
 # Python executor happy paths
@@ -291,7 +326,7 @@ _E2E_ACTIONS = [
     (ActionKind.FS_READ,   {"path": "~/nonexistent_path_123.txt"}),
     (ActionKind.FS_MKDIR,  {}),
     (ActionKind.FS_HASH,   {}),
-    (ActionKind.FS_SEARCH, {"root": "~", "pattern": "*.txt", "max_results": 5}),
+    (ActionKind.FS_SEARCH, {"root": "~/nonexistent_search_root_xyz", "pattern": "*.txt", "max_results": 5}),
     (ActionKind.PYTHON_EVAL, {"code": "x = 1"}),
     (ActionKind.GIT_STATUS,  {"repo": "."}),
 ]

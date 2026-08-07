@@ -1,5 +1,10 @@
 # HANDOFF FOR NEXT CODING AGENT — PROJECT AEGIS
 
+> ## ⚠️ SUPERSEDED (2026-08-07)
+> Written when P04 was "next". The repository now implements **L1–L6 + redesign pkgs**, and the
+> full test suite **hangs at L5**. For the current truth see
+> [`AEGIS_MASTER_AUDIT.md`](./AEGIS_MASTER_AUDIT.md). Retained for historical record.
+
 **Handoff Date:** 2026-07-27  
 **Current State:** Prompts 01, 02, 03 are 100% COMPLETE and VERIFIED.  
 **Next Prompt:** Prompt 04 — L4 Memory Layer (episodic, semantic, working memory).

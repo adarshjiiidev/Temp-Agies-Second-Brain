@@ -1,21 +1,33 @@
 {
   "project": "AEGIS",
   "project_full_name": "Adaptive Executive Governance & Intelligence System",
-  "current_milestone": "Prompt 02 - Core Runtime",
-  "status": "implemented_and_verified",
+  "current_milestone_docs": "Prompt 02 - Core Runtime",
+  "current_state_actual": "L1-L6 implemented plus redesign packages (reasoning, prompts, capabilities)",
+  "status": "L1-L6 present; full test suite does not complete (hangs at L5)",
+  "audit_report": "docs/AEGIS_MASTER_AUDIT.md",
   "verification": {
     "python_environment": "venv",
-    "tests": {
-      "command": "python -m pytest tests/ --tb=no -q",
-      "result": "46 passed in 1.33s"
+    "tests_collected": 791,
+    "tests_l1l2": "57 passed",
+    "tests_l3": "256 passed",
+    "tests_l4": "130 passed",
+    "tests_l5": "HANGS at test_pipeline.py::test_50_e2e_actions_all_produce_audit",
+    "tests_l6": "not runnable (blocked by L5 hang)",
+    "import_check": {
+      "command": "python -c \"import aegis; print('OK', len(dir(aegis)))\"",
+      "result": "OK 87"
+    },
+    "ruff_check": {
+      "command": "ruff check src/aegis tests examples",
+      "result": "642 issues"
     },
     "example": {
       "command": "python examples/runtime_lifecycle.py",
       "result": "completed successfully with success banner"
     },
-    "import_check": {
-      "command": "python -c \"import aegis; print('OK', len(dir(aegis)))\"",
-      "result": "OK 87"
+    "rust_crates": {
+      "status": "UNVERIFIED - cargo/rustc not installed on host",
+      "note": "crates do not compile (missing rand/tempfile deps, aegis_crypto syntax errors) once toolchain available"
     }
   },
   "implemented_modules": [
@@ -32,17 +44,34 @@
     "l2_foundation.crypto.vault",
     "l2_foundation.scheduler.background",
     "l2_foundation.persistence.sql",
-    "l2_foundation.plugin_loader.loader"
-  ],
-  "deferred_or_scaffolded": [
+    "l2_foundation.plugin_loader.loader",
     "l3_intelligence.ai_kernel",
     "l4_memory",
-    "l5_capability",
-    "l6_cognitive",
-    "l7_hci"
+    "l5_execution",
+    "l6_planning",
+    "reasoning",
+    "prompts",
+    "capabilities"
+  ],
+  "deferred_or_scaffolded": [
+    "l7_hci",
+    "T4 Firecracker sandbox (P08+)",
+    "Rust FFI dYzn bindings (cargo unavailable)",
+    "AI reasoning provider wiring (reasoning/ kernels broken/missing on AIKernel)"
+  ],
+  "critical_findings": [
+    "Full test suite hangs at tests/integration_l5/test_pipeline.py::test_50_e2e_actions_all_produce_audit",
+    "KernelReasoningProvider calls kernel.has_models()/infer_text() which do not exist on AIKernel",
+    "Rust crates do not compile (missing rand/tempfile; aegis_crypto syntax errors)",
+    "t_ast.py timeout is fake (returns UNSOLVED; T4 tests loop)",
+    "vault.py has zero-key fallback path",
+    "ai_kernel registry quality_score_for double-counts reliability",
+    "import-linter contracts in pyproject reference stale package names",
+    "all 8 git commits titled 'Initial Commit' - no history narrative"
   ],
   "notes": [
-    "The test suite required the anyio and pytest-anyio packages to be installed in the environment before collection would succeed.",
-    "Rust crates are present but not yet verified with cargo because the Rust toolchain was not available on this host."
+    "This file reflects the live 2026-08-07 audit (docs/AEGIS_MASTER_AUDIT.md). It supersedes the earlier L1/L2-only current_state record.",
+    "Docs historically describe the project as L1+L2 only; code implements L1-L6 + redesign. Code is authoritative.",
+    "roadmap defines 23 prompts (not 21)."
   ]
 }

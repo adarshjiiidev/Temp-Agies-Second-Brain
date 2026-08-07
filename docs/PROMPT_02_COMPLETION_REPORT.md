@@ -1,5 +1,10 @@
 # PROMPT 02 — CORE RUNTIME: FINAL COMPLETION REPORT
 
+> ## ⚠️ HISTORICAL — PROMPT 02 SCOPE ONLY
+> Describes only the L1/L2 milestone. The repository has since advanced to **L1–L6 + redesign pkgs**.
+> The full test suite currently **hangs at L5**. For current truth see
+> [`AEGIS_MASTER_AUDIT.md`](./AEGIS_MASTER_AUDIT.md).
+
 _Milestone deliverable per directive §22 — 14 sections. All verification performed 2026-07-25 on host, repository HEAD at Prompt 02 completion._
 
 ---

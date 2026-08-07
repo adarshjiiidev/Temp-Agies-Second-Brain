@@ -1,6 +1,18 @@
 # PROJECT AEGIS — CURRENT STATE
 
-_Last updated: Prompt 05 Recovery & Stabilization. Treat as source of truth for repository state between conversation sessions._
+> ## ⚠️ SUPERSEDED / OUT OF DATE — READ THIS FIRST
+>
+> On **2026-08-07** a full repository audit was performed (see [`AEGIS_MASTER_AUDIT.md`](./AEGIS_MASTER_AUDIT.md)).
+> This file was accurate as of the Prompt 05 Recovery milestone, but the repository has since **moved on**:
+> - **L6 is now implemented** (this file's §1/§2 say "L6 NOT STARTED / Prompt 06 not authorised") — this is WRONG.
+> - The full test suite **was hanging at L5 integration — FIXED on 2026-08-07 (STAB-01)**. It now completes
+>   (~8s): 793 tests on system python, 782 on `.venv` python (pytest/pytest-anyio collection difference).
+> - Ruff is now **642** issues (this file says 281).
+> - The roadmap defines **23** prompts, not 21.
+> - Redesign packages (`reasoning`, `prompts`, `capabilities`) exist on disk.
+>
+> **The repository is the source of truth.** For current numbers use `AEGIS_MASTER_AUDIT.md`. The detailed
+> component inventory (§3) below remains largely useful and is retained for reference.
 
 ## 1. Project Status
 
@@ -8,11 +20,12 @@ _Last updated: Prompt 05 Recovery & Stabilization. Treat as source of truth for 
 |---|---|
 | Project Code Name | AEGIS (Adaptive Executive Governance & Intelligence System) |
 | Full Name | Personal Adaptive AI Operating System |
-| Current Milestone | **Prompt 05 — Execution Engine** (COMPLETE, verified) |
-| Next Milestone | Prompt 06 (NOT started; awaiting explicit directive) |
-| Total Prompts Planned | 21 per roadmap (docs/09_ROADMAP.md) |
-| Working Baseline | HEAD (all fixes applied and verified) |
-| Repository Health | **546/546 tests passing** (0 failures, 0 skipped); ruff 281 pre-existing warnings; mypy blocked by Windows policy; cargo not installed |
+| Current Milestone (docs) | **Prompt 05 — Execution Engine** (COMPLETE, verified) |
+| Actual State | **L1–L6 + redesign pkgs implemented** (see top banner + AEGIS_MASTER_AUDIT.md) |
+| Next Milestone | Prompt 07 (awaits explicit directive) |
+| Total Prompts Planned | 23 per roadmap (docs/09_ROADMAP.md) |
+| Working Baseline | HEAD (all fixes applied) |
+| Repository Health | **Full suite passes (~8s) since 2026-08-07 STAB-01: 793 tests on system python (782 on `.venv` python); ruff 642; mypy blocked by Windows policy; cargo not installed** |
 
 ---
 
@@ -25,7 +38,7 @@ _Last updated: Prompt 05 Recovery & Stabilization. Treat as source of truth for 
 | P03 | AI Kernel (L3) | ✅ COMPLETE | 131/131 | Router, registry, accounting, cache, structured output, scrubber, keys |
 | P04 | Memory & Knowledge (L4) | ✅ COMPLETE | 238/238 | Store, graph, context, search, policies, markdown, P0 invariants |
 | P05 | Execution Engine (L5) | ✅ COMPLETE | 120/120 | Pipeline, permission, policy, audit, sandbox, executors, rollback; 1 bug fixed (B-L5-001) |
-| P06 | Planning (L6) | 🔲 NOT STARTED | — | Awaiting explicit directive |
+| P06 | Planning (L6) | ✅ IMPLEMENTED (post-P05 Recovery audit) | 180 | Planning engine, 11 subpackages; full suite passes since 2026-08-07 STAB-01 |
 
 ### Layer Boundary (Verified)
 
@@ -36,7 +49,7 @@ _Last updated: Prompt 05 Recovery & Stabilization. Treat as source of truth for 
 | L3 | AI Kernel | ✅ Complete + Verified |
 | L4 | Memory / Knowledge | ✅ Complete + Verified |
 | L5 | Execution Engine | ✅ Complete + Verified |
-| L6 | Planning / Agents | 🔲 NOT STARTED |
+| L6 | Planning / Agents | ✅ Implemented (see top banner) |
 | L7 | HCI / UI | 🔲 NOT STARTED |
 
 ---
@@ -181,10 +194,13 @@ _Rust verification status: BLOCKED — cargo.exe not on PATH. Install Rust toolc
 
 ## 4. Incomplete Components
 
-_All components through L5 (Prompts 01–05) are COMPLETE with passing test coverage._
+_Components through L5 implement a verified 7-stage pipeline. The full suite was found hanging at L5
+integration in the 2026-08-07 audit; that hang was FIXED (STAB-01, same day) and the full suite now passes.
+L6 was implemented after this file's last update._
 
-**Not yet started (L6+):**
-- L6 Planning / Agents — Prompt 06 (not authorised)
+**Not yet started / incomplete:**
+- AI reasoning provider wiring (`reasoning/` kernels broken/missing on `AIKernel`)
+- Rust FFI crates — unverified (no Cargo); fail to compile once toolchain available
 - L7 HCI / UI — future milestone
 - T4 Firecracker sandbox — planned P08+
 - Approval token pre-auth mechanism — planned (see TD-06)
@@ -341,20 +357,16 @@ C:\Users\adars\Projects\AGIES
 
 ## 9. Next Milestone
 
-**NEXT MILESTONE: Prompt 06 — Planning / Agents (L6)**
+**Suggested NEXT MILESTONE: Prompt 07 (adaptive/personal learning) — or continue stabilization of the `reasoning` provider / Rust crates first.**
 
-_Requires EXPLICIT user authorisation in a new directive. Prompt 05 is COMPLETE._
+_See top banner + `AEGIS_MASTER_AUDIT.md` §5 for recommended remediation. The L5-suite hang is FIXED (STAB-01); redesign-package wiring remains._
 
 ---
 
-## 10. STOP CONDITION
+## 10. STOP CONDITION (historical — Prompt 05 Recovery)
 
-✅ Prompt 05 (Execution Engine) has been:
-  1. Full repository re-audit against codebase (not conversation history)
-  2. Complete test suite executed: 546/546 passing
-  3. Root cause analysis: 1 bug (B-L5-001) identified, traced, fixed, regression tests added
-  4. Warning cleanup: spurious asyncio marks removed from L4 sync tests (30 warnings eliminated)
-  5. Verification: import sanity, policy rule assertion, both regression tests pass
-  6. Documentation: PROJECT_AEGIS_CURRENT_STATE.md updated, final handoff produced
-
-🛑 **STOP NOW.** Do not begin Prompt 06. Await explicit milestone directive.
+Prior Prompt 05 status (superseded by the 2026-08-07 audit):
+  1. Prompt 05 bug B-L5-001 fixed (`builtin-shell-sandbox` rule `SANDBOX_REQUIRED` → `NEEDS_APPROVAL`), regression tests added.
+  2. Verification commands at that time reported 546/546 passing — since superseded; the suite later
+     hung at L5, which STAB-01 (2026-08-07) fixed (793 system python / 782 venv).
+  3. Post-STAB-01 the full-suite green baseline is restored and current.

@@ -2,8 +2,13 @@
 
 **Document ID:** AEGIS-DOC-010
 **Version:** 0.1.0 (Prompt 01 Foundation)
-**Status:** DRAFT — Architecture Phase Only
-**Last Updated:** 2026-07-24
+**Status:** 🟢 SUPERSEDED-IN-PROGRESS — 23 prompts defined; P01–P06 implemented (L1–L6). See top banner.
+**Last Updated:** 2026-07-24 (orig) / 2026-08-07 (status reconciliation)
+
+> **STATUS AS OF 2026-08-07 (see `AEGIS_MASTER_AUDIT.md`):** Prompts 01–06 (L1 through L6) are
+> implemented in the repository. P07+ (adaptive/personal, HCI, production hardening) remain NOT started.
+> This roadmap defines **23** prompts (not 21). The per-prompt status lines below are echoed from the
+> original Prompt-01 draft and are annotated where the repository differs.
 
 ---
 
@@ -50,7 +55,7 @@ Rule 5 — **Prompt 01 is unique.** Prompt 01 is documentation/architecture only
 ## 3. PER-PROMPT DETAIL — WHAT SHIPS, SUCCESS CRITERIA, EXIT GATE
 
 ### PROMPT 01 — VISION & TECHNICAL FOUNDATION
-**Status:** In Progress (this document is Prompt 01)
+**Status:** ✅ DONE (11 docs under `docs/`)
 **What ships:**
 - 11 architecture & strategy documents under `docs/` (00_VISION through 10_RISKS)
 - No implementation code, no fake stubs, no skeleton plugins
@@ -70,6 +75,7 @@ Rule 5 — **Prompt 01 is unique.** Prompt 01 is documentation/architecture only
 ---
 
 ### PROMPT 02 — CORE RUNTIME
+**Status:** ✅ DONE (L1 + L2; 57 tests)
 **Primary modules:** L1 (runtime, supervisor, interfaces, errors, health) + L2 (event_bus, config, secrets_vault + crypto, persistence I/F, plugin_loader, telemetry, scheduler)
 **Rust crates:** `aegis_crypto` AEAD encryption; `aegis_audit_chain` skeleton; `aegis_ffi_common` types
 **What ships:**
@@ -100,6 +106,7 @@ Rule 5 — **Prompt 01 is unique.** Prompt 01 is documentation/architecture only
 ---
 
 ### PROMPT 03 — AI KERNEL
+**Status:** ✅ DONE (L3; 256 tests)
 **Primary modules:** L3 ai_kernel (router, providers/base/ollama/openrouter/groq/vllm, structured, cost, prompts library)
 **What ships:**
 - `LLMProvider` interface with full typed signature; `EmbeddingProvider` interface
@@ -126,6 +133,7 @@ Rule 5 — **Prompt 01 is unique.** Prompt 01 is documentation/architecture only
 ---
 
 ### PROMPT 04 — MEMORY & KNOWLEDGE ENGINE
+**Status:** ✅ DONE (L4; 130 tests)
 **Primary modules:** L4 full: memory_engine (9 tiers), vector, knowledge_graph, environment (scanner), meta_memory
 Rust crates: `aegis_store` high-performance index FFI (baseline)
 **What ships:**
@@ -151,6 +159,7 @@ Rust crates: `aegis_store` high-performance index FFI (baseline)
 ---
 
 ### PROMPT 05 — EXECUTION KERNEL
+**Status:** ✅ DONE (L5; note suite currently hangs at L5 integration — see audit report)
 **Primary modules:** L3 full (permission, policy, execution, sandbox, audit, verification)
 Rust crates: `aegis_sandbox` T1/T2 enforcement; `aegis_audit_chain` full
 **What ships:**
@@ -176,6 +185,7 @@ Rust crates: `aegis_sandbox` T1/T2 enforcement; `aegis_audit_chain` full
 ---
 
 ### PROMPT 06 — COGNITIVE PLANNING ENGINE
+**Status:** ✅ DONE (L6; 180 tests)
 **Primary modules:** L6 planner
 **What ships:**
 - Intent → typed Goal → Subgoals → Tasks → typed Actions decomposition
@@ -197,6 +207,7 @@ Rust crates: `aegis_sandbox` T1/T2 enforcement; `aegis_audit_chain` full
 ---
 
 ### PROMPT 07 — ADAPTIVE INTELLIGENCE & PERSONAL ENVIRONMENT LEARNING
+**Status:** 🔲 NOT STARTED (next milestone after L6)
 **Primary modules:** L6 adaptive (observers, workflow inference, preference learner) + enriched L4 environment
 **What ships:**
 - Environment Model graph: hardware, OS, apps, projects, repos, files, workspaces, devices, tools, accounts

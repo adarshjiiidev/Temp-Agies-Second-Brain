@@ -306,19 +306,29 @@ class FilesystemExecutor:
         pattern = p.get("pattern", "*")
         recursive = p.get("recursive", True)
         max_results = p.get("max_results", 200)
+        max_seconds = float(p.get("max_seconds", 10.0))
 
         if not root.exists():
             raise ExecutorError(f"Search root not found: {root}")
 
-        if recursive:
-            matches = list(root.rglob(pattern))
-        else:
-            matches = list(root.glob(pattern))
+        # Lazy walk: stop as soon as max_results matches are found, or the
+        # wall-clock budget expires. Materialising the full result set is
+        # unbounded and can take minutes on large/networked roots.
+        iterable = root.rglob(pattern) if recursive else root.glob(pattern)
+        deadline = time.monotonic() + max_seconds
 
-        matches = matches[:max_results]
+        matches: list[str] = []
+        for match in iterable:
+            if time.monotonic() > deadline:
+                break
+            matches.append(str(match))
+            if len(matches) >= max_results:
+                break
+
         return {
             "root": str(root),
             "pattern": pattern,
-            "matches": [str(m) for m in matches],
+            "matches": matches,
             "count": len(matches),
+            "truncated": len(matches) >= max_results or time.monotonic() > deadline,
         }

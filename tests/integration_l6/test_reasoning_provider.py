@@ -525,8 +525,8 @@ class TestStrategyMapping:
             ("research_mode", PlanningStrategy.RESEARCH_MODE),
             ("privacy_first", PlanningStrategy.PRIVACY_FIRST),
             ("offline_first", PlanningStrategy.OFFLINE_FIRST),
-            ("speed_first", PlanningStrategy.SPEED_FIRST),
-            ("safe_mode", PlanningStrategy.SAFE_MODE),
+            ("speed_first", PlanningStrategy.FASTEST),
+            ("safe_mode", PlanningStrategy.BALANCED),
         ]
         for ai_str, expected in cases:
             assert _parse_strategy(ai_str, None) == expected, \

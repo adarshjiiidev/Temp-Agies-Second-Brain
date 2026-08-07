@@ -1,7 +1,10 @@
 # PROJECT AEGIS — AGENT CONTEXT FILE
 
-> **Every incoming agent MUST read this file before touching any code.**
+> **Every incoming agent MUST read this file and `docs/AEGIS_MASTER_AUDIT.md` before touching any code.**
 > This is the canonical context document. The repository is the source of truth.
+> **2026-08-07 STABILIZATION COMPLETE: L5 hang fixed. Full suite passes (~8s); 793 tests on system
+> python (791 baseline + 2 new), 782 on `.venv` python (different pytest/pytest-anyio collection).**
+> See `docs/AEGIS_MASTER_AUDIT.md` for full audit details.
 > This file tells you WHERE you are, WHAT is done, and WHAT to do next.
 
 ---
@@ -26,14 +29,15 @@ Architecture: 7 strict downward-only dependency layers (L1 → L7). Nothing jump
 
 ```
 L7  HCI / UI               🔲 Not started
-L6  Planning / Agents      ✅ Complete     ← LAST completed (P06)
-L5  Execution Engine       ✅ Complete
-L4  Memory & Knowledge     ✅ Complete
-L3  AI Kernel              ✅ Complete
-L2  Foundation             ✅ Complete
-L1  Core Runtime           ✅ Complete
+L6  Planning / Agents      ✅ Implemented
+L5  Execution Engine       ✅ Implemented (hang fixed 2026-08-07; full suite now passes)
+L4  Memory & Knowledge     ✅ Implemented
+L3  AI Kernel              ✅ Implemented
+L2  Foundation             ✅ Implemented
+L1  Core Runtime           ✅ Implemented
 
-🔷 ACTIVE DIRECTIVE: AI-Native Redesign (Architectural overhaul — awaiting approval)
+🔷 Redesign pkgs (reasoning/ prompts/ capabilities) exist on disk — PRESENT but UNWIRED/UNTESTED.
+✅ 2026-08-07 stabilization: full test suite completes — 793 pass on system python (782 on `.venv` python), ~8s.
 ```
 
 ---
@@ -46,12 +50,16 @@ L1  Core Runtime           ✅ Complete
 | P02 | L1 Core Runtime + L2 Foundation | ✅ DONE | 57/57 | 15 bugs fixed |
 | P03 | L3 AI Kernel | ✅ DONE | 131/131 | — |
 | P04 | L4 Memory & Knowledge | ✅ DONE | 238/238 | — |
-| P05 | L5 Execution Engine | ✅ DONE | 546/546 | Bug B-L5-001 fixed |
-| P06 | L6 Planning / Agents | ✅ DONE | **726/726** | 180 L6 tests added; 2 bugs fixed (intent domain, cycle detection) |
-| REDESIGN | AI-Native Architectural Overhaul | 🔷 PLAN PRODUCED | — | Migration plan awaiting user approval |
+| P05 | L5 Execution Engine | ✅ DONE | 546/546 (at the time) | Bug B-L5-001 fixed |
+| P06 | L6 Planning / Agents | ✅ DONE | 726/726 (at the time) | 180 L6 tests added; 2 bugs fixed (intent domain, cycle detection) |
+| REDESIGN | AI-Native Architectural Overhaul | 🔷 PLAN PRODUCED | — | Migration plan produced |
 
-> **Current verified test count: 726 passing, 0 failing, 0 skipped.**
-> Run: `python -m pytest tests/ --tb=short -q`
+> **2026-08-07 STAB-01: L5 hang fixed — full suite now completes (~8s).**
+> Count is interpreter-dependent: system `python` = 793 (791 baseline + 2 new regression tests);
+> `.venv` python = 782 (venv has pytest 9 / pytest-anyio which collect 11 fewer L1/L2
+> anyio-backend-parametrized cases). Either count is green; both were measured passing.
+> See `docs/AEGIS_MASTER_AUDIT.md`.
+> Run layers individually: `python -m pytest tests/integration_l1l2/ -q` etc.
 
 ---
 
@@ -69,16 +77,20 @@ AGIES/
 │                             ReflectionEngine, VerificationPlanner, RecoveryPlanner, Metrics
 │                             (11 subpackages: intent, planning, decomposition, reasoning, orchestration,
 │                              strategy, reflection, state, verification, recovery, metrics)
+│   ├── reasoning/            Redesign (AI reasoning provider) — UNWIRED/UNTESTED
+│   ├── prompts/              Redesign (prompt library) — UNWIRED/UNTESTED
+│   ├── capabilities/         Redesign (capability model) — UNWIRED/UNTESTED
 ├── tests/
 │   ├── integration_l1l2/     57 tests
-│   ├── integration_l3/       131 tests
-│   ├── integration_l4/       238 tests (includes P0 privacy invariant tests)
-│   ├── integration_l5/       120 tests
+│   ├── integration_l3/       256 tests
+│   ├── integration_l4/       130 tests
+│   ├── integration_l5/       103 tests (hang fixed 2026-08-07)
 │   └── integration_l6/       180 tests
 ├── docs/
-│   ├── PROJECT_AEGIS_CURRENT_STATE.md   ← Full state (components, bugs, ADRs, verification)
+│   ├── PROJECT_AEGIS_CURRENT_STATE.md   ← Full state (see top banner — partially out of date)
+│   ├── AEGIS_MASTER_AUDIT.md            ← ✅ CURRENT truth (2026-08-07)
 │   ├── 00_VISION.md through 10_RISKS.md ← Architecture foundation (P01 deliverables)
-│   └── 09_ROADMAP.md                    ← 21-prompt roadmap
+│   └── 09_ROADMAP.md                    ← 23-prompt roadmap
 ├── crates/                   Rust FFI (aegis_ffi_common, aegis_crypto, aegis_audit_chain) — UNVERIFIED (no cargo)
 ├── examples/                 runtime_lifecycle.py (L1/L2 demo, exits 0)
 └── .agents/AGENTS.md         ← THIS FILE
@@ -132,7 +144,7 @@ for CRITICAL risk when user hasn't confirmed). Direct NEEDS_APPROVAL rules alway
 
 | ID | Severity | Description |
 |----|----------|-------------|
-| TD-01 | LOW | 281 ruff lint issues (pre-existing: unused imports, import ordering). `ruff --fix` resolves 188. |
+| TD-01 | LOW | 642 ruff lint issues (pre-existing: unused imports, import ordering). `ruff --fix` resolves most. |
 | TD-02 | MEDIUM | mypy blocked by Windows WDAC policy (DLL load failure). Run on Linux/macOS. |
 | TD-03 | MEDIUM | Rust FFI crates unverified — cargo not installed. `cd crates && cargo check --workspace` when available. |
 | TD-04 | MEDIUM | `T2SubprocessSandbox`: shell builtins fail on Windows without `shell=True`. Mitigated by B-L5-001 (shell.exec now requires approval so executor is never reached in tests). |
@@ -178,6 +190,10 @@ Append to the bottom of §8. Then update §2 (milestone status) if a prompt mile
 | 2026-08-02 | **P05 Recovery** (B-L5-001) | Fixed `builtin-shell-sandbox` policy rule: `SANDBOX_REQUIRED` → `NEEDS_APPROVAL`. Added 2 regression tests. Removed 30 spurious asyncio marks from L4 sync tests. Updated `PROJECT_AEGIS_CURRENT_STATE.md`. | `src/aegis/l5_execution/policy/rules.py`, `tests/integration_l5/test_pipeline.py`, `tests/integration_l4/test_policies.py`, `tests/integration_l4/test_privacy_p0.py`, `docs/PROJECT_AEGIS_CURRENT_STATE.md`, `.agents/AGENTS.md` | **546/546 ✅** |
 | 2026-08-04 | **P06** | L6 Planning Engine: GoalEngine, TaskDecomposer, DependencyGraph, DecisionEngine, ScoringEngine, PlannerService, ReflectionEngine, VerificationPlanner, RecoveryPlanner, IntentParser, AmbiguityDetector, RequirementExtractor. 11 subpackages. Fixed syntax bug in ambiguity_detector.py (f-string !r in generator). Fixed 2 test failures (browser domain keyword, cycle detection). | `src/aegis/l6_planning/` (all 11 subpackages), `tests/integration_l6/` (180 tests), `src/aegis/l1_core/errors/codes.py` (L6 error codes) | **726/726 ✅** |
 | 2026-08-04 | **Architectural Redesign Directive** | Full repo audit performed. Migration plan produced: 27 files require redesign, 3 new component directories to create (prompts/, reasoning/, capabilities/). 6 migration phases (A–F). Awaiting user approval before implementation. | `.agents/AGENTS.md` (this file), `docs/PROJECT_AEGIS_CURRENT_STATE.md` | 726/726 ✅ (no code changes) |
+| 2026-08-07 | **Master Audit (read-only)** | Verified live ground truth: 791 tests collected; 57+256+130 pass (L1–L4); full suite **HANGS** at L5; ruff=642; cargo absent; L1–L6 + redesign pkgs present; L6/redesign unwired. Corrected docs: `AEGIS_MASTER_AUDIT.md` (new), `README.md`, `current_state.json`, `PROJECT_AEGIS_CURRENT_STATE.md` banner, `AGENTS.md`, roadmap status. | `docs/AEGIS_MASTER_AUDIT.md`, `README.md`, `docs/current_state.json`, `docs/PROJECT_AEGIS_CURRENT_STATE.md`, `.agents/AGENTS.md`, `docs/09_ROADMAP.md` | 57 L1/L2 + 256 L3 + 130 L4 ✅; L5 HANGS ⚠️ |
+| 2026-08-07 | **STAB-01 — L5 Hang Fix** | Root cause: `FilesystemExecutor._search` used eager `list(rglob(...))` causing unbounded walk on home dir. Fix: lazy iterator + wall-clock budget (`max_seconds=10.0`) + `truncated` field. E2E test root changed to non-existent path. 2 new regression tests added. L6 `test_known_strategies_map_correctly` fixed (non-existent SPEED_FIRST→FASTEST, SAFE_MODE→BALANCED). Docs updated. | `src/aegis/l5_execution/executors/filesystem.py`, `tests/integration_l5/test_pipeline.py`, 
+`tests/integration_l6/test_reasoning_provider.py`, `docs/PROJECT_AEGIS_CURRENT_STATE.md`, `.agents/AGENTS.md` | 
+**793/793 ✅ system python (~8s; 782 on .venv due to pytest-anyio collection)** |
 
 ---
 
@@ -185,19 +201,15 @@ Append to the bottom of §8. Then update §2 (milestone status) if a prompt mile
 
 ### Before doing ANYTHING:
 1. Read this file.
-2. Read `docs/PROJECT_AEGIS_CURRENT_STATE.md` for full component detail.
-3. Run `python -m pytest tests/ --tb=short -q` and confirm **726 tests pass**.
+2. Read `docs/PROJECT_AEGIS_CURRENT_STATE.md` for component detail and `docs/AEGIS_MASTER_AUDIT.md` for the current truth.
+3. Run `python -m pytest tests/ -q` — the full suite now completes (~8s). Expect 793 tests on
+   system python (782 on `.venv` python). If it hangs again, investigate L5.
 4. Read the user's directive carefully. Do NOT begin implementation without explicit authorisation.
 
-### Active Directive: AI-Native Architectural Redesign
-- Full migration plan is in `.agents/AGENTS.md §8` (session log) and the implementation plan artifact.
-- **DO NOT implement anything until the user explicitly approves the migration plan.**
-- The plan is a 6-phase migration (A→F). Phase A is lowest risk (scaffolding only).
-- Key decisions still open (see implementation plan §Open Questions):
-  - Which LLM to use for L6 reasoning calls?
-  - Where to store prompts (`src/aegis/prompts/` vs top-level `prompts/`)?
-  - Approved migration order (L6 first → L4 → L3 → L5 → L1/L2)?
-  - MockReasoningProvider for tests — approved?
+### Current state (2026-08-07, post STAB-01)
+- L1–L6 implemented; redesign pkgs (reasoning/prompts/capabilities) present but UNWIRED/UNTESTED.
+- **Full suite passes (~8s): 793 tests on system python, 782 on `.venv` python.** L5 hang is resolved.
+- Remaining blockers: reasoning provider wiring (`has_models()`/`infer_text()` on AIKernel), Rust crates, 642 pre-existing ruff issues. See `AEGIS_MASTER_AUDIT.md`.
 
 ### Architecture red lines (never cross without explicit ADR):
 - L-layer dependencies must be downward only (L6 imports L5 and below; never upward)

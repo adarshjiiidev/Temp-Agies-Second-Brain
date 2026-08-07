@@ -1,5 +1,10 @@
 # PROJECT AEGIS — MASTER CODEBASE AUDIT & ARCHITECTURAL RECONSTRUCTION
 
+> ## ⚠️ SUPERSEDED (2026-08-07)
+> Audited 2026-07-27. The repository has since advanced; the **full test suite no longer completes**
+> (hangs at L5). For the current truth see [`AEGIS_MASTER_AUDIT.md`](./AEGIS_MASTER_AUDIT.md).
+> Retained for historical record.
+
 **Audit Date:** 2026-07-27  
 **Auditor:** AI Coding Assistant (Antigravity)  
 **Repository Source of Truth:** `c:\Users\adars\Projects\AGIES`  
