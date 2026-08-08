@@ -38,6 +38,7 @@ __all__ = [
     "ArchivalPolicy",
     "MergePolicy",
     "MemoryPolicy",
+    "PrivacyZonePolicy",
 ]
 
 
@@ -334,4 +335,105 @@ class MemoryPolicy(BaseModel):
                 tier_ttl_overrides={t.value: 60.0 for t in MemoryTier},
             ),
             archival=ArchivalPolicy(archive_after_days_not_accessed=1.0),
+        )
+
+
+# ---------------------------------------------------------------------------
+# PrivacyZonePolicy  (P07 addition)
+# Applied FIRST at every scanner/observer ingestion boundary. No data
+# touches a MemoryRecord unless it passes all zone checks.
+# ---------------------------------------------------------------------------
+
+class PrivacyZonePolicy(BaseModel):
+    """Declarative privacy zone filter for P07 environment observation.
+
+    A PrivacyZonePolicy holds:
+    - ``blocked_path_prefixes``: list of absolute or ``~``-prefixed path
+      strings. Any scan result whose ``source_path`` starts with one of
+      these prefixes is **silently dropped** before storage.
+    - ``blocked_app_names``: case-insensitive substring list. Any application
+      whose display name or executable name matches is dropped.
+    - ``min_privacy_tier``: floor on what tier is assigned. E.g. 'P0' means
+      every record from this zone is treated as P0 regardless of defaults.
+    - ``enabled``: master switch. When ``False`` the zone is transparent
+      (no filtering). Useful for tests or explicit user override.
+
+    Usage::
+
+        zone = PrivacyZonePolicy(
+            name="home_zone",
+            blocked_path_prefixes=["~/Private", "~/.ssh"],
+            blocked_app_names=["1password", "keychain"],
+            min_privacy_tier="P0",
+        )
+        if not zone.allows_path("/home/user/Private/doc.txt"):
+            # drop — do not store
+    """
+
+    model_config = {"frozen": True}
+
+    name: str = "default_privacy_zone"
+    enabled: bool = True
+
+    # Paths starting with any of these prefixes are blocked.
+    # Values may use ``~`` which is expanded at check time.
+    blocked_path_prefixes: list[str] = Field(default_factory=list)
+
+    # Application names (case-insensitive substring match).
+    blocked_app_names: list[str] = Field(default_factory=list)
+
+    # Privacy tier floor: if set, every record produced by this zone
+    # gets at least this tier (cannot be lowered by caller).
+    min_privacy_tier: str | None = None  # e.g. "P0", "P1"
+
+    # ---------------------------------------------------------------------------
+    # Check helpers (deterministic — never delegated to AI)
+    # ---------------------------------------------------------------------------
+
+    def allows_path(self, path: str) -> bool:
+        """Return False if the path falls inside a blocked prefix."""
+        if not self.enabled:
+            return True
+        import os
+        resolved = os.path.expanduser(path)
+        for prefix in self.blocked_path_prefixes:
+            expanded = os.path.expanduser(prefix)
+            if resolved.startswith(expanded):
+                return False
+        return True
+
+    def allows_app(self, app_name: str) -> bool:
+        """Return False if the app name matches a blocked app substring."""
+        if not self.enabled:
+            return True
+        lower = app_name.lower()
+        for blocked in self.blocked_app_names:
+            if blocked.lower() in lower:
+                return False
+        return True
+
+    def effective_privacy_tier(self, default_tier: str) -> str:
+        """Return the effective privacy tier, honouring the floor."""
+        if not self.enabled or self.min_privacy_tier is None:
+            return default_tier
+        # Higher protection = lower index in ["P0", "P1", "P2", "P3"]
+        _order = {"P0": 0, "P1": 1, "P2": 2, "P3": 3}
+        current = _order.get(default_tier, 2)
+        floor = _order.get(self.min_privacy_tier, 0)
+        # Return whichever is more protective (lower index)
+        return default_tier if current <= floor else self.min_privacy_tier
+
+    @classmethod
+    def open(cls) -> "PrivacyZonePolicy":
+        """A transparent (non-filtering) policy for tests or opt-out."""
+        return cls(name="open", enabled=False)
+
+    @classmethod
+    def strict(cls, blocked_paths: list[str] | None = None) -> "PrivacyZonePolicy":
+        """A strict P0-floor policy, optionally with extra blocked paths."""
+        return cls(
+            name="strict",
+            enabled=True,
+            blocked_path_prefixes=blocked_paths or [],
+            min_privacy_tier="P0",
         )

@@ -47,6 +47,7 @@ from aegis.l4_memory.policies import (
     DecayPolicy,
     MemoryPolicy,
     MergePolicy,
+    PrivacyZonePolicy,
     RetentionPolicy,
 )
 from aegis.l4_memory.search import SearchEngine, SearchQuery, SearchResult
@@ -101,6 +102,7 @@ __all__ = [
     "AccessPolicy",
     "ArchivalPolicy",
     "MergePolicy",
+    "PrivacyZonePolicy",
     # Types / Enums
     "MemoryTier",
     "MemoryKind",

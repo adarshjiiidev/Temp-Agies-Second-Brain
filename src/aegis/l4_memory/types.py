@@ -176,6 +176,7 @@ class ProvenanceKind(str, Enum):
     SCANNER_DERIVED = "scanner_derived"     # Environment scanner result
     USER_CONFIRMED = "user_confirmed"       # Explicitly validated by user
     CORROBORATED = "corroborated"           # ≥2 independent sources agree
+    OBSERVER_DERIVED = "observer_derived"   # P07 behavior observer event
 
 
 # ---------------------------------------------------------------------------
@@ -223,6 +224,12 @@ class EntityKind(str, Enum):
     FILE = "file"
     MEMORY_RECORD = "memory_record"  # KG node wrapping a MemoryRecord reference
     CUSTOM = "custom"
+    # P07 — environment model additions
+    APPLICATION = "application"      # Installed/runnable application
+    DEVICE = "device"                # Physical or virtual hardware device
+    DEV_ENVIRONMENT = "dev_environment"  # Python venv, conda env, nvm, etc.
+    ACCOUNT = "account"              # User account (local or service)
+    WORKSPACE = "workspace"          # IDE workspace / working directory grouping
 
 
 # ---------------------------------------------------------------------------
@@ -250,6 +257,10 @@ class RelationshipKind(str, Enum):
     BELONGS_TO = "belongs_to"
     TAGGED_WITH = "tagged_with"
     CUSTOM = "custom"
+    # P07 — environment relationship additions
+    RUNS_ON = "runs_on"              # Application runs on device/OS
+    DEPLOYS_THROUGH = "deploys_through"  # Project deploys through tool/env
+    MANAGES = "manages"             # Account/tool manages another entity
 
 
 # ---------------------------------------------------------------------------
