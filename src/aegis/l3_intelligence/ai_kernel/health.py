@@ -157,11 +157,14 @@ class ProviderHealthMonitor:
             raise
 
     async def _sweep(self) -> None:
-        """Run one health-check sweep over all registered providers."""
+        """Run one health-check sweep over all registered providers.
+
+        May be called directly for manual/one-shot sweeps (e.g. in tests)
+        without the ``_running`` flag being True — the flag is only used by
+        the background ``_run()`` loop to know when to stop iterating.
+        """
         provider_ids = list(self._prov_registry.list_provider_ids())
         for provider_id in provider_ids:
-            if not self._running:
-                return
             await self._probe_provider(provider_id)
 
     async def _probe_provider(self, provider_id: str) -> None:
