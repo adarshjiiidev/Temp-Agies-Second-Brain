@@ -1,17 +1,16 @@
 # PROJECT AEGIS — CURRENT STATE
 
-> ## ⚠️ SUPERSEDED / OUT OF DATE — READ THIS FIRST
+> ## ⚠️ PARTIALLY OUT OF DATE — READ THIS FIRST
 >
 > On **2026-08-07** a full repository audit was performed (see [`AEGIS_MASTER_AUDIT.md`](./AEGIS_MASTER_AUDIT.md)).
 > This file was accurate as of the Prompt 05 Recovery milestone, but the repository has since **moved on**:
 > - **L6 is now implemented** (this file's §1/§2 say "L6 NOT STARTED / Prompt 06 not authorised") — this is WRONG.
-> - The full test suite **was hanging at L5 integration — FIXED on 2026-08-07 (STAB-01)**. It now completes
->   (~8s): 793 tests on system python, 782 on `.venv` python (pytest/pytest-anyio collection difference).
-> - Ruff is now **642** issues (this file says 281).
-> - The roadmap defines **23** prompts, not 21.
-> - Redesign packages (`reasoning`, `prompts`, `capabilities`) exist on disk.
+> - The full test suite **was hanging at L5 integration — FIXED on 2026-08-07 (STAB-01)**. It now completes.
+> - **P07 hardcoding remediation** completed 2026-08-10 (887 tests).
+> - **P07 gap remediation** (provider abstraction, auto-promotion, freshness scheduler, privacy zone service) completed **2026-08-11**: **1007 tests, 0 regressions**.
+> - Redesign packages (`reasoning`, `prompts`, `capabilities`) exist on disk — PRESENT but UNWIRED/UNTESTED.
 >
-> **The repository is the source of truth.** For current numbers use `AEGIS_MASTER_AUDIT.md`. The detailed
+> **The repository is the source of truth.** For current numbers use `AEGIS_MASTER_AUDIT.md` and `P07_ARCHITECTURE_PLAN.md §10`. The detailed
 > component inventory (§3) below remains largely useful and is retained for reference.
 
 ## 1. Project Status
@@ -20,12 +19,13 @@
 |---|---|
 | Project Code Name | AEGIS (Adaptive Executive Governance & Intelligence System) |
 | Full Name | Personal Adaptive AI Operating System |
-| Current Milestone (docs) | **Prompt 05 — Execution Engine** (COMPLETE, verified) |
-| Actual State | **L1–L6 + redesign pkgs implemented** (see top banner + AEGIS_MASTER_AUDIT.md) |
-| Next Milestone | Prompt 07 (awaits explicit directive) |
+| Current Milestone (docs) | **P07 Gap Remediation — COMPLETE (2026-08-11)** |
+| Actual State | **L1–L6 + P07 gaps implemented** (see `AEGIS_MASTER_AUDIT.md` + `P07_ARCHITECTURE_PLAN.md §10`) |
+| Next Milestone | P08 (requires explicit directive) |
 | Total Prompts Planned | 23 per roadmap (docs/09_ROADMAP.md) |
 | Working Baseline | HEAD (all fixes applied) |
-| Repository Health | **Full suite passes (~8s) since 2026-08-07 STAB-01: 793 tests on system python (782 on `.venv` python); ruff 642; mypy blocked by Windows policy; cargo not installed** |
+| Repository Health | **Full suite passes (~10s): 1007 tests on system python (887 baseline + 120 new gap tests); 0 regressions; ruff 642 (pre-existing); mypy blocked by Windows WDAC; cargo not installed** |
+
 
 ---
 

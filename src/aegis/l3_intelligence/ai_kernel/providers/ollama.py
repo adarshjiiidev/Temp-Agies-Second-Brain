@@ -4,6 +4,12 @@ Connects to a local Ollama server (default: http://localhost:11434).
 Uses OpenAI-compatible /api/chat endpoint with NDJSON streaming.
 Deployment: LOCAL. Cost: $0. Satisfies P0/P1/P2/P3 privacy tiers.
 
+P07.5 additions:
+    health_check()    — probes GET /api/version; returns HEALTHY/DOWN.
+    discover_models() — probes GET /api/tags; returns dynamic model list.
+    auto_discover:    If True (default False), constructor calls discover_models()
+                      to populate model list from running Ollama instance.
+
 Dependencies: httpx (async HTTP).
 """
 
@@ -36,6 +42,7 @@ except ImportError as _httpx_err:  # pragma: no cover
 
 _DEFAULT_BASE_URL = "http://localhost:11434"
 _DEFAULT_TIMEOUT = 120.0
+_HEALTH_TIMEOUT = 5.0   # Short timeout for health probes
 
 
 def _normalize_finish_reason(reason: str | None) -> str:
@@ -47,9 +54,12 @@ class OllamaProvider(BaseProvider):
     """Ollama local LLM provider.
 
     Args:
-        base_url: Ollama server base URL (default: http://localhost:11434).
-        model_ids: List of model ids to advertise. Defaults to ["llama3"].
-        timeout: Default HTTP timeout in seconds.
+        base_url:     Ollama server base URL (default: http://localhost:11434).
+        model_ids:    Static list of model ids to advertise. Used as fallback
+                      when ``auto_discover=False`` or discovery fails.
+        timeout:      Default HTTP timeout in seconds.
+        auto_discover: If True, attempt to discover models at construction time
+                      (synchronous; call ``await discover_models()`` for async refresh).
     """
 
     provider_id: str = "ollama"
@@ -59,10 +69,13 @@ class OllamaProvider(BaseProvider):
         base_url: str = _DEFAULT_BASE_URL,
         model_ids: list[str] | None = None,
         timeout: float = _DEFAULT_TIMEOUT,
+        auto_discover: bool = False,
     ) -> None:
         self._base_url = base_url.rstrip("/")
         self._timeout = timeout
         self._model_ids: list[str] = model_ids or ["llama3"]
+        self._auto_discover = auto_discover
+
 
     # ------------------------------------------------------------------
     # LLMProvider Protocol
@@ -88,6 +101,73 @@ class OllamaProvider(BaseProvider):
             )
             for m in self._model_ids
         ]
+
+    # ------------------------------------------------------------------
+    # P07.5: Health check + model discovery
+    # ------------------------------------------------------------------
+
+    async def health_check(self) -> ModelHealth:
+        """Probe Ollama by calling GET /api/version.
+
+        Returns:
+            HEALTHY if Ollama responds with 2xx, DOWN otherwise.
+        """
+        try:
+            async with httpx.AsyncClient(timeout=_HEALTH_TIMEOUT) as client:
+                resp = await client.get(f"{self._base_url}/api/version")
+                if resp.status_code < 400:
+                    return ModelHealth.HEALTHY
+                return ModelHealth.DOWN
+        except (httpx.RequestError, httpx.TimeoutException):
+            return ModelHealth.DOWN
+
+    async def discover_models(self) -> list[ModelSpec]:
+        """Discover installed models by calling GET /api/tags.
+
+        Parses the response and returns ModelSpec entries for each installed
+        model. Falls back to the static ``available_models()`` list on any
+        error (network, parse, etc.) so callers can always rely on a result.
+
+        Returns:
+            List of ModelSpec for each model returned by Ollama, or the
+            static list if discovery fails.
+        """
+        try:
+            async with httpx.AsyncClient(timeout=_HEALTH_TIMEOUT) as client:
+                resp = await client.get(f"{self._base_url}/api/tags")
+                if resp.status_code >= 400:
+                    return self.available_models()
+                data = resp.json()
+        except (httpx.RequestError, httpx.TimeoutException, ValueError):
+            return self.available_models()
+
+        discovered: list[ModelSpec] = []
+        for entry in data.get("models", []):
+            model_id = entry.get("name", "")
+            if not model_id:
+                continue
+            # Use context_window from model details if available (Ollama >=0.2)
+            details = entry.get("details", {})
+            ctx = details.get("context_length") or 8192
+            discovered.append(
+                ModelSpec(
+                    model_id=model_id,
+                    provider="ollama",
+                    family=details.get("family", "ollama"),
+                    context_window=int(ctx),
+                    output_limit=4096,
+                    modality={Modality.TEXT},
+                    capabilities={CapabilityFlag.STREAMING},
+                    cost_per_input_1k=0.0,
+                    cost_per_output_1k=0.0,
+                    health=ModelHealth.HEALTHY,
+                )
+            )
+        if not discovered:
+            return self.available_models()
+        # Update the internal model list for available_models() consistency
+        self._model_ids = [s.model_id for s in discovered]
+        return discovered
 
     async def chat(
         self, messages: Iterable[ChatMessage], params: ChatParams

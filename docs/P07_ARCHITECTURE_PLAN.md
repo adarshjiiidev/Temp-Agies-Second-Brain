@@ -254,3 +254,165 @@ Fill A–O from §26 of the master directive:
 
 ---
 *PRINCIPAL SYSTEM ARCHITECT — P07 PLAN. Implementation happens only after explicit director authorization.*
+
+---
+
+## 10. GAP REMEDIATION — IMPLEMENTATION RECORD (2026-08-11)
+
+**Status:** IMPLEMENTED AND VERIFIED  
+**Previous test count:** 887  
+**New test count:** 1007 passed, 1 skipped  
+**Regressions:** 0
+
+---
+
+### GAP #1 — Application Discovery Provider Abstraction
+
+**Original gap:** `ApplicationScanner` embedded platform-specific registry/PATH discovery directly, making it untestable without a real host machine.
+
+**Root cause:** No abstraction boundary between discovery mechanism and scanner coordination logic.
+
+**Implementation:**
+
+- **New file:** `src/aegis/l4_memory/p07/scanners/providers.py`
+  - `ApplicationDiscoveryProvider` — abstract base class (ABC) defining the discovery protocol
+  - `PathToolProvider` — cross-platform, uses `shutil.which` over a configurable tool list
+  - `WindowsRegistryProvider` — Windows HKLM/HKCU Uninstall keys; returns empty list on non-Windows (no-op)
+  - `CompositeProvider` — aggregates multiple providers; first-provider-wins deduplication
+  - `default_providers()` — factory returning platform-appropriate stack
+
+- **Modified:** `src/aegis/l4_memory/p07/scanners/app_scanner.py`
+  - Constructor now accepts `providers: list[ApplicationDiscoveryProvider] | None`
+  - Defaults to `default_providers()` (platform-appropriate)
+  - Test injection: pass `providers=[MockProvider(...)]` → no machine dependency
+
+**Architectural decision:** Provider protocol = ABC (not `runtime_checkable` Protocol) for clarity and enforcement. Scanner → Provider dependency injection follows L3 ProviderRegistry pattern.
+
+**Tests added:** 31 tests (GAP #1 section in `test_p07_gaps.py`)
+- Provider protocol, PathToolProvider, WindowsRegistryProvider, CompositeProvider, scanner injection
+
+**Remaining limitations:** Linux/XDG provider not implemented (future P08+ enhancement; PATH provider covers most tools cross-platform).
+
+---
+
+### GAP #2 — Workflow Auto-Promotion
+
+**Original gap:** P07 roadmap specifies T4 PROCEDURAL promotion after 3 successful repetitions, but only explicit user promotion existed.
+
+**Root cause:** No success-tracking infrastructure; no promotion orchestration.
+
+**Implementation:**
+
+- **New file:** `src/aegis/l4_memory/p07/inference/promotion.py`
+  - `WorkflowPromotionConfig(threshold=3, enable_auto=True, cooldown_seconds=60.0)` — named typed config; no magic constants
+  - `WorkflowSuccessTracker` — per-key success/failure counting; idempotent `mark_promoted`; cooldown gate; bounded evidence (max 10 records)
+  - `WorkflowAutoPromoter` — async promotion coordinator; calls `CandidateStore.promote()`
+  - `PromotionResult` — structured outcome with reason, candidate_id, success_count
+
+**Critical invariants enforced:**
+- T5_PERSONAL (preference) candidates are checked by `kind == "preference"` → NEVER promoted
+- `enable_auto=False` short-circuits immediately with explicit reason message
+- Failure events decrement count (floor: 0) — failed executions don't count
+- Cooldown prevents promotion storm after threshold reached
+- Promotion is provenance-backed (count recorded in reason)
+
+**Architectural decision:** Threshold default=3 matches P07 roadmap. `WorkflowPromotionConfig` makes it injectable and documented. Auto-promotion does NOT bypass L5 execution permissions.
+
+**Tests added:** 26 tests (GAP #2 section in `test_p07_gaps.py`)
+
+**Remaining limitations:** Privacy-zone workflow blocking not yet wired (gate exists but zone_registry injection not exercised in production coordinator path — P08 integration work).
+
+---
+
+### GAP #3 — Freshness Scheduler
+
+**Original gap:** `FreshnessTracker` tracked staleness but nothing triggered rescans automatically.
+
+**Root cause:** No execution bridge between staleness state and scanner execution.
+
+**Implementation:**
+
+- **New file:** `src/aegis/l4_memory/p07/model/scheduler.py`
+  - `FreshnessSchedulerConfig(check_interval_seconds=300.0, rescan_on_stale=True, max_concurrent_rescans=3)`
+  - `FreshnessScheduler` — asyncio background loop; registers scanners with TTL; triggers `scanner_fn()` on staleness
+
+**Safety invariants:**
+- Idempotent registration (second `register()` for same name is no-op)
+- Failure-tolerant: scanner exceptions are caught, logged, error_count incremented; staleness NOT updated on failure (preserves stale state correctly)
+- Shutdown-safe: `asyncio.CancelledError` propagates; `stop()` cancels task with timeout
+- No scans after shutdown: background loop exits on `_running = False`
+- No L2 dependency: uses stdlib `asyncio` only (injected `BackgroundTaskManager` is possible but not required)
+- `rescan_on_stale=False` config completely disables automatic rescans (for testing/manual mode)
+
+**Architectural decision:** Used pure `asyncio` (not L2 Scheduler) to avoid L4→L2 upward dependency. L2 injection is possible via the optional `task_manager` parameter but not required. This respects the strict downward dependency rule.
+
+**Tests added:** 23 tests (GAP #3 section in `test_p07_gaps.py`)
+- Registration, staleness detection, lifecycle (start/stop), no-activity-after-shutdown, failure recovery
+
+**Remaining limitations:** `FreshnessScheduler` is not yet wired into `ScanningCoordinator` in production (integration connection is P08 work; the components are individually correct and tested).
+
+---
+
+### GAP #4 — Privacy Zone Service
+
+**Original gap:** `ZoneRegistry` and `PrivacyZonePolicy` existed for enforcement, but no cohesive service API for management (add/remove/update/list/export/import).
+
+**Root cause:** Enforcement layer present, orchestration layer missing.
+
+**Implementation:**
+
+- **New file:** `src/aegis/l4_memory/p07/privacy/service.py`
+  - `PrivacyZoneServiceConfig(normalize_paths=True, allow_overwrite=True)` — typed configuration
+  - `ZoneSummary` — frozen dataclass; serializable `.to_dict()` output
+  - `PrivacyZoneService` — orchestration layer over `ZoneRegistry`
+
+**API surface:**
+- `add_zone(name, blocked_paths, blocked_apps, min_tier, scope, enabled)` — validated, idempotent
+- `remove_zone(name)` → bool
+- `update_zone(name, *, ...)` → bool (partial update; unspecified fields unchanged)
+- `list_zones()` → `list[ZoneSummary]`
+- `check_path(path)` → bool (normalized)
+- `check_node(node)` → `ZoneCheckResult`
+- `check_app(app_name)` → bool
+- `get_covering_zones(path)` → `list[str]` (audit utility)
+- `is_nested_under(child, parent)` → bool (pure path utility)
+- `export_configuration()` → `dict` (JSON-serializable, version=1)
+- `import_configuration(data)` → int (atomic: validates all before applying any)
+- `clear_all_zones()` → int
+
+**Path normalization policy (documented in module docstring):**
+1. `~` expanded via `os.path.expanduser`
+2. Normalized via `os.path.normpath` (collapses `.`, `..`)
+3. Case-folded via `os.path.normcase` (Windows: case-insensitive; Unix: case-sensitive)
+4. Blocked path prefixes stored WITH trailing `os.sep` → boundary-safe `startswith` check (prevents `/private` from matching `/private_extra`)
+5. Symlinks NOT resolved (explicit policy to avoid symlink target leakage)
+
+**Nested zone policy (documented):**
+- Zones are fully independent — no inheritance
+- Removing a parent zone does NOT remove child zones
+- Adding a parent zone does NOT add child zones
+- `get_covering_zones()` provides audit visibility into which zones cover a path
+
+**Import atomicity:** All entries validated before any are applied. Validation failure leaves existing zones unchanged.
+
+**P0 invariant:** Privacy-zone data never enters observation/graph/candidate/inference — enforced by `check_node()` / `check_path()` at every ingestion boundary in `ScanningCoordinator` and `Observer`.
+
+**Tests added:** 40 tests (GAP #4 section in `test_p07_gaps.py`)
+- Basic CRUD, path normalization, boundary checking, nested zones, export/import, P0 leakage regression
+
+---
+
+### Files Changed (Gap Remediation)
+
+| File | Status | Gap |
+|------|--------|-----|
+| `src/aegis/l4_memory/p07/scanners/providers.py` | NEW | #1 |
+| `src/aegis/l4_memory/p07/scanners/app_scanner.py` | MODIFIED | #1 |
+| `src/aegis/l4_memory/p07/scanners/__init__.py` | MODIFIED | #1 |
+| `src/aegis/l4_memory/p07/inference/promotion.py` | NEW | #2 |
+| `src/aegis/l4_memory/p07/inference/__init__.py` | MODIFIED | #2 |
+| `src/aegis/l4_memory/p07/model/scheduler.py` | NEW | #3 |
+| `src/aegis/l4_memory/p07/model/__init__.py` | MODIFIED | #3 |
+| `src/aegis/l4_memory/p07/privacy/service.py` | NEW | #4 |
+| `src/aegis/l4_memory/p07/privacy/__init__.py` | MODIFIED | #4 |
+| `tests/integration_l4/test_p07_gaps.py` | NEW | #1–#4 |

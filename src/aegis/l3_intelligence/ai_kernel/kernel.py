@@ -137,7 +137,31 @@ class AIKernel:
         self._structured_proc = StructuredOutputProcessor()
 
     # ------------------------------------------------------------------
-    # Public API
+    # Public API — Introspection (P07.5)
+    # ------------------------------------------------------------------
+
+    def has_models(self) -> bool:
+        """Return True if at least one model is registered in the kernel.
+
+        Useful for guard checks in calling code (e.g. KernelReasoningProvider)
+        before attempting an inference call that would fail immediately.
+        """
+        return len(self._registry.list_all()) > 0
+
+    def list_models(self) -> list:
+        """Return a snapshot of all registered ModelMetadata entries.
+
+        Returns:
+            Ordered list of ModelMetadata (same order as ModelRegistry.list_all()).
+        """
+        return self._registry.list_all()
+
+    def provider_count(self) -> int:
+        """Return the number of providers registered in the provider registry."""
+        return len(self._prov_reg.list_provider_ids())
+
+    # ------------------------------------------------------------------
+    # Public API — Inference
     # ------------------------------------------------------------------
 
     async def generate(self, request: AIRequest) -> AIResponse:

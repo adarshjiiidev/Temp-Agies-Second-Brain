@@ -2,9 +2,9 @@
 
 > **Every incoming agent MUST read this file and `docs/AEGIS_MASTER_AUDIT.md` before touching any code.**
 > This is the canonical context document. The repository is the source of truth.
-> **2026-08-10 P07 COMPLETE: Hardcoding remediation done. Full suite passes (~17s); 887 tests on
-> system python. P07 persistence bugs fixed. 73 new P07 comprehensive tests added.**
-> See `docs/AEGIS_MASTER_AUDIT.md` and `docs/HARDCODING_REMEDIATION_REPORT.md` for full details.
+> **2026-08-11 P07 GAP REMEDIATION COMPLETE: 4 gaps implemented (provider abstraction, auto-promotion,
+> freshness scheduler, privacy zone service). Full suite passes (~10s): 1007 tests, 0 regressions.**
+> See `docs/P07_ARCHITECTURE_PLAN.md §10` for full gap detail.
 > This file tells you WHERE you are, WHAT is done, and WHAT to do next.
 
 ---
@@ -54,6 +54,7 @@ L1  Core Runtime           ✅ Implemented
 | P06 | L6 Planning / Agents | ✅ DONE | 726/726 (at the time) | 180 L6 tests added; 2 bugs fixed (intent domain, cycle detection) |
 | REDESIGN | AI-Native Architectural Overhaul | 🔷 PLAN PRODUCED | — | Migration plan produced |
 | P07 | P07 Hardcoding Remediation + Env Model | ✅ DONE | 887/887 | H12 bug fix, H9/H10 ScoringConfig/EvaluatorConfig, kernel_provider rewrite, 73 new P07 comprehensive tests, 7 P07 persistence bugs fixed |
+| P07-GAP | P07 Gap Remediation (4 architectural gaps) | ✅ DONE | 1007/1007 | Provider abstraction, WorkflowAutoPromoter, FreshnessScheduler, PrivacyZoneService; 120 new tests |
 
 > **2026-08-07 STAB-01: L5 hang fixed — full suite now completes (~8s).**
 > Count is interpreter-dependent: system `python` = 793 (791 baseline + 2 new regression tests);
@@ -195,6 +196,7 @@ Append to the bottom of §8. Then update §2 (milestone status) if a prompt mile
 | 2026-08-07 | **STAB-01 — L5 Hang Fix** | Root cause: `FilesystemExecutor._search` used eager `list(rglob(...))` causing unbounded walk on home dir. Fix: lazy iterator + wall-clock budget (`max_seconds=10.0`) + `truncated` field. E2E test root changed to non-existent path. 2 new regression tests added. L6 `test_known_strategies_map_correctly` fixed (non-existent SPEED_FIRST→FASTEST, SAFE_MODE→BALANCED). Docs updated. | `src/aegis/l5_execution/executors/filesystem.py`, `tests/integration_l5/test_pipeline.py`, `tests/integration_l6/test_reasoning_provider.py`, `docs/PROJECT_AEGIS_CURRENT_STATE.md`, `.agents/AGENTS.md` | **793/793 ✅ system python (~8s; 782 on .venv due to pytest-anyio collection)** |
 | 2026-08-10 | **P07 Phase 1 — Hardcoding Remediation** | H12 Registry double-count bug fixed. `kernel_provider.py` rewritten to use real `AIKernel.generate()` API. H9: `scoring.py` magic constants → `ScoringConfig`. H10: `evaluator.py` thresholds → `EvaluatorConfig`. H1–H8 classified as `DETERMINISTIC_FALLBACK` (correct). `HARDCODING_REMEDIATION_REPORT.md` produced. | `src/aegis/l3_intelligence/ai_kernel/registry.py`, `src/aegis/reasoning/kernel_provider.py`, `src/aegis/l6_planning/reasoning/scoring.py`, `src/aegis/l6_planning/reasoning/evaluator.py`, `tests/integration_l3/test_registry_quality_score.py`, `docs/HARDCODING_REMEDIATION_REPORT.md` | **814/814 ✅** |
 | 2026-08-10 | **P07 Phase 2 — Comprehensive P07 Tests + Persistence Bug Fixes** | 73 new comprehensive P07 tests added covering observer, audit, sink, consent gate, privacy zones, workflow/preference inferencer (8/10 criterion), scanning coordinator, app scanner (95% criterion), candidate store, env store, and shutdown zero-leftover invariants. Fixed 7 bugs in `env_store.py` (wrong KG method names) and `candidate_store.py` (invalid SearchQuery kwarg, PENDING_REVIEW invisible to search, wrong promote call, T5 policy gate). | `tests/integration_l4/test_p07_comprehensive.py` (NEW), `src/aegis/l4_memory/p07/persistence/env_store.py`, `src/aegis/l4_memory/p07/persistence/candidate_store.py`, `docs/HARDCODING_REMEDIATION_REPORT.md` | **887/887 ✅ (~17s)** |
+| 2026-08-11 | **P07-GAP — Gap Remediation (4 gaps)** | GAP #1: `ApplicationDiscoveryProvider` abstraction + `PathToolProvider`/`WindowsRegistryProvider`/`CompositeProvider`; `app_scanner.py` refactored to use DI. GAP #2: `WorkflowSuccessTracker` + `WorkflowAutoPromoter` (threshold=3, T5 never auto-promotes, cooldown, provenance). GAP #3: `FreshnessScheduler` (asyncio, shutdown-safe, failure-tolerant, no L2 dep). GAP #4: `PrivacyZoneService` (add/remove/update/list/check/export/import, boundary-safe path normalization, atomic import, P0 invariant). 120 new tests added. 0 regressions. | `src/aegis/l4_memory/p07/scanners/providers.py` (NEW), `app_scanner.py`, `scanners/__init__.py`, `inference/promotion.py` (NEW), `inference/__init__.py`, `model/scheduler.py` (NEW), `model/__init__.py`, `privacy/service.py` (NEW), `privacy/__init__.py`, `tests/integration_l4/test_p07_gaps.py` (NEW), `docs/P07_ARCHITECTURE_PLAN.md`, `docs/PROJECT_AEGIS_CURRENT_STATE.md`, `.agents/AGENTS.md` | **1007/1007 ✅ (~10s)** |
 
 ---
 
@@ -203,17 +205,17 @@ Append to the bottom of §8. Then update §2 (milestone status) if a prompt mile
 ### Before doing ANYTHING:
 1. Read this file.
 2. Read `docs/PROJECT_AEGIS_CURRENT_STATE.md` for component detail and `docs/AEGIS_MASTER_AUDIT.md` for the current truth.
-3. Read `docs/HARDCODING_REMEDIATION_REPORT.md` for the complete P07 hardcoding audit results.
-4. Run `python -m pytest tests/ -q` — the full suite now completes (~17s). Expect **887 tests** on
-   system python. If it hangs, investigate L5.
-5. Read the user's directive carefully. Do NOT begin implementation without explicit authorisation.
+3. Read `docs/P07_ARCHITECTURE_PLAN.md §10` for the complete P07 gap remediation record.
+4. Read `docs/HARDCODING_REMEDIATION_REPORT.md` for the P07 hardcoding audit results.
+5. Run `python -m pytest tests/ -q` — expect **1007 tests** on system python (~10s). If it hangs, investigate L5.
+6. Read the user's directive carefully. Do NOT begin implementation without explicit authorisation.
 
-### Current state (2026-08-10, post P07)
+### Current state (2026-08-11, post P07 gap remediation)
 - L1–L6 implemented; redesign pkgs (reasoning/prompts/capabilities) present but UNWIRED/UNTESTED.
-- **Full suite passes (~17s): 887 tests on system python.** L5 hang is resolved.
+- **Full suite passes (~10s): 1007 tests on system python.** L5 hang is resolved.
 - P07 environment model: inference, discovery, persistence, scanners, observer, consent gate, privacy zones — all implemented and tested.
-- P07 persistence bugs fixed: env_store, candidate_store wired correctly to KnowledgeGraph.
-- Remaining blockers: reasoning provider wiring (`has_models()`/`infer_text()` on AIKernel), Rust crates, 642 pre-existing ruff issues. See `AEGIS_MASTER_AUDIT.md`.
+- **P07 gap remediation complete:** ApplicationDiscoveryProvider (GAP #1), WorkflowAutoPromoter (GAP #2), FreshnessScheduler (GAP #3), PrivacyZoneService (GAP #4).
+- Remaining blockers: reasoning provider wiring (`has_models()`/`infer_text()` on AIKernel), Rust crates, 642 pre-existing ruff issues, FreshnessScheduler not yet wired into ScanningCoordinator (P08 work). See `AEGIS_MASTER_AUDIT.md`.
 
 ### Architecture red lines (never cross without explicit ADR):
 - L-layer dependencies must be downward only (L6 imports L5 and below; never upward)

@@ -181,7 +181,7 @@ class PrivacyZoneService:
             raise ValueError(f"Zone {name!r} already exists and allow_overwrite=False")
 
         normalized_paths = (
-            [self._normalize_path(p) for p in (blocked_paths or [])]
+            [self._normalize_path_prefix(p) for p in (blocked_paths or [])]
             if self._config.normalize_paths
             else list(blocked_paths or [])
         )
@@ -228,7 +228,7 @@ class PrivacyZoneService:
             return False
 
         new_paths = (
-            [self._normalize_path(p) for p in blocked_paths]
+            [self._normalize_path_prefix(p) for p in blocked_paths]
             if blocked_paths is not None
             else list(existing.policy.blocked_path_prefixes)
         )
@@ -321,11 +321,11 @@ class PrivacyZoneService:
             zone = self._get_zone(name)
             if zone is None:
                 continue
-            for prefix in zone.policy.blocked_path_prefixes:
-                norm_prefix = (
-                    self._normalize_path(prefix) if self._config.normalize_paths else prefix
-                )
-                if self._paths_match_prefix(normalized, norm_prefix):
+            for stored_prefix in zone.policy.blocked_path_prefixes:
+                # stored_prefix is already normalized with trailing sep (from add_zone /
+                # update_zone).  _paths_match_prefix adds trailing sep if missing so this
+                # handles both normalise=True and normalise=False cases safely.
+                if self._paths_match_prefix(normalized, stored_prefix):
                     covering.append(name)
                     break
         return covering
@@ -458,6 +458,32 @@ class PrivacyZoneService:
         return os.path.normcase(normed)
 
     @staticmethod
+    def _normalize_path_prefix(path: str) -> str:
+        """Normalize a path prefix for storage in a PrivacyZonePolicy.
+
+        Same as _normalize_path, but also appends a trailing os.sep so that
+        the underlying PrivacyZonePolicy.allows_path() startswith() check
+        correctly handles directory boundaries.
+
+        Example:
+            /private  →  /private/    (blocks /private/foo but NOT /private_extra)
+            ~/.ssh    →  /home/user/.ssh/
+
+        The stored prefix is always a normalized directory path ending with sep,
+        so the PrivacyZonePolicy's ``startswith(prefix)`` check is boundary-safe.
+        """
+        if not path:
+            return path
+        expanded = os.path.expanduser(path)
+        normed = os.path.normpath(expanded)
+        cased = os.path.normcase(normed)
+        # Append trailing separator for boundary-safe startswith matching
+        sep = os.sep
+        if not cased.endswith(sep):
+            cased = cased + sep
+        return cased
+
+    @staticmethod
     def _paths_match_prefix(path: str, prefix: str) -> bool:
         """Return True if path starts with prefix (platform-normalized).
 
@@ -472,4 +498,5 @@ class PrivacyZoneService:
             prefix_check = prefix + sep
         else:
             prefix_check = prefix
-        return path.startswith(prefix_check) or path == prefix
+        return path.startswith(prefix_check) or path == prefix.rstrip(sep)
+

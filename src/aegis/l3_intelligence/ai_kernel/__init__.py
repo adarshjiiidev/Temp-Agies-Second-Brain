@@ -111,6 +111,22 @@ from aegis.l3_intelligence.ai_kernel.structured import (
 # Scrubber
 from aegis.l3_intelligence.ai_kernel.scrubber import scrub_messages
 
+# P07.5: Provider health monitor
+from aegis.l3_intelligence.ai_kernel.health import (
+    ProviderHealthConfig,
+    ProviderHealthMonitor,
+)
+
+# P07.5: Credential resolution + provisioners
+from aegis.l3_intelligence.ai_kernel.credentials import (
+    CredentialResolver,
+    CredentialResolutionError,
+    CredentialProvisioner,
+    ManualProvisioner,
+    EnvironmentProvisioner,
+    BrowserProvisioner,
+)
+
 __all__ = [
     # Kernel
     "AIKernel",
@@ -179,4 +195,14 @@ __all__ = [
     "extract_json_block",
     # Scrubber
     "scrub_messages",
+    # P07.5: Health monitor
+    "ProviderHealthConfig",
+    "ProviderHealthMonitor",
+    # P07.5: Credentials
+    "CredentialResolver",
+    "CredentialResolutionError",
+    "CredentialProvisioner",
+    "ManualProvisioner",
+    "EnvironmentProvisioner",
+    "BrowserProvisioner",
 ]
