@@ -427,11 +427,12 @@ class ModelRegistry:
         )
         long_context_bonus = 0.5 if has_long_context else 0.0
 
+        # reliability must contribute EXACTLY ONCE (structural*0.35 + reliability*0.35 + long_context_bonus)
+        # Bug H12: the bare `+ reliability` below was a double-count — fixed 2026-08-08.
         score = (
             structural * 0.35
             + reliability * 0.35
             + long_context_bonus
-            + reliability
         )
 
         if score < 0.0:

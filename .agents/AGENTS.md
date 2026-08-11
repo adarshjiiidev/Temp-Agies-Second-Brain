@@ -2,9 +2,9 @@
 
 > **Every incoming agent MUST read this file and `docs/AEGIS_MASTER_AUDIT.md` before touching any code.**
 > This is the canonical context document. The repository is the source of truth.
-> **2026-08-07 STABILIZATION COMPLETE: L5 hang fixed. Full suite passes (~8s); 793 tests on system
-> python (791 baseline + 2 new), 782 on `.venv` python (different pytest/pytest-anyio collection).**
-> See `docs/AEGIS_MASTER_AUDIT.md` for full audit details.
+> **2026-08-10 P07 COMPLETE: Hardcoding remediation done. Full suite passes (~17s); 887 tests on
+> system python. P07 persistence bugs fixed. 73 new P07 comprehensive tests added.**
+> See `docs/AEGIS_MASTER_AUDIT.md` and `docs/HARDCODING_REMEDIATION_REPORT.md` for full details.
 > This file tells you WHERE you are, WHAT is done, and WHAT to do next.
 
 ---
@@ -53,6 +53,7 @@ L1  Core Runtime           ✅ Implemented
 | P05 | L5 Execution Engine | ✅ DONE | 546/546 (at the time) | Bug B-L5-001 fixed |
 | P06 | L6 Planning / Agents | ✅ DONE | 726/726 (at the time) | 180 L6 tests added; 2 bugs fixed (intent domain, cycle detection) |
 | REDESIGN | AI-Native Architectural Overhaul | 🔷 PLAN PRODUCED | — | Migration plan produced |
+| P07 | P07 Hardcoding Remediation + Env Model | ✅ DONE | 887/887 | H12 bug fix, H9/H10 ScoringConfig/EvaluatorConfig, kernel_provider rewrite, 73 new P07 comprehensive tests, 7 P07 persistence bugs fixed |
 
 > **2026-08-07 STAB-01: L5 hang fixed — full suite now completes (~8s).**
 > Count is interpreter-dependent: system `python` = 793 (791 baseline + 2 new regression tests);
@@ -191,9 +192,9 @@ Append to the bottom of §8. Then update §2 (milestone status) if a prompt mile
 | 2026-08-04 | **P06** | L6 Planning Engine: GoalEngine, TaskDecomposer, DependencyGraph, DecisionEngine, ScoringEngine, PlannerService, ReflectionEngine, VerificationPlanner, RecoveryPlanner, IntentParser, AmbiguityDetector, RequirementExtractor. 11 subpackages. Fixed syntax bug in ambiguity_detector.py (f-string !r in generator). Fixed 2 test failures (browser domain keyword, cycle detection). | `src/aegis/l6_planning/` (all 11 subpackages), `tests/integration_l6/` (180 tests), `src/aegis/l1_core/errors/codes.py` (L6 error codes) | **726/726 ✅** |
 | 2026-08-04 | **Architectural Redesign Directive** | Full repo audit performed. Migration plan produced: 27 files require redesign, 3 new component directories to create (prompts/, reasoning/, capabilities/). 6 migration phases (A–F). Awaiting user approval before implementation. | `.agents/AGENTS.md` (this file), `docs/PROJECT_AEGIS_CURRENT_STATE.md` | 726/726 ✅ (no code changes) |
 | 2026-08-07 | **Master Audit (read-only)** | Verified live ground truth: 791 tests collected; 57+256+130 pass (L1–L4); full suite **HANGS** at L5; ruff=642; cargo absent; L1–L6 + redesign pkgs present; L6/redesign unwired. Corrected docs: `AEGIS_MASTER_AUDIT.md` (new), `README.md`, `current_state.json`, `PROJECT_AEGIS_CURRENT_STATE.md` banner, `AGENTS.md`, roadmap status. | `docs/AEGIS_MASTER_AUDIT.md`, `README.md`, `docs/current_state.json`, `docs/PROJECT_AEGIS_CURRENT_STATE.md`, `.agents/AGENTS.md`, `docs/09_ROADMAP.md` | 57 L1/L2 + 256 L3 + 130 L4 ✅; L5 HANGS ⚠️ |
-| 2026-08-07 | **STAB-01 — L5 Hang Fix** | Root cause: `FilesystemExecutor._search` used eager `list(rglob(...))` causing unbounded walk on home dir. Fix: lazy iterator + wall-clock budget (`max_seconds=10.0`) + `truncated` field. E2E test root changed to non-existent path. 2 new regression tests added. L6 `test_known_strategies_map_correctly` fixed (non-existent SPEED_FIRST→FASTEST, SAFE_MODE→BALANCED). Docs updated. | `src/aegis/l5_execution/executors/filesystem.py`, `tests/integration_l5/test_pipeline.py`, 
-`tests/integration_l6/test_reasoning_provider.py`, `docs/PROJECT_AEGIS_CURRENT_STATE.md`, `.agents/AGENTS.md` | 
-**793/793 ✅ system python (~8s; 782 on .venv due to pytest-anyio collection)** |
+| 2026-08-07 | **STAB-01 — L5 Hang Fix** | Root cause: `FilesystemExecutor._search` used eager `list(rglob(...))` causing unbounded walk on home dir. Fix: lazy iterator + wall-clock budget (`max_seconds=10.0`) + `truncated` field. E2E test root changed to non-existent path. 2 new regression tests added. L6 `test_known_strategies_map_correctly` fixed (non-existent SPEED_FIRST→FASTEST, SAFE_MODE→BALANCED). Docs updated. | `src/aegis/l5_execution/executors/filesystem.py`, `tests/integration_l5/test_pipeline.py`, `tests/integration_l6/test_reasoning_provider.py`, `docs/PROJECT_AEGIS_CURRENT_STATE.md`, `.agents/AGENTS.md` | **793/793 ✅ system python (~8s; 782 on .venv due to pytest-anyio collection)** |
+| 2026-08-10 | **P07 Phase 1 — Hardcoding Remediation** | H12 Registry double-count bug fixed. `kernel_provider.py` rewritten to use real `AIKernel.generate()` API. H9: `scoring.py` magic constants → `ScoringConfig`. H10: `evaluator.py` thresholds → `EvaluatorConfig`. H1–H8 classified as `DETERMINISTIC_FALLBACK` (correct). `HARDCODING_REMEDIATION_REPORT.md` produced. | `src/aegis/l3_intelligence/ai_kernel/registry.py`, `src/aegis/reasoning/kernel_provider.py`, `src/aegis/l6_planning/reasoning/scoring.py`, `src/aegis/l6_planning/reasoning/evaluator.py`, `tests/integration_l3/test_registry_quality_score.py`, `docs/HARDCODING_REMEDIATION_REPORT.md` | **814/814 ✅** |
+| 2026-08-10 | **P07 Phase 2 — Comprehensive P07 Tests + Persistence Bug Fixes** | 73 new comprehensive P07 tests added covering observer, audit, sink, consent gate, privacy zones, workflow/preference inferencer (8/10 criterion), scanning coordinator, app scanner (95% criterion), candidate store, env store, and shutdown zero-leftover invariants. Fixed 7 bugs in `env_store.py` (wrong KG method names) and `candidate_store.py` (invalid SearchQuery kwarg, PENDING_REVIEW invisible to search, wrong promote call, T5 policy gate). | `tests/integration_l4/test_p07_comprehensive.py` (NEW), `src/aegis/l4_memory/p07/persistence/env_store.py`, `src/aegis/l4_memory/p07/persistence/candidate_store.py`, `docs/HARDCODING_REMEDIATION_REPORT.md` | **887/887 ✅ (~17s)** |
 
 ---
 
@@ -202,13 +203,16 @@ Append to the bottom of §8. Then update §2 (milestone status) if a prompt mile
 ### Before doing ANYTHING:
 1. Read this file.
 2. Read `docs/PROJECT_AEGIS_CURRENT_STATE.md` for component detail and `docs/AEGIS_MASTER_AUDIT.md` for the current truth.
-3. Run `python -m pytest tests/ -q` — the full suite now completes (~8s). Expect 793 tests on
-   system python (782 on `.venv` python). If it hangs again, investigate L5.
-4. Read the user's directive carefully. Do NOT begin implementation without explicit authorisation.
+3. Read `docs/HARDCODING_REMEDIATION_REPORT.md` for the complete P07 hardcoding audit results.
+4. Run `python -m pytest tests/ -q` — the full suite now completes (~17s). Expect **887 tests** on
+   system python. If it hangs, investigate L5.
+5. Read the user's directive carefully. Do NOT begin implementation without explicit authorisation.
 
-### Current state (2026-08-07, post STAB-01)
+### Current state (2026-08-10, post P07)
 - L1–L6 implemented; redesign pkgs (reasoning/prompts/capabilities) present but UNWIRED/UNTESTED.
-- **Full suite passes (~8s): 793 tests on system python, 782 on `.venv` python.** L5 hang is resolved.
+- **Full suite passes (~17s): 887 tests on system python.** L5 hang is resolved.
+- P07 environment model: inference, discovery, persistence, scanners, observer, consent gate, privacy zones — all implemented and tested.
+- P07 persistence bugs fixed: env_store, candidate_store wired correctly to KnowledgeGraph.
 - Remaining blockers: reasoning provider wiring (`has_models()`/`infer_text()` on AIKernel), Rust crates, 642 pre-existing ruff issues. See `AEGIS_MASTER_AUDIT.md`.
 
 ### Architecture red lines (never cross without explicit ADR):

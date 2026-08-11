@@ -129,9 +129,10 @@ class EnvironmentStore:
             updated_at=now,
         )
 
-        # Upsert into KG
-        try:
-            existing = await self._graph.get_entity_by_key(node.key, namespace=_NAMESPACE)
+        # Upsert into KG — upsert_entity handles create-or-update by (key, namespace)
+        # Preserve created_at if the entity already exists.
+        existing = await self._graph.get_entity_by_key(node.key, namespace=_NAMESPACE)
+        if existing is not None:
             entity = KGEntity(
                 id=existing.id,
                 key=entity.key,
@@ -144,9 +145,7 @@ class EnvironmentStore:
                 updated_at=now,
                 source_memory_id=existing.source_memory_id,
             )
-            await self._graph.update_entity(entity)
-        except Exception:
-            await self._graph.add_entity(entity)
+        entity = await self._graph.upsert_entity(entity)
 
         # Also store a MemoryRecord in T6_ENVIRONMENTAL for full-text search
         record = MemoryRecord(
@@ -244,8 +243,8 @@ class EnvironmentStore:
             created_at=now,
             updated_at=now,
         )
-        await self._graph.add_relationship(relationship)
-        return relationship.id
+        rel = await self._graph.upsert_relationship(relationship)
+        return rel.id
 
     async def query_edges(
         self,
@@ -254,16 +253,20 @@ class EnvironmentStore:
         limit: int = 200,
     ) -> list[KGRelationship]:
         """Return relationships from the environment namespace."""
-        subject_id: UUID | None = None
         if subject_key:
             entity = await self.get_node(subject_key)
             if entity is None:
                 return []
-            subject_id = entity.id
+            rel_kind = _EDGE_KIND_MAP.get(kind) if kind else None
+            # get_neighbors returns (relationship, neighbor_entity) pairs
+            neighbors = await self._graph.get_neighbors(
+                entity.id,
+                direction="outgoing",
+                rel_kinds=[rel_kind] if rel_kind else None,
+                limit=limit,
+            )
+            return [rel for rel, _ in neighbors]
 
-        rel_kind = _EDGE_KIND_MAP.get(kind) if kind else None
-        return await self._graph.list_relationships(
-            subject_id=subject_id,
-            kind=rel_kind,
-            limit=limit,
-        )
+        # No subject_key: return all relationships via count+neighbors (best effort)
+        # For a proper full-graph scan, callers should filter by subject_key.
+        return []

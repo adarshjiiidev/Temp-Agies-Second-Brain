@@ -109,6 +109,7 @@ class CandidateStore:
             tier=MemoryTier.T4_PROCEDURAL,
             kind=MemoryKind.PROCEDURE,
             status=MemoryStatus.PENDING_REVIEW,
+            is_draft=True,  # Required: PENDING_REVIEW treated as draft in manager policy gate
             importance=Importance.NORMAL,
             privacy_tier=privacy_tier,
             confidence=confidence,
@@ -150,6 +151,7 @@ class CandidateStore:
             tier=MemoryTier.T5_PERSONAL,
             kind=MemoryKind.PREFERENCE,
             status=MemoryStatus.PENDING_REVIEW,
+            is_draft=True,  # Required: T5_PERSONAL must be draft to pass privacy gate
             importance=Importance.NORMAL,
             privacy_tier=privacy_tier,
             confidence=confidence,
@@ -180,14 +182,22 @@ class CandidateStore:
         """Return all PENDING_REVIEW candidates."""
         from aegis.l4_memory.search import SearchQuery
         from aegis.l4_memory.types import SearchMode
+        # include_draft=True is essential: without it, _metadata_search sets
+        # status=ACTIVE and PENDING_REVIEW records are never returned.
         query = SearchQuery(
             namespace=_NAMESPACE,
-            status=MemoryStatus.PENDING_REVIEW,
+            tags=frozenset({"p07_candidate"}),
             mode=SearchMode.METADATA,
+            include_draft=True,
             limit=limit,
         )
         results = await self._manager.search(query)
-        return [CandidateRecord(r.record) for r in results]
+        # Filter to PENDING_REVIEW only (excludes promoted/rejected records)
+        return [
+            CandidateRecord(r.record)
+            for r in results
+            if r.record.status == MemoryStatus.PENDING_REVIEW
+        ]
 
     async def get(self, candidate_id: UUID) -> CandidateRecord | None:
         """Return a single candidate by ID."""
@@ -216,9 +226,12 @@ class CandidateStore:
         Returns True on success.
         """
         try:
+            # to_status is the second positional arg; user_confirmed=True required
+            # for T5_PERSONAL records (preference candidates).
             await self._manager.promote(
                 candidate_id,
-                new_status=MemoryStatus.ACTIVE,
+                MemoryStatus.ACTIVE,
+                user_confirmed=True,
             )
             return True
         except Exception:
