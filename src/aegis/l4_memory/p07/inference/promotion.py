@@ -284,10 +284,16 @@ class WorkflowAutoPromoter:
         if self._tracker.is_eligible(workflow_key):
             return await self._try_promote(workflow_key, candidate_id=candidate_id)
 
+        # Determine why not eligible — give a clear reason
+        if not self._tracker._config.enable_auto:
+            reason = "Auto-promotion disabled by configuration"
+        else:
+            reason = f"Threshold not yet reached ({count}/{self._tracker._config.threshold})"
+
         return PromotionResult(
             workflow_key=workflow_key,
             promoted=False,
-            reason=f"Threshold not yet reached ({count}/{self._tracker._config.threshold})",
+            reason=reason,
             candidate_id=candidate_id,
             success_count=count,
         )

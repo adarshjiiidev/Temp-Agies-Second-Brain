@@ -104,8 +104,9 @@ class PathToolProvider(ApplicationDiscoveryProvider):
         """
         Args:
             tools: List of tool names to probe. Defaults to _COMMON_TOOLS.
+                   Pass an empty list explicitly to disable PATH discovery.
         """
-        self._tools = tools or list(_COMMON_TOOLS)
+        self._tools = list(tools) if tools is not None else list(_COMMON_TOOLS)
 
     @property
     def name(self) -> str:
