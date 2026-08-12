@@ -3,9 +3,10 @@
 > **Every incoming agent MUST read this file and `docs/AEGIS_MASTER_AUDIT.md` before touching any code.**
 > This is the canonical context document. The repository is the source of truth.
 > **2026-08-11 P07.5 COMPLETE: Provider-agnostic LLM inference infrastructure hardened.**
-> Ollama discovery, ProviderHealthMonitor, CredentialResolver/Provisioner, AIKernel introspection.
+> **2026-08-12 P-RUST PHASE R0+R1 COMPLETE: Rust Performance Core audit + existing crate repairs.**
+> Rust migration map, ADR-0001, `aegis_crypto` compile errors fixed, dependency manifests corrected.
 > **Full suite passes (~22s): 1060 tests (1 skipped Windows-only), 0 regressions.**
-> See `docs/P07_5_ARCHITECTURE.md` for full architecture detail.
+> See `docs/architecture/RUST_PERFORMANCE_CORE.md` and `docs/adr/ADR-0001-rust-performance-core.md`.
 > This file tells you WHERE you are, WHAT is done, and WHAT to do next.
 
 ---
@@ -57,6 +58,7 @@ L1  Core Runtime           ✅ Implemented
 | P07 | P07 Hardcoding Remediation + Env Model | ✅ DONE | 887/887 | H12 bug fix, H9/H10 ScoringConfig/EvaluatorConfig, kernel_provider rewrite, 73 new P07 comprehensive tests, 7 P07 persistence bugs fixed |
 | P07-GAP | P07 Gap Remediation (4 architectural gaps) | ✅ DONE | 1007/1007 | Provider abstraction, WorkflowAutoPromoter, FreshnessScheduler, PrivacyZoneService; 120 new tests |
 | P07.5 | LLM Provider & Inference Infrastructure | ✅ DONE | 1060/1060 | Ollama discovery, ProviderHealthMonitor, CredentialResolver, CredentialProvisioner ABC, AIKernel.has_models/list_models/provider_count; 53 new tests; 0 regressions |
+| P-RUST R0+R1 | Rust Performance Core — Audit + Crate Repairs | ✅ DONE | 1060/1060 (Python unchanged) | Phase R0: full L1–L7 migration map, ADR-0001. Phase R1: 6 compile errors fixed in `aegis_crypto`, `rand` dep added to `aegis_ffi_common`, `tempfile` dev-dep added to `aegis_audit_chain`. Phases R2–R7 deferred pending `cargo` installation |
 
 > **2026-08-07 STAB-01: L5 hang fixed — full suite now completes (~8s).**
 > Count is interpreter-dependent: system `python` = 793 (791 baseline + 2 new regression tests);
@@ -200,6 +202,7 @@ Append to the bottom of §8. Then update §2 (milestone status) if a prompt mile
 | 2026-08-10 | **P07 Phase 2 — Comprehensive P07 Tests + Persistence Bug Fixes** | 73 new comprehensive P07 tests added covering observer, audit, sink, consent gate, privacy zones, workflow/preference inferencer (8/10 criterion), scanning coordinator, app scanner (95% criterion), candidate store, env store, and shutdown zero-leftover invariants. Fixed 7 bugs in `env_store.py` (wrong KG method names) and `candidate_store.py` (invalid SearchQuery kwarg, PENDING_REVIEW invisible to search, wrong promote call, T5 policy gate). | `tests/integration_l4/test_p07_comprehensive.py` (NEW), `src/aegis/l4_memory/p07/persistence/env_store.py`, `src/aegis/l4_memory/p07/persistence/candidate_store.py`, `docs/HARDCODING_REMEDIATION_REPORT.md` | **887/887 ✅ (~17s)** |
 | 2026-08-11 | **P07-GAP — Gap Remediation (4 gaps)** | GAP #1: `ApplicationDiscoveryProvider` abstraction + `PathToolProvider`/`WindowsRegistryProvider`/`CompositeProvider`; `app_scanner.py` refactored to use DI. GAP #2: `WorkflowSuccessTracker` + `WorkflowAutoPromoter` (threshold=3, T5 never auto-promotes, cooldown, provenance). GAP #3: `FreshnessScheduler` (asyncio, shutdown-safe, failure-tolerant, no L2 dep). GAP #4: `PrivacyZoneService` (add/remove/update/list/check/export/import, boundary-safe path normalization, atomic import, P0 invariant). 120 new tests added. 0 regressions. | `src/aegis/l4_memory/p07/scanners/providers.py` (NEW), `app_scanner.py`, `scanners/__init__.py`, `inference/promotion.py` (NEW), `inference/__init__.py`, `model/scheduler.py` (NEW), `model/__init__.py`, `privacy/service.py` (NEW), `privacy/__init__.py`, `tests/integration_l4/test_p07_gaps.py` (NEW), `docs/P07_ARCHITECTURE_PLAN.md`, `docs/PROJECT_AEGIS_CURRENT_STATE.md`, `.agents/AGENTS.md` | **1007/1007 ✅ (~10s)** |
 | 2026-08-11 | **P07.5 — LLM Provider & Inference Infrastructure** | `BaseProvider.health_check()` + `discover_models()` (default UNKNOWN/static). `OllamaProvider` overrides: `GET /api/version` (health), `GET /api/tags` (discovery), fallback to static list on error. `ProviderHealthMonitor` (asyncio background loop, threshold-gated DOWN marking, UNKNOWN-safe). `CredentialResolver` (env:/file:/aegis-keyring: schemes). `CredentialProvisioner` ABC + `ManualProvisioner` + `EnvironmentProvisioner` + `BrowserProvisioner` (NotImplementedError stub). `AIKernel.has_models()` + `list_models()` + `provider_count()`. `ProviderRegistry.register_force()`. 53 new tests (credential security + L6→L3 integration). 0 regressions. | `providers/base.py`, `providers/ollama.py`, `ai_kernel/health.py` (NEW), `ai_kernel/credentials.py` (NEW), `ai_kernel/kernel.py`, `ai_kernel/__init__.py`, `tests/integration_l3/test_credential_security.py` (NEW), `tests/integration_l3/test_reasoning_integration.py` (NEW), `docs/P07_5_ARCHITECTURE.md` (NEW), `.agents/AGENTS.md` | **1060/1060 ✅ (~22s)** |
+| 2026-08-12 | **P-RUST R0+R1 — Rust Performance Core Audit + Crate Repairs** | Phase R0: Complete L1–L7 component audit. Every component classified (KEEP_PYTHON/RUST_CANDIDATE/RUST_CORE/DO_NOT_MIGRATE). Full migration map written. `ADR-0001-rust-performance-core.md` written (hybrid rationale, PyO3+maturin strategy, rollback policy, FFI contract, security constraints). Phase R1: Fixed 6 compile errors in `aegis_crypto/src/lib.rs` (base64 import, invalid const hex table, wrong array indexing, confused AES-GCM encrypt double-call, missing closing paren, hmac return type). Added `rand = "0.8"` to `aegis_ffi_common/Cargo.toml`. Added `tempfile = "3"` dev-dep to `aegis_audit_chain/Cargo.toml`. Phases R2–R7 blocked pending `cargo` installation. 0 Python regressions. | `crates/aegis_ffi_common/Cargo.toml`, `crates/aegis_crypto/src/lib.rs`, `crates/aegis_audit_chain/Cargo.toml`, `docs/architecture/RUST_PERFORMANCE_CORE.md` (NEW), `docs/adr/ADR-0001-rust-performance-core.md` (NEW), `.agents/AGENTS.md`, `docs/PROJECT_AEGIS_CURRENT_STATE.md` | **1060/1060 ✅ (Python unchanged; Rust unverified — cargo not installed)** |
 
 ---
 
@@ -214,12 +217,13 @@ Append to the bottom of §8. Then update §2 (milestone status) if a prompt mile
 6. Run `python -m pytest tests/ -q` — expect **1060 tests** on system python (~22s). If it hangs, investigate L5.
 7. Read the user's directive carefully. Do NOT begin implementation without explicit authorisation.
 
-### Current state (2026-08-11, post P07.5)
+### Current state (2026-08-12, post P-RUST R0+R1)
 - L1–L6 implemented; redesign pkgs (reasoning/prompts/capabilities) present — `KernelReasoningProvider` wired and tested.
 - **Full suite passes (~22s): 1060 tests on system python.** L5 hang is resolved.
 - P07 environment model: inference, discovery, persistence, scanners, observer, consent gate, privacy zones — all implemented and tested.
 - **P07.5 complete:** `OllamaProvider.health_check()` + `discover_models()`, `ProviderHealthMonitor`, `CredentialResolver`, `ManualProvisioner`, `EnvironmentProvisioner`, `BrowserProvisioner` (stub), `AIKernel.has_models()` + `list_models()` + `provider_count()`.
-- Remaining: Rust crates (cargo not installed), 642 pre-existing ruff issues, `ProviderHealthMonitor` not yet wired into AEGIS lifecycle, `FreshnessScheduler` not yet wired into `ScanningCoordinator` (P08 scope).
+- **P-RUST R0+R1 complete:** Full L1–L7 component audit done; `ADR-0001` + `RUST_PERFORMANCE_CORE.md` written; `aegis_crypto` compile errors fixed; dependency manifests corrected. Phases R2–R7 blocked on `cargo` installation.
+- Remaining: `cargo` installation (enables R2 benchmarks + R3 new crates), 642 pre-existing ruff issues, `ProviderHealthMonitor` not yet wired into AEGIS lifecycle, `FreshnessScheduler` not yet wired into `ScanningCoordinator` (P08 scope).
 
 ### Architecture red lines (never cross without explicit ADR):
 - L-layer dependencies must be downward only (L6 imports L5 and below; never upward)

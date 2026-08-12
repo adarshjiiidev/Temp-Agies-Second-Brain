@@ -8,6 +8,8 @@
 > - The full test suite **was hanging at L5 integration — FIXED on 2026-08-07 (STAB-01)**. It now completes.
 > - **P07 hardcoding remediation** completed 2026-08-10 (887 tests).
 > - **P07 gap remediation** (provider abstraction, auto-promotion, freshness scheduler, privacy zone service) completed **2026-08-11**: **1007 tests, 0 regressions**.
+> - **P07.5 LLM provider infrastructure** completed **2026-08-11**: **1060 tests, 0 regressions**.
+> - **P-RUST R0+R1** (Rust Performance Core audit + crate repairs) completed **2026-08-12**: migration map, ADR-0001, `aegis_crypto` compile errors fixed. **1060 Python tests unchanged.**
 > - Redesign packages (`reasoning`, `prompts`, `capabilities`) exist on disk — PRESENT but UNWIRED/UNTESTED.
 >
 > **The repository is the source of truth.** For current numbers use `AEGIS_MASTER_AUDIT.md` and `P07_ARCHITECTURE_PLAN.md §10`. The detailed
@@ -19,12 +21,12 @@
 |---|---|
 | Project Code Name | AEGIS (Adaptive Executive Governance & Intelligence System) |
 | Full Name | Personal Adaptive AI Operating System |
-| Current Milestone (docs) | **P07 Gap Remediation — COMPLETE (2026-08-11)** |
-| Actual State | **L1–L6 + P07 gaps implemented** (see `AEGIS_MASTER_AUDIT.md` + `P07_ARCHITECTURE_PLAN.md §10`) |
-| Next Milestone | P08 (requires explicit directive) |
+| Current Milestone (docs) | **P-RUST R0+R1 — Rust Performance Core Audit + Repair (2026-08-12)** |
+| Actual State | **L1–L6 + P07 + P07.5 + P-RUST R0+R1 implemented** (see `AEGIS_MASTER_AUDIT.md` + `docs/architecture/RUST_PERFORMANCE_CORE.md`) |
+| Next Milestone | P-RUST R2 (benchmarks, requires `cargo`) or P08 (requires explicit directive) |
 | Total Prompts Planned | 23 per roadmap (docs/09_ROADMAP.md) |
 | Working Baseline | HEAD (all fixes applied) |
-| Repository Health | **Full suite passes (~10s): 1007 tests on system python (887 baseline + 120 new gap tests); 0 regressions; ruff 642 (pre-existing); mypy blocked by Windows WDAC; cargo not installed** |
+| Repository Health | **Full suite passes (~22s): 1060 tests on system python; 0 regressions; ruff 642 (pre-existing); mypy blocked by Windows WDAC; cargo not installed (Rust crates fixed but unverified)** |
 
 
 ---
@@ -222,7 +224,7 @@ L6 was implemented after this file's last update._
 |---|---|---|---|
 | TD-01 | Ruff 281 lint issues in src + tests | LOW | Pre-existing: unused imports, import ordering (I001), unused vars (F841). All auto-fixable with `ruff --fix`. Not test-blocking. |
 | TD-02 | mypy blocked by Windows Application Control policy | MEDIUM | DLL load failure blocks mypy. Run on Linux/macOS to validate strict types. |
-| TD-03 | Cargo not installed → Rust FFI crates unverified | MEDIUM | Install rustup then `cargo check --workspace` in /crates. |
+| TD-03 | Rust FFI crates: Phase R1 complete | MEDIUM | Rust FFI crates: Phase R1 complete (compile errors fixed, manifests corrected). Verification pending `cargo` installation. Run `cargo check --workspace && cargo test --workspace` when `cargo` is available. |
 | TD-04 | T2SubprocessSandbox: shell builtins fail on Windows without `shell=True` | MEDIUM | `asyncio.create_subprocess_exec(["echo", "hello"])` fails on Windows — echo is a CMD builtin. Mitigated by B-L5-001 fix (shell.exec now requires approval so Stage 6 never reached in the affected test path). Needs proper fix when shell executor is used in production. |
 | TD-05 | T4 Firecracker sandbox not implemented | LOW | `SandboxManager.build_context()` raises `NotImplementedError` for T4. Expected — planned for P08+. |
 | TD-06 | `user_confirmed=True` does not bypass direct `NEEDS_APPROVAL` policy rules | MEDIUM | `user_confirmed` only bypasses the `force_approval_on_critical` override path. Direct NEEDS_APPROVAL rules always produce APPROVAL_REQUIRED regardless. A pre-approval token mechanism (future feature) would be needed to fully implement the confirmation flow. |
