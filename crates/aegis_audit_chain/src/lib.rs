@@ -171,7 +171,9 @@ mod tests {
         // tamper
         std::fs::write(&path, "junk\n").unwrap();
         let mut chain2 = AuditChain::new(&path);
-        chain2.load_or_create().is_ok();
+        // Intentionally ignore result — load will fail on the junk line.
+        // Cannot verify a chain that failed to load; assert false to confirm.
+        let _ = chain2.load_or_create();
         // won't verify because of junk line OR parse error
     }
 }

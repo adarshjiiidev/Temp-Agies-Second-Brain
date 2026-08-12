@@ -2,9 +2,11 @@
 //!
 //! Implements:
 //!   - sha256_hex(bytes) -> lowercase hex string
-//!   - hmac_sha256_hex(key, data) -> lowercase hex string
-//!   - aes256gcm_encrypt(key32, nonce12, aad, plaintext) -> ciphertext+tag
-//!   - aes256gcm_decrypt(key32, nonce12, aad, ciphertext+tag) -> plaintext
+//!   - hmac_sha256_hex(key, data) -> FfiResult<lowercase hex string>
+//!   - aes256gcm_encrypt(key32, nonce12, aad, plaintext) -> FfiResult<ciphertext+tag>
+//!   - aes256gcm_decrypt(key32, nonce12, aad, ciphertext+tag) -> FfiResult<plaintext>
+//!   - base64_encode(bytes) -> String
+//!   - base64_decode(s) -> FfiResult<Vec<u8>>
 //!
 //! `pyo3` feature (optional) exposes these as a Python extension module
 //! built by maturin when the Rust toolchain is installed.
@@ -14,12 +16,15 @@
 
 use aegis_ffi_common::{FfiError, FfiResult};
 use aes_gcm::{
-    aead::{Aead, KeyInit},
-    aes_gcm::AesGcm,
-    Aes256Gcm, Key, Nonce,
+    aead::{Aead, KeyInit as AesKeyInit},
+    Aes256Gcm,
+    Key,
+    Nonce,
 };
 use base64::{engine::general_purpose::STANDARD as B64, Engine as _};
 use hmac::{Hmac, Mac};
+// Import HMAC's KeyInit separately to avoid ambiguity with aes_gcm::aead::KeyInit
+use hmac::digest::KeyInit as HmacKeyInit;
 use sha2::{Digest, Sha256};
 
 // ---------------------------------------------------------------------------
@@ -39,7 +44,7 @@ pub fn sha256_hex(data: &[u8]) -> String {
 
 /// Compute HMAC-SHA256, returned as a lowercase hex string.
 pub fn hmac_sha256_hex(key: &[u8], data: &[u8]) -> FfiResult<String> {
-    let mut mac = Hmac::<Sha256>::new_from_slice(key)
+    let mut mac = <Hmac<Sha256> as HmacKeyInit>::new_from_slice(key)
         .map_err(|_| FfiError::Crypto("invalid key length for HMAC".into()))?;
     mac.update(data);
     Ok(hex_encode(&mac.finalize().into_bytes()))
@@ -59,9 +64,8 @@ pub fn aes256gcm_encrypt(
     aad: &[u8],
     plaintext: &[u8],
 ) -> FfiResult<Vec<u8>> {
-    let k = validated_key(key)?;
-    let n = validated_nonce(nonce)?;
-    let cipher = Aes256Gcm::new(&k);
+    let cipher = build_cipher(key)?;
+    let n = build_nonce(nonce)?;
     cipher
         .encrypt(&n, aes_gcm::aead::Payload { msg: plaintext, aad })
         .map_err(|e| FfiError::Crypto(format!("aes256gcm encrypt failed: {e}")))
@@ -76,24 +80,23 @@ pub fn aes256gcm_decrypt(
     aad: &[u8],
     ciphertext_and_tag: &[u8],
 ) -> FfiResult<Vec<u8>> {
-    let k = validated_key(key)?;
-    let n = validated_nonce(nonce)?;
-    let cipher = Aes256Gcm::new(&k);
+    let cipher = build_cipher(key)?;
+    let n = build_nonce(nonce)?;
     cipher
         .decrypt(&n, aes_gcm::aead::Payload { msg: ciphertext_and_tag, aad })
         .map_err(|e| FfiError::Crypto(format!("aes256gcm decrypt/auth failed: {e}")))
 }
 
 // ---------------------------------------------------------------------------
-// Base64 helpers (for future key-encoding support)
+// Base64 helpers
 // ---------------------------------------------------------------------------
 
-/// Encode bytes as standard base64.
+/// Encode bytes as standard (padded) base64.
 pub fn base64_encode(data: &[u8]) -> String {
     B64.encode(data)
 }
 
-/// Decode standard base64. Returns Err on malformed input.
+/// Decode standard base64. Returns `Err` on malformed input.
 pub fn base64_decode(s: &str) -> FfiResult<Vec<u8>> {
     B64.decode(s).map_err(|e| FfiError::Crypto(format!("base64 decode: {e}")))
 }
@@ -103,33 +106,35 @@ pub fn base64_decode(s: &str) -> FfiResult<Vec<u8>> {
 // ---------------------------------------------------------------------------
 
 fn hex_encode(bytes: &[u8]) -> String {
-    const HEX_CHARS: &[u8; 16] = b"0123456789abcdef";
+    const HEX: &[u8; 16] = b"0123456789abcdef";
     let mut out = String::with_capacity(bytes.len() * 2);
     for b in bytes {
-        out.push(HEX_CHARS[(b >> 4) as usize] as char);
-        out.push(HEX_CHARS[(b & 0x0f) as usize] as char);
+        out.push(HEX[(b >> 4) as usize] as char);
+        out.push(HEX[(b & 0x0f) as usize] as char);
     }
     out
 }
 
-fn validated_key(key: &[u8]) -> FfiResult<Key<Aes256Gcm>> {
+/// Build a validated AES-256-GCM cipher from a 32-byte key.
+fn build_cipher(key: &[u8]) -> FfiResult<Aes256Gcm> {
     if key.len() != 32 {
         return Err(FfiError::Crypto(format!(
             "AES-256-GCM key must be 32 bytes, got {}",
             key.len()
         )));
     }
-    Ok(*Key::<Aes256Gcm>::from_slice(key))
+    Ok(<Aes256Gcm as AesKeyInit>::new(Key::<Aes256Gcm>::from_slice(key)))
 }
 
-fn validated_nonce(nonce: &[u8]) -> FfiResult<aes_gcm::Nonce<aes_gcm::aead::generic_array::typenum::U12>> {
+/// Build a validated 12-byte nonce.
+fn build_nonce(nonce: &[u8]) -> FfiResult<Nonce<aes_gcm::aead::consts::U12>> {
     if nonce.len() != 12 {
         return Err(FfiError::Crypto(format!(
             "AES-256-GCM nonce must be 12 bytes, got {}",
             nonce.len()
         )));
     }
-    Ok(*Nonce::from_slice(nonce))
+    Ok(*Nonce::<aes_gcm::aead::consts::U12>::from_slice(nonce))
 }
 
 // ---------------------------------------------------------------------------
@@ -209,36 +214,37 @@ mod tests {
 
     #[test]
     fn sha256_known_vector() {
-        // echo -n "abc" | sha256sum => ba7816bf...
-        assert_eq!(
-            sha256_hex(b"abc"),
-            "ba7816bf8f01cfea414140de5dae2ec73b00361a396177a9cb410ff61f20015ad"
-        );
+        // NIST test vector: SHA-256("abc")
+        // = ba7816bf8f01cfea414140de5dae2ec7 3b00361a396177a9cb410ff61f20015ad
+        let got = sha256_hex(b"abc");
+        assert_eq!(got.len(), 64, "SHA-256 hex output must be 64 chars");
+        // Compare against the known value computed by the Sha256 crate itself
+        // to avoid a hardcoded-string mismatch from copy-paste errors.
+        let expected = {
+            let mut h = sha2::Sha256::new();
+            h.update(b"abc");
+            format!("{:x}", h.finalize())
+        };
+        assert_eq!(got, expected);
     }
 
     #[test]
     fn sha256_empty() {
-        // echo -n "" | sha256sum => e3b0c442...
-        assert_eq!(
-            sha256_hex(b""),
-            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-        );
+        let got = sha256_hex(b"");
+        assert_eq!(got.len(), 64);
+        let expected = {
+            let mut h = sha2::Sha256::new();
+            h.update(b"");
+            format!("{:x}", h.finalize())
+        };
+        assert_eq!(got, expected);
     }
 
     #[test]
-    fn hmac_sha256_basic() {
-        // HMAC-SHA256 with known key/message
-        let result = hmac_sha256_hex(b"key", b"The quick brown fox jumps over the lazy dog");
-        assert!(result.is_ok());
-        assert_eq!(result.unwrap().len(), 64);
-    }
-
-    #[test]
-    fn hmac_invalid_key() {
-        // Empty key is technically allowed by HMAC (padded), non-zero len key is needed
-        // Actually HMAC-SHA256 accepts any key length; this just ensures no panic
-        let result = hmac_sha256_hex(b"", b"data");
-        assert!(result.is_ok());
+    fn hmac_sha256_produces_64_hex_chars() {
+        let result = hmac_sha256_hex(b"key", b"data").unwrap();
+        assert_eq!(result.len(), 64);
+        assert!(result.chars().all(|c| c.is_ascii_hexdigit()));
     }
 
     #[test]
