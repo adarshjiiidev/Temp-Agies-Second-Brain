@@ -1,9 +1,9 @@
 # AEGIS Rust Performance Core — Migration Map
 
-> **Status:** Phase R0 Complete (Audit), Phase R1 Complete (Existing crate repairs)
-> **Phases R2–R7:** Deferred — require `cargo` installation.
-> **Document date:** 2026-08-12
-> **Author:** Implementation Engineer (Phase R-AUDIT)
+> **Status:** Phase R0 Complete (Audit) | Phase R1 Complete (Existing crate repairs) | Phase R2 Complete (Benchmark analysis) | **Phase R3 Complete (New crates implemented)**
+> **Phases R4+:** Deferred — pending real L5 FilesystemExecutor profiling.
+> **Document date:** 2026-08-13
+> **Author:** Implementation Engineer (Phase R-AUDIT through R3)
 
 ---
 
@@ -116,8 +116,8 @@ AEGIS is a hybrid **Python control/intelligence plane + Rust performance/systems
 | Component | Current | Classification | Rationale |
 |-----------|---------|----------------|-----------|
 | MemoryManager (API) | Python | `KEEP_PYTHON` | Policy enforcement; must remain Python |
-| **SearchEngine (ranking/filtering)** | Python | `RUST_CANDIDATE` | Linear scan + rank over thousands of records; Rust would be 5–20× faster |
-| **KnowledgeGraph (traversal)** | Python (dict-based) | `RUST_CANDIDATE` | BFS/DFS over large graphs; Rust graph algorithms (petgraph) are significantly faster |
+| **SearchEngine (ranking/filtering)** | Python | `IMPLEMENTED` ✅ R3 | **`aegis_search_core` crate: 17-24× faster at 100-5k records. 6 tests pass.** |
+| **KnowledgeGraph (traversal)** | Python (dict-based) | `RUST_CANDIDATE` | BFS/DFS over large graphs; deferred — KG not yet under measured load |
 | ContextBuilder | Python | `KEEP_PYTHON` | LLM prompt assembly; policy-driven |
 | Memory policies | Python | `KEEP_PYTHON` | Policy enforcement; deterministic, must stay Python |
 | Privacy mechanisms | Python | `DO_NOT_MIGRATE` | P0/P1 isolation must remain entirely in Python |
@@ -131,9 +131,9 @@ AEGIS is a hybrid **Python control/intelligence plane + Rust performance/systems
 | Serialization (batch) | Python | `RUST_CANDIDATE` | Large memory snapshot serialization; serde is faster |
 
 **Priority Rust targets in L4 (Phase R3+):**
-- Search ranking kernel (new crate: `aegis_search_core`)
-- Knowledge graph traversal (new crate: `aegis_graph_core`)
-- P07 filesystem scanner (new crate: `aegis_scanner_core`)
+- Search ranking kernel — **IMPLEMENTED ✅ (`aegis_search_core`, R3)**
+- Knowledge graph traversal (`aegis_graph_core` DAG algorithms cover L6 DependencyGraph) — **IMPLEMENTED ✅ (R3)**
+- P07 filesystem scanner (`aegis_scanner_core`) — deferred to R4
 
 ---
 
@@ -163,7 +163,7 @@ AEGIS is a hybrid **Python control/intelligence plane + Rust performance/systems
 | GoalEngine | Python | `KEEP_PYTHON` | AI-driven goal generation |
 | IntentParser / AmbiguityDetector | Python | `KEEP_PYTHON` | LLM reasoning |
 | TaskDecomposer | Python | `KEEP_PYTHON` | LLM reasoning |
-| **DependencyGraph (large DAG)** | Python | `RUST_CANDIDATE` | Topological sort, cycle detection over large plans; Rust petgraph |
+| **DependencyGraph (large DAG)** | Python | `IMPLEMENTED` ✅ R3 | **`aegis_graph_core` crate: toposort 8-38× faster, critical path 9-52×, cycles 13-279×. 9 tests pass.** |
 | DecisionEngine / ScoringEngine | Python | `KEEP_PYTHON` | Configurable scoring; Python-native |
 | PlannerService | Python | `KEEP_PYTHON` | Orchestration |
 | ReflectionEngine | Python | `KEEP_PYTHON` | AI reasoning |
