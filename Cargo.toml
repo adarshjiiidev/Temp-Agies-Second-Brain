@@ -4,6 +4,9 @@ members = [
     "crates/aegis_ffi_common",
     "crates/aegis_crypto",
     "crates/aegis_audit_chain",
+    "crates/aegis_search_core",
+    "crates/aegis_graph_core",
+    "benches/bench_rust",
 ]
 
 [workspace.package]

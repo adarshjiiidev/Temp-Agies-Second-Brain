@@ -1,0 +1,14 @@
+[package]
+name = "aegis_search_core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "AEGIS Search Ranking Kernel — pure scoring/sorting over memory record fields"
+publish = false
+
+[dependencies]
+aegis_ffi_common = { path = "../aegis_ffi_common" }
+
+[dev-dependencies]
+# no extra dev deps needed
