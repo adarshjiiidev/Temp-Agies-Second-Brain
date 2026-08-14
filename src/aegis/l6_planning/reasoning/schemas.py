@@ -33,7 +33,11 @@ __all__ = [
     "ReflectionInsightOutput",
     "VerificationCriterionSpec",
     "VerificationCriteriaOutput",
-    "RiskAssessmentOutput",
+    # NOTE: RiskAssessmentOutput is intentionally NOT exported here.
+    # It is an L5-level schema (action-level risk for the L5 execution pipeline)
+    # and does not belong in the L6 planning schema namespace.
+    # The risk_assessment_v1 prompt template is retained for future L5
+    # integration. See docs/architecture/RUST_PERFORMANCE_CORE.md §L5 notes.
 ]
 
 
@@ -227,13 +231,24 @@ class VerificationCriteriaOutput(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Risk Assessment (L5 shadow)
+# Risk Assessment (L5 shadow — NOT used in L6 planning pipeline)
 # ---------------------------------------------------------------------------
 
 class RiskAssessmentOutput(BaseModel):
     """Structured output from the risk_assessment_v1 prompt.
 
-    Used by L5 risk reasoning (Phase E). Included here for schema completeness.
+    ARCHITECTURAL NOTE: This schema lives in the L6 schema module for
+    historical reasons but is an L5 concern — it models action-level risk
+    for the L5 execution pipeline (action_kind, action_target,
+    permission_scope), NOT plan-level risk for L6.
+
+    It is NOT called anywhere in the L6 _ai_create_plan pipeline.
+    The corresponding prompt template (risk_assessment_v1.yaml) is retained
+    for future L5 AI-augmented risk reasoning (P08+).
+
+    DO NOT wire this into L6 planning without an architectural review —
+    the variable set (action_kind, action_target, safety_floor) is not
+    available at plan creation time.
     """
     risk_level: str = Field(description="low|medium|high|critical")
     factors: list[dict[str, Any]] = Field(default_factory=list, description="Risk factors with weights")

@@ -40,8 +40,8 @@ L3  AI Kernel              ✅ Implemented
 L2  Foundation             ✅ Implemented
 L1  Core Runtime           ✅ Implemented
 
-🔷 Redesign pkgs (reasoning/ prompts/ capabilities) exist on disk — PRESENT but UNWIRED/UNTESTED.
-✅ 2026-08-07 stabilization: full test suite completes — 793 pass on system python (782 on `.venv` python), ~8s.
+🔷 Redesign pkgs (reasoning/ prompts/ capabilities) exist on disk — reasoning/ WIRED AND TESTED (P07.5); prompts/ and capabilities/ present but unwired.
+✅ 2026-08-13 stabilization: full test suite completes — 1060 pass on system python (~22s). Rust: 26 pass (5 crates).
 ```
 
 ---

@@ -280,7 +280,29 @@ class PlannerService:
             )
             for o in obj_out.objectives
         ]
-        mission = mission.model_copy(update={"objectives": ai_objectives, "strategy": strategy})
+
+        # G2 FIX: Map AI intent output into mission.parsed_intent so the AI is
+        # genuinely authoritative for intent classification when available.
+        # We update domain/confidence/requires_internet/requires_local_only from
+        # the AI; structural fields (primary_verb, keyword_matches, etc.) are
+        # preserved from the deterministic parser to maintain pipeline stability.
+        from aegis.l6_planning.types import IntentDomain
+        try:
+            ai_domain = IntentDomain(intent_out.domain)
+        except ValueError:
+            ai_domain = mission.parsed_intent.domain  # safe fallback
+        ai_aligned_intent = mission.parsed_intent.model_copy(update={
+            "domain": ai_domain,
+            "confidence": float(intent_out.confidence),
+            "requires_internet": bool(intent_out.requires_internet),
+            "requires_local_only": bool(intent_out.requires_local_only),
+        })
+        mission = mission.model_copy(update={
+            "objectives": ai_objectives,
+            "strategy": strategy,
+            "parsed_intent": ai_aligned_intent,
+        })
+
 
         # Build Task objects from AI specs
         tasks = _ai_specs_to_tasks(decomp_out.tasks)

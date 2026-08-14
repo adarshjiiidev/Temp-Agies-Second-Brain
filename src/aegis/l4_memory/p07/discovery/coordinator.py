@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from aegis.l4_memory.p07.discovery.consent import ConsentGate, ConsentScope
+from aegis.l4_memory.p07.model.scheduler import FreshnessScheduler
 from aegis.l4_memory.p07.model.types import EnvNode, ScanResult
 from aegis.l4_memory.p07.privacy.zones import ZoneRegistry
 from aegis.l4_memory.p07.scanners.base import ScannerBase
@@ -87,12 +88,15 @@ class ScanningCoordinator:
         consent_gate: ConsentGate,
         zone_registry: ZoneRegistry | None = None,
         scanners: list[ScannerBase] | None = None,
+        freshness_scheduler: FreshnessScheduler | None = None,
         logger_: logging.Logger | None = None,
     ) -> None:
         self._consent = consent_gate
         self._zones = zone_registry or ZoneRegistry()
         self._scanners: list[ScannerBase] = list(scanners or [])
+        self._scheduler = freshness_scheduler
         self._log = logger_ or logger
+        self._env_store: Any = None  # Set by start() for scheduler rescans
 
     # ------------------------------------------------------------------
     # Scanner management
@@ -109,6 +113,52 @@ class ScanningCoordinator:
                 del self._scanners[i]
                 return True
         return False
+
+    # ------------------------------------------------------------------
+    # Lifecycle (optional — needed when FreshnessScheduler is attached)
+    # ------------------------------------------------------------------
+
+    async def start(self, env_store: Any = None) -> None:
+        """Start the FreshnessScheduler background loop (if configured).
+
+        Idempotent: no-op if no scheduler was provided or already running.
+
+        Args:
+            env_store: Optional EnvironmentStore passed to rescans triggered
+                       by the scheduler.  If None, rescans run in dry-run mode.
+        """
+        if self._scheduler is None:
+            return
+        self._env_store = env_store
+        # Register all current scanners with the freshness scheduler
+        for scanner in self._scanners:
+            async def _scan_fn(s=scanner, store=env_store) -> None:  # noqa: E731
+                await self.run_discovery(env_store=store)
+            self._scheduler.register(
+                scanner.name,
+                _scan_fn,
+                ttl_seconds=86400.0,  # Default 24h TTL; override via scheduler.register()
+            )
+        await self._scheduler.start()
+        self._log.info(
+            "ScanningCoordinator: FreshnessScheduler started (%d scanner(s) registered)",
+            len(self._scanners),
+        )
+
+    async def stop(self) -> None:
+        """Stop the FreshnessScheduler background loop (if running).
+
+        Idempotent: no-op if no scheduler was provided.
+        """
+        if self._scheduler is None:
+            return
+        await self._scheduler.stop()
+        self._log.info("ScanningCoordinator: FreshnessScheduler stopped")
+
+    @property
+    def is_running(self) -> bool:
+        """True if the background FreshnessScheduler is active."""
+        return self._scheduler is not None and self._scheduler.is_running
 
     # ------------------------------------------------------------------
     # Discovery

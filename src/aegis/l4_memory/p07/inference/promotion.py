@@ -310,7 +310,9 @@ class WorkflowAutoPromoter:
         2. Candidate exists in store
         3. Candidate is PENDING_REVIEW (not already promoted)
         4. Candidate is a WORKFLOW kind (not preference)
-        5. Privacy zone check passes (if zone_registry provided)
+        5. Privacy zone check passes (if zone_registry provided) — source_path must
+           not be blocked by any configured zone; if blocked, promotion is refused
+           to prevent auto-elevating data from restricted areas.
         """
         count = self._tracker.get_count(workflow_key)
 
@@ -363,7 +365,26 @@ class WorkflowAutoPromoter:
                 success_count=count,
             )
 
+        # Privacy zone check: if a zone_registry was provided, the candidate's
+        # source_path must not be blocked by any configured zone.
+        # This prevents auto-promoting workflows whose origin path has been
+        # designated as a restricted privacy zone.
+        if self._zones is not None and candidate.source_path:
+            if not self._zones.check_path(candidate.source_path):
+                logger.info(
+                    "WorkflowAutoPromoter: blocking promotion of %r — source path %r is in a restricted privacy zone",
+                    workflow_key, candidate.source_path,
+                )
+                return PromotionResult(
+                    workflow_key=workflow_key,
+                    promoted=False,
+                    reason="Source path is within a restricted privacy zone; explicit user confirmation required",
+                    candidate_id=candidate.id,
+                    success_count=count,
+                )
+
         # Promote
+
         logger.info(
             "WorkflowAutoPromoter: auto-promoting %r after %d successes",
             workflow_key, count,

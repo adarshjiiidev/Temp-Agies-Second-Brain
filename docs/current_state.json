@@ -1,33 +1,41 @@
 {
   "project": "AEGIS",
   "project_full_name": "Adaptive Executive Governance & Intelligence System",
-  "current_milestone_docs": "Prompt 02 - Core Runtime",
-  "current_state_actual": "L1-L6 implemented plus redesign packages (reasoning, prompts, capabilities)",
-  "status": "L1-L6 present; full test suite does not complete (hangs at L5)",
+  "last_updated": "2026-08-14",
+  "current_milestone_docs": "P07.5 + P-RUST R3 complete; Final Pre-P08 hardening in progress",
+  "current_state_actual": "L1-L6 implemented plus reasoning/ (wired), prompts/, capabilities/ (unwired). 5 Rust performance kernels.",
+  "status": "STABLE — full test suite passes (1060 Python, 26 Rust). L5 hang resolved 2026-08-07.",
   "audit_report": "docs/AEGIS_MASTER_AUDIT.md",
   "verification": {
-    "python_environment": "venv",
-    "tests_collected": 791,
+    "python_environment": "system python 3.12.3",
+    "tests_collected": 1060,
     "tests_l1l2": "57 passed",
     "tests_l3": "256 passed",
     "tests_l4": "130 passed",
-    "tests_l5": "HANGS at test_pipeline.py::test_50_e2e_actions_all_produce_audit",
-    "tests_l6": "not runnable (blocked by L5 hang)",
+    "tests_l5": "103 passed (hang fixed 2026-08-07: FilesystemExecutor lazy iterator + 10s budget)",
+    "tests_l6": "180 passed",
+    "tests_p07_comprehensive": "73 passed",
+    "tests_p07_gaps": "120 passed",
+    "tests_p07_p075": "181+ passed (credential_security + reasoning_integration + registry_quality)",
+    "rust_tests": "26 passed (aegis_audit_chain:1, aegis_crypto:9, aegis_ffi_common:1, aegis_search_core:6, aegis_graph_core:9)",
+    "rust_warnings": "0",
+    "runtime_seconds_python": "~22s",
+    "runtime_seconds_rust": "~0.5s",
     "import_check": {
       "command": "python -c \"import aegis; print('OK', len(dir(aegis)))\"",
-      "result": "OK 87"
+      "result": "OK (verified)"
     },
     "ruff_check": {
       "command": "ruff check src/aegis tests examples",
-      "result": "642 issues"
+      "result": "642 pre-existing issues (TD-01; no new issues from P07/P-RUST work)"
     },
     "example": {
       "command": "python examples/runtime_lifecycle.py",
-      "result": "completed successfully with success banner"
+      "result": "exits 0 (verified)"
     },
     "rust_crates": {
-      "status": "UNVERIFIED - cargo/rustc not installed on host",
-      "note": "crates do not compile (missing rand/tempfile deps, aegis_crypto syntax errors) once toolchain available"
+      "status": "VERIFIED — cargo +stable test --workspace → 26/26 pass, 0 warnings",
+      "toolchain": "stable 1.87.0 (rust-toolchain.toml pinned to stable)"
     }
   },
   "implemented_modules": [
@@ -45,33 +53,48 @@
     "l2_foundation.scheduler.background",
     "l2_foundation.persistence.sql",
     "l2_foundation.plugin_loader.loader",
-    "l3_intelligence.ai_kernel",
-    "l4_memory",
-    "l5_execution",
-    "l6_planning",
-    "reasoning",
-    "prompts",
-    "capabilities"
+    "l3_intelligence.ai_kernel (kernel, registry, router, cache, accounting, keys, credentials, health, scrubber, structured, streaming, pipeline)",
+    "l3_intelligence.ai_kernel.providers (groq, openrouter, ollama, vllm, fake)",
+    "l4_memory (MemoryManager T0-T8, SearchEngine, ContextBuilder, policies, markdown loader)",
+    "l4_memory.p07 (discovery, inference, model, observer, persistence, privacy, scanners — all 7 subpackages)",
+    "l5_execution (7-stage pipeline, PermissionEngine, RiskAnalyzer, PolicyEngine, SandboxManager, AuditChain, RollbackEngine, PostExecVerifier, 10 executors)",
+    "l6_planning (GoalEngine, TaskDecomposer, DependencyGraph, DecisionEngine, PlannerService, ReflectionEngine, VerificationPlanner, RecoveryPlanner — 11 subpackages)",
+    "reasoning.kernel_provider (KernelReasoningProvider — wired, tested)",
+    "reasoning.mock_provider (MockReasoningProvider)",
+    "crates.aegis_ffi_common",
+    "crates.aegis_crypto",
+    "crates.aegis_audit_chain",
+    "crates.aegis_search_core",
+    "crates.aegis_graph_core"
   ],
   "deferred_or_scaffolded": [
-    "l7_hci",
+    "l7_hci (L7 HCI/UI — not started)",
     "T4 Firecracker sandbox (P08+)",
-    "Rust FFI dYzn bindings (cargo unavailable)",
-    "AI reasoning provider wiring (reasoning/ kernels broken/missing on AIKernel)"
+    "R5 PyO3 FFI wiring (R5 — Rust kernels unconnected to Python; future work)",
+    "R4 FilesystemExecutor profiling (R4 — not yet measured)",
+    "prompts/ capabilities/ (redesign packages — present, not wired)",
+    "ProviderHealthMonitor AEGIS lifecycle wiring (implemented + tested; not called from AIKernel startup)",
+    "FreshnessScheduler wiring into ScanningCoordinator (implemented + tested; not called)",
+    "Linux XDG discovery provider (deferred; PathToolProvider is cross-platform)",
+    "BrowserProvisioner (stub — raises NotImplementedError; explicit no-browser-automation contract)"
   ],
   "critical_findings": [
-    "Full test suite hangs at tests/integration_l5/test_pipeline.py::test_50_e2e_actions_all_produce_audit",
-    "KernelReasoningProvider calls kernel.has_models()/infer_text() which do not exist on AIKernel",
-    "Rust crates do not compile (missing rand/tempfile; aegis_crypto syntax errors)",
-    "t_ast.py timeout is fake (returns UNSOLVED; T4 tests loop)",
-    "vault.py has zero-key fallback path",
-    "ai_kernel registry quality_score_for double-counts reliability",
-    "import-linter contracts in pyproject reference stale package names",
-    "all 8 git commits titled 'Initial Commit' - no history narrative"
+    "RESOLVED: L5 hang (2026-08-07) — FilesystemExecutor._search lazy iterator + 10s budget",
+    "RESOLVED: H12 registry quality_score double-count (2026-08-10)",
+    "RESOLVED: KernelReasoningProvider AIKernel interface mismatch (2026-08-11)",
+    "RESOLVED: Rust crate compile errors — cargo +stable test now passes 26/26 (2026-08-12)",
+    "OPEN (P1): No full-chain integration test PlannerService+KernelReasoningProvider+AIKernel+FakeProvider",
+    "OPEN (P1): AI intent_out not mapped into mission.parsed_intent in _ai_create_plan",
+    "OPEN (P1): WorkflowAutoPromoter docstring claims zone check; _zones never consulted in _try_promote",
+    "OPEN (P2): FreshnessScheduler not wired; ProviderHealthMonitor not wired into lifecycle",
+    "OPEN (P2): RiskAssessmentOutput + risk_assessment_v1 prompt dead code (never called)",
+    "COSMETIC: 642 pre-existing ruff issues (TD-01); 4 Pydantic protected_namespaces warnings"
   ],
   "notes": [
-    "This file reflects the live 2026-08-07 audit (docs/AEGIS_MASTER_AUDIT.md). It supersedes the earlier L1/L2-only current_state record.",
-    "Docs historically describe the project as L1+L2 only; code implements L1-L6 + redesign. Code is authoritative.",
-    "roadmap defines 23 prompts (not 21)."
+    "This file reflects the 2026-08-14 Pre-P08 audit. Supersedes 2026-08-07 audit.",
+    "Code is always authoritative over this file.",
+    "Rust kernels (aegis_search_core, aegis_graph_core) are pure acceleration — no FFI to Python yet.",
+    "Groq provider exists (providers/groq.py) but lacks dedicated test coverage for key-pool behavior.",
+    "roadmap: 23 prompts defined in docs/09_ROADMAP.md."
   ]
 }
