@@ -123,6 +123,7 @@ class AIKernel:
         policy: RouterPolicy | None = None,
         cache: ResponseCache | None = None,
         metrics: AIMetricsRegistry | None = None,
+        health_monitor: "ProviderHealthMonitor | None" = None,
         log: logging.Logger | None = None,
     ) -> None:
         self._registry = registry
@@ -132,6 +133,7 @@ class AIKernel:
         self._policy = policy or RouterPolicy()
         self._cache = cache or ResponseCache(CachePolicy(enabled=False))
         self._metrics = metrics or AIMetricsRegistry()
+        self._health_monitor = health_monitor
         self._log = log or logger
         self._router = Router(registry=registry, policy=self._policy, logger_=self._log)
         self._structured_proc = StructuredOutputProcessor()
@@ -161,8 +163,37 @@ class AIKernel:
         return len(self._prov_reg.list_provider_ids())
 
     # ------------------------------------------------------------------
-    # Public API — Inference
+    # Lifecycle
     # ------------------------------------------------------------------
+
+    async def start(self) -> None:
+        """Start background services (ProviderHealthMonitor if configured).
+
+        Idempotent: safe to call multiple times. No-op if no health monitor
+        was provided at construction time.
+
+        Note: ProviderHealthMonitor must be constructed with both
+        ``provider_registry`` and ``model_registry`` before passing it here.
+        """
+        if self._health_monitor is not None:
+            await self._health_monitor.start()
+            self._log.info("AIKernel: ProviderHealthMonitor started")
+
+    async def stop(self) -> None:
+        """Stop background services gracefully.
+
+        Idempotent: safe to call multiple times. No-op if no health monitor
+        was provided or is already stopped.
+        """
+        if self._health_monitor is not None:
+            await self._health_monitor.stop()
+            self._log.info("AIKernel: ProviderHealthMonitor stopped")
+
+    @property
+    def health_monitor(self) -> "ProviderHealthMonitor | None":
+        """Return the attached ProviderHealthMonitor (may be None)."""
+        return self._health_monitor
+
 
     async def generate(self, request: AIRequest) -> AIResponse:
         """Execute a full inference request and return a normalized AIResponse.
