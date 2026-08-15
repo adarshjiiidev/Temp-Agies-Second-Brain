@@ -6,9 +6,11 @@
 > **2026-08-12 P-RUST PHASE R0+R1 COMPLETE: Rust Performance Core audit + crate repairs — FULLY VERIFIED.**
 > **2026-08-13 P-RUST PHASE R2 COMPLETE: Benchmark-driven migration analysis — crypto stays Python.**
 > **2026-08-13 P-RUST PHASE R3 COMPLETE: Real-load profiling done. `aegis_search_core` + `aegis_graph_core` implemented.**
+> **2026-08-15 PRE-P08 HARDENING COMPLETE: G1-G7 gaps closed; G9/G10 decided. Python 1097/1097 pass.**
 > Key finding R3: Search ranking 17-24× faster in Rust; DAG ops 8-280× faster. Both 3× thresholds exceeded.
-> `cargo +stable test --workspace` → 26 Rust tests pass. 0 warnings. Python 1060/1060.
-> See `docs/benchmarks/R3_BENCHMARK_REPORT.md` for full R3 results.
+> Key finding R4: Scanner is OS-syscall-bound — DO_NOT_MIGRATE. Key finding R5: PyO3 DEFER to P10+.
+> `cargo +stable test --workspace` → 26 Rust tests pass. 0 warnings. Python 1097/1097.
+> See `docs/benchmarks/R3_BENCHMARK_REPORT.md` + `docs/benchmarks/R4_R5_BENCHMARK_REPORT.md`.
 > This file tells you WHERE you are, WHAT is done, and WHAT to do next.
 
 ---
@@ -63,6 +65,9 @@ L1  Core Runtime           ✅ Implemented
 | P-RUST R0+R1 | Rust Performance Core — Audit + Crate Repairs | ✅ DONE | 1060 Python + 11 Rust | Phase R0: full L1–L7 migration map, ADR-0001. Phase R1: 6 compile errors fixed in `aegis_crypto`, `rand` dep added to `aegis_ffi_common`, `tempfile` dev-dep added to `aegis_audit_chain`, `rust-toolchain.toml` updated to `stable`. **cargo verified**: `cargo +stable test --workspace` → 11/11 pass, 0 warnings. |
 | P-RUST R2 | Rust Performance Core — Benchmark-Driven Migration Analysis | ✅ DONE | 1060 Python + 11 Rust (0 regressions) | B1-B6 benchmarks run. **Finding: Python (OpenSSL) beats Rust software crypto 5-10x for AES-GCM, 1.5x for SHA-256. Rust HMAC 2.1x faster at 1KB only.** All pipeline migrations deferred. `bench_rust` Criterion crate added to workspace. `benches/bench_python.py` + `docs/benchmarks/R2_BENCHMARK_REPORT.md` produced. |
 | P-RUST R3 | Rust Performance Core — Real-Load Profiling + New Crate Implementation | ✅ DONE | 1060 Python + 26 Rust (0 regressions) | B7 (search ranking): Rust 17-24× faster at 100-5k records. B8 (DAG ops): Rust 8-280× faster at 50-1k nodes. **Both 3× thresholds exceeded.** `aegis_search_core` (6 tests) + `aegis_graph_core` (9 tests) implemented, all tests pass. Criterion benches `search.rs`+`graph.rs` added. `docs/benchmarks/R3_BENCHMARK_REPORT.md` produced. |
+| P-RUST R4 | Filesystem Scanner Profiling | ✅ DONE | 1097 Python + 26 Rust (0 regressions) | B9: PathToolProvider is OS-syscall-bound (shutil.which). **DO_NOT_MIGRATE.** fnmatch→regex Python fix identified (50× faster, no Rust needed). `docs/benchmarks/R4_R5_BENCHMARK_REPORT.md` produced. |
+| P-RUST R5 | PyO3 FFI Integration Evaluation | ✅ DONE | 1097 Python + 26 Rust | FFI overhead: search_core ~3.4ms serialization vs 5.3ms net gain (borderline); graph_core ~0.4ms vs 41ms gain (clear). **DEFER to P10+ Browser OS milestone.** Crates ready. |
+| PRE-P08 | Pre-P08 Hardening (G1–G10) | ✅ DONE | 1097 Python + 26 Rust | G1: full-chain test (8 tests). G2: AI intent→mission.parsed_intent aligned. G3: WorkflowAutoPromoter zone guard. G4: Groq provider tests (25 tests). G5: FreshnessScheduler wired. G6: ProviderHealthMonitor wired. G7: RiskAssessmentOutput layer boundary fixed. G9/G10: R4/R5 decided. Security: 0 real API keys in source. |
 
 > **2026-08-07 STAB-01: L5 hang fixed — full suite now completes (~8s).**
 > Count is interpreter-dependent: system `python` = 793 (791 baseline + 2 new regression tests);
@@ -209,6 +214,9 @@ Append to the bottom of §8. Then update §2 (milestone status) if a prompt mile
 | 2026-08-12 | **P-RUST R0+R1 — Rust Performance Core Audit + Crate Repairs (VERIFIED)** | Phase R0: Complete L1–L7 component audit. Every component classified (KEEP_PYTHON/RUST_CANDIDATE/RUST_CORE/DO_NOT_MIGRATE). Full migration map written. `ADR-0001-rust-performance-core.md` written. Phase R1: Fixed 6 compile errors in `aegis_crypto/src/lib.rs` (KeyInit trait ambiguity, AeadCore/OsRng unused imports, base64 import, const hex table, array indexing, AES-GCM double-encrypt, missing closing paren, hmac return type). Added `rand = "0.8"` to `aegis_ffi_common/Cargo.toml`. Added `tempfile = "3"` dev-dep to `aegis_audit_chain/Cargo.toml`. Updated `rust-toolchain.toml` to `stable` (was `1.75.0`, causing rustup download errors). Fixed `unused_must_use` warning in audit chain test. **Fully verified**: `cargo +stable test --workspace` → 11/11 Rust tests pass, 0 warnings. Python 1060/1060. | `crates/aegis_ffi_common/Cargo.toml`, `crates/aegis_crypto/src/lib.rs`, `crates/aegis_audit_chain/src/lib.rs`, `crates/aegis_audit_chain/Cargo.toml`, `rust-toolchain.toml`, `Cargo.toml` (rust-version 1.75→1.80), `docs/architecture/RUST_PERFORMANCE_CORE.md` (NEW), `docs/adr/ADR-0001-rust-performance-core.md` (NEW), `.agents/AGENTS.md`, `docs/PROJECT_AEGIS_CURRENT_STATE.md` | **11 Rust ✅ + 1060 Python ✅ — 0 warnings** |
 | 2026-08-13 | **P-RUST R2 — Benchmark-Driven Migration Analysis** | B1–B6 Python+Rust benchmarks run and compared. **Key findings:** (1) AES-256-GCM: Python (OpenSSL/AES-NI) is **5–10× faster** than Rust `aes-gcm` crate — DO_NOT_MIGRATE. (2) SHA-256: Python 1.5× faster (OpenSSL SHA-NI). (3) HMAC-SHA-256: Rust 2.1× faster at 1 KB only, Python wins at ≥64 KB — below 3× threshold. (4) Audit chain: different workloads (Rust uses disk I/O), KEEP_PYTHON for pipeline. (5) Search rank (B5) + FS scan (B6): Python baselines recorded, deferred to R3. `bench_rust` Criterion crate added to workspace, `bench_python.py` emoji bug fixed. | `benches/bench_python.py`, `benches/results/python_results.json` (NEW), `benches/bench_rust/Cargo.toml` (NEW), `benches/bench_rust/benches/crypto.rs` (NEW), `benches/bench_rust/benches/audit.rs` (NEW), `Cargo.toml` (bench_rust member added), `docs/benchmarks/R2_BENCHMARK_REPORT.md` (NEW), `.agents/AGENTS.md` | **1060 Python ✅ + 11 Rust ✅ — 0 regressions** |
 | 2026-08-13 | **P-RUST R3 — Real-Load Profiling + New Crate Implementation** | B7 (search ranking) + B8 (DependencyGraph) profiled with real AEGIS objects. **B7:** Python 9.1ms @5k records → Rust 0.375ms — **24× faster** (threshold 3×). **B8:** Python 42ms critical_path @1k nodes → Rust 0.81ms — **52× faster**; detect_cycles 9.7ms → 0.035ms — **279× faster**. Both thresholds massively exceeded. `aegis_search_core` (score+sort kernel, 6 tests) + `aegis_graph_core` (toposort/critical-path/cycle-detect/parallel-groups, 9 tests) implemented. Criterion benches `search.rs`+`graph.rs` added. `docs/benchmarks/R3_BENCHMARK_REPORT.md` produced. 0 Python regressions. | `benches/bench_r3.py` (NEW), `benches/results/r3_python_results.json` (NEW), `benches/bench_rust/benches/search.rs` (NEW), `benches/bench_rust/benches/graph.rs` (NEW), `crates/aegis_search_core/` (NEW — Cargo.toml + src/lib.rs), `crates/aegis_graph_core/` (NEW — Cargo.toml + src/lib.rs), `Cargo.toml` (2 new workspace members), `benches/bench_rust/Cargo.toml` (2 new dev-deps + 2 new bench entries), `docs/benchmarks/R3_BENCHMARK_REPORT.md` (NEW), `.agents/AGENTS.md` | **26 Rust ✅ + 1060 Python ✅ — 0 warnings, 0 regressions** |
+| 2026-08-15 | **P-RUST R4 — Filesystem Scanner Profiling** | B9: `PathToolProvider.discover()` benchmarked (shutil.which × 36 tools = 126ms). Workload is OS-syscall-bound — Rust cannot accelerate. Found Python fnmatch 50× slower than re (fix path for future if needed). **Decision: DO_NOT_MIGRATE.** `docs/benchmarks/R4_R5_BENCHMARK_REPORT.md` produced. | `docs/benchmarks/R4_R5_BENCHMARK_REPORT.md` (NEW) | **1097 Python ✅ + 26 Rust ✅ — 0 regressions** |
+| 2026-08-15 | **P-RUST R5 — PyO3 FFI Integration Evaluation** | Serialization overhead measured: search_core ~3.4ms (5k records), graph_core ~0.4ms (1k nodes). Net gains: search_core 5.3ms (borderline), graph_core 41ms (clear). **Decision: DEFER to P10+ Browser OS milestone.** Crates ready; wire when L7 creates real call load. `docs/benchmarks/R4_R5_BENCHMARK_REPORT.md` updated. | `docs/benchmarks/R4_R5_BENCHMARK_REPORT.md` | **1097 Python ✅ + 26 Rust ✅** |
+| 2026-08-15 | **PRE-P08 Hardening (G1–G10)** | G1: `test_ai_real_chain.py` (8 full-chain tests, mocked reason() for schema correctness). G2: `planner_service._ai_create_plan` aligns AI intent fields into `mission.parsed_intent`. G3: `WorkflowAutoPromoter._try_promote` privacy zone guard. G4: `test_groq_provider.py` (25 tests — key pool, rotation, HTTP error map, secret safety, CredentialResolver, BrowserProvisioner). G5: `ScanningCoordinator` wires FreshnessScheduler lifecycle. G6: `AIKernel` wires ProviderHealthMonitor lifecycle. G7: `RiskAssessmentOutput` removed from L6 `__all__`. G9/G10: R4/R5 decided (DO_NOT_MIGRATE / DEFER). Security: no real API keys in source verified. | `tests/integration_l6/test_ai_real_chain.py` (NEW, 8 tests), `tests/integration_l3/test_groq_provider.py` (NEW, 25 tests), `src/aegis/l6_planning/orchestration/planner_service.py`, `src/aegis/l6_planning/reasoning/schemas.py`, `src/aegis/l4_memory/p07/discovery/coordinator.py`, `src/aegis/l3_intelligence/ai_kernel/kernel.py`, `.agents/AGENTS.md` | **1097/1097 ✅ (1 skipped Windows-only) — READY FOR P08** |
 
 
 ---
@@ -221,25 +229,31 @@ Append to the bottom of §8. Then update §2 (milestone status) if a prompt mile
 3. Read `docs/P07_5_ARCHITECTURE.md` for the complete P07.5 implementation record.
 4. Read `docs/P07_ARCHITECTURE_PLAN.md §10` for P07 gap remediation details.
 5. Read `docs/HARDCODING_REMEDIATION_REPORT.md` for P07 hardcoding audit results.
-6. Run `python -m pytest tests/ -q` — expect **1060 tests** on system python (~22s). If it hangs, investigate L5.
+6. Run `python -m pytest tests/ -q` — expect **1097 tests** on system python (~25s). If it hangs, investigate L5.
 7. Read the user's directive carefully. Do NOT begin implementation without explicit authorisation.
 
-### Current state (2026-08-13, post P-RUST R3 — RUST PERFORMANCE CORE COMPLETE)
+### Current state (2026-08-15, post PRE-P08 HARDENING — READY FOR P08)
 - L1–L6 implemented; redesign pkgs (reasoning/prompts/capabilities) present — `KernelReasoningProvider` wired and tested.
-- **Python: 1060 tests pass (~32s).** L5 hang resolved. 0 regressions.
+- **Python: 1097 tests pass (~25s).** 1 skipped (Windows-only). 0 failures. 0 regressions.
 - **Rust: 26 tests pass (`cargo +stable test --workspace`).** 0 errors, 0 warnings.
   - `aegis_ffi_common`: 1 test (UUID v4 version bits)
   - `aegis_crypto`: 9 tests (SHA-256, HMAC, AES-GCM roundtrip, base64, hex)
   - `aegis_audit_chain`: 1 test (append + verify + tamper detection)
-  - `aegis_search_core`: 6 tests (score formula, sort, provenance, recency — **NEW R3**)
-  - `aegis_graph_core`: 9 tests (toposort, critical path, cycle detection, parallel groups — **NEW R3**)
-- P07 environment model: inference, discovery, persistence, scanners, observer, consent gate, privacy zones — all implemented and tested.
-- **P07.5 complete:** OllamaProvider health/discovery, ProviderHealthMonitor, CredentialResolver/Provisioner, AIKernel introspection.
-- **P-RUST R0+R1 complete + verified:** Full L1–L7 audit, ADR-0001, RUST_PERFORMANCE_CORE.md, all five Rust crates compile clean.
-- **P-RUST R2 complete:** B1–B6 benchmarks. Python (OpenSSL AES-NI) is 5–10× faster than Rust `aes-gcm`. No pipeline crypto migrations.
-- **P-RUST R3 complete:** B7 (search: Rust 17-24× faster) + B8 (DAG ops: Rust 8-280× faster). Both 3× thresholds exceeded. `aegis_search_core` + `aegis_graph_core` crates implemented. See `docs/benchmarks/R3_BENCHMARK_REPORT.md`.
-- **`cargo` is now installed** (rustup stable, 1.87.0). `rust-toolchain.toml` pinned to `stable`.
-- Remaining: Phase R4 (profile real L5 FilesystemExecutor if needed — see R3 report §Phase R4 Recommendation). Also: 642 pre-existing ruff issues, ProviderHealthMonitor not yet wired into AEGIS lifecycle. Phase R5 (PyO3 wiring) is future work.
+  - `aegis_search_core`: 6 tests (score formula, sort, provenance, recency)
+  - `aegis_graph_core`: 9 tests (toposort, critical path, cycle detection, parallel groups)
+- **PRE-P08 gaps closed:**
+  - G1: `tests/integration_l6/test_ai_real_chain.py` — 8 full-chain tests covering AI path + G2 intent alignment.
+  - G2: `planner_service.py` — AI intent (domain, confidence, requires_internet, requires_local_only) authoritative in `mission.parsed_intent`.
+  - G3: `WorkflowAutoPromoter._try_promote` — privacy zone guard prevents T5 auto-promotion.
+  - G4: `tests/integration_l3/test_groq_provider.py` — 25 tests (key pool, rotation, HTTP error mapping, secret safety, CredentialResolver, BrowserProvisioner safety).
+  - G5: `ScanningCoordinator` — FreshnessScheduler lifecycle wired (start/stop/register).
+  - G6: `AIKernel` — ProviderHealthMonitor background loop lifecycle wired.
+  - G7: `RiskAssessmentOutput` removed from L6 `__all__` (correct layer boundary — belongs to L5).
+  - G9: R4 decision — scanner is OS-syscall-bound. DO_NOT_MIGRATE.
+  - G10: R5 decision — PyO3 DEFER to P10+. Crates ready.
+- **Security:** No real API keys in source (verified). Scrubber patterns are regex-only.
+- **Remaining pre-existing tech debt:** 642 ruff lint issues (TD-01), mypy blocked on Windows (TD-02).
+- **Ready for P08.** Awaiting explicit user directive.
 
 ### Architecture red lines (never cross without explicit ADR):
 - L-layer dependencies must be downward only (L6 imports L5 and below; never upward)
