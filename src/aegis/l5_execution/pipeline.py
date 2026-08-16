@@ -50,6 +50,7 @@ from aegis.l5_execution.executors.http import HttpExecutor
 from aegis.l5_execution.executors.obsidian import ObsidianExecutor
 from aegis.l5_execution.executors.python_exec import PythonExecutor
 from aegis.l5_execution.executors.shell import ShellExecutor
+from aegis.l5_execution.executors.mcp import MCPExecutor
 from aegis.l5_execution.executors.vscode import VSCodeExecutor
 from aegis.l5_execution.permission.engine import PermissionEngine
 from aegis.l5_execution.policy.engine import PolicyEngine
@@ -538,6 +539,8 @@ class ExecutionPipeline:
         self.registry.register(ObsidianExecutor(default_vault=self._obsidian_vault))
         self.registry.register(HttpExecutor(allowlist=self._http_allowlist))
         self.registry.register(DockerExecutor())
+        # P08: MCP and external agent executor (stub — full transport in P09+)
+        self.registry.register(MCPExecutor())
         # Stubs for future milestones
         self.registry.register(BrowserExecutor)
         self.registry.register(DesktopExecutor)

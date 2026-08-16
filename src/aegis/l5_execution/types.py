@@ -117,6 +117,12 @@ class ActionKind(str, Enum):
     MEMORY_DELETE = "memory.delete"
     MEMORY_EXPORT = "memory.export"
 
+    # MCP (P08 — untrusted extension boundary — always gated by policy)
+    MCP_INVOKE = "mcp.invoke"
+
+    # External Agent (P08 stub — full implementation P20+)
+    EXTERNAL_AGENT = "external_agent.invoke"
+
 
 class ExecutionStatus(str, Enum):
     """Overall outcome of an execution pipeline run."""
