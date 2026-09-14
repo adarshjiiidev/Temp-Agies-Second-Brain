@@ -48,3 +48,6 @@ dist-ssr/
 __pycache__/
 *.pyc
 
+
+# Second Brain — excluded from git, backed up separately
+/.temporary-aegis/
