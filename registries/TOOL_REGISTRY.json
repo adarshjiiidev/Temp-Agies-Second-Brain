@@ -1,0 +1,231 @@
+{
+  "generated_at": "2026-09-12T20:51:20.427265",
+  "description": "Unified AEGIS AI OS Tool Registry across agent frameworks",
+  "tools": [
+    {
+      "name": "terminal",
+      "agent": "hermes",
+      "identity": "shell-terminal",
+      "capability": "Execute shell commands, run scripts, manage processes on the host machine",
+      "description": "Run shell commands on the host machine with configurable timeout and workdir",
+      "parameters": {
+        "command": "string",
+        "timeout": "number",
+        "workdir": "string",
+        "background": "boolean"
+      },
+      "permissions": [
+        "read",
+        "write",
+        "execute",
+        "execute_local_commands"
+      ],
+      "risk": "medium",
+      "trust": "high",
+      "agent_support": [
+        "hermes",
+        "claude-code",
+        "codex",
+        "bash"
+      ]
+    },
+    {
+      "name": "file_read",
+      "agent": "hermes",
+      "identity": "filesystem-reader",
+      "capability": "Read any file on the filesystem with slice offsets",
+      "description": "Read any file on the filesystem",
+      "parameters": {
+        "path": "string",
+        "offset": "number",
+        "limit": "number"
+      },
+      "permissions": [
+        "read",
+        "read_any_file"
+      ],
+      "risk": "low",
+      "trust": "high",
+      "agent_support": [
+        "hermes",
+        "openclaw",
+        "claude-code",
+        "codex"
+      ]
+    },
+    {
+      "name": "file_write",
+      "agent": "hermes",
+      "identity": "filesystem-writer",
+      "capability": "Write or overwrite files in the workspace or vault",
+      "description": "Create new files or overwrite existing content",
+      "parameters": {
+        "path": "string",
+        "content": "string"
+      },
+      "permissions": [
+        "write",
+        "write_to_workspace"
+      ],
+      "risk": "medium",
+      "trust": "high",
+      "agent_support": [
+        "hermes",
+        "claude-code",
+        "codex"
+      ]
+    },
+    {
+      "name": "file_patch",
+      "agent": "hermes",
+      "identity": "code-patcher",
+      "capability": "Apply surgical non-contiguous patches and diff replacements",
+      "description": "Apply targeted regex or exact-match replacements to source files",
+      "parameters": {
+        "path": "string",
+        "target": "string",
+        "replacement": "string"
+      },
+      "permissions": [
+        "read",
+        "write"
+      ],
+      "risk": "low",
+      "trust": "high",
+      "agent_support": [
+        "hermes",
+        "claude-code",
+        "codex"
+      ]
+    },
+    {
+      "name": "file_search",
+      "agent": "hermes",
+      "identity": "ripgrep-searcher",
+      "capability": "Fast ripgrep text and regex search across directory trees",
+      "description": "Search code and markdown notes across directories with glob filters",
+      "parameters": {
+        "query": "string",
+        "path": "string",
+        "is_regex": "boolean"
+      },
+      "permissions": [
+        "read"
+      ],
+      "risk": "low",
+      "trust": "high",
+      "agent_support": [
+        "hermes",
+        "claude-code",
+        "codex"
+      ]
+    },
+    {
+      "name": "browser",
+      "agent": "hermes",
+      "identity": "browser-automation",
+      "capability": "Navigate web pages, inspect DOM, take screenshots, extract content",
+      "description": "Headless browser automation for research, verification, and testing",
+      "parameters": {
+        "url": "string",
+        "action": "navigate|click|screenshot|extract|wait"
+      },
+      "permissions": [
+        "navigate_urls",
+        "take_screenshots",
+        "read_page_content"
+      ],
+      "risk": "medium",
+      "trust": "high",
+      "agent_support": [
+        "hermes",
+        "openclaw"
+      ]
+    },
+    {
+      "name": "execute_code",
+      "agent": "codex",
+      "identity": "python-node-sandbox",
+      "capability": "Execute code snippets in Python, Node.js, and Bash sandboxes",
+      "description": "Execute isolated code blocks and evaluate output",
+      "parameters": {
+        "language": "python|javascript|bash",
+        "code": "string"
+      },
+      "permissions": [
+        "execute"
+      ],
+      "risk": "medium",
+      "trust": "high",
+      "agent_support": [
+        "codex",
+        "hermes",
+        "deepseek"
+      ]
+    },
+    {
+      "name": "memory_store",
+      "agent": "hermes",
+      "identity": "para-vault-manager",
+      "capability": "Query, update, and index Obsidian PARA memory files and MOCs",
+      "description": "Manage long-term knowledge in Obsidian vault and profile memories",
+      "parameters": {
+        "action": "query|store|link",
+        "folder": "string",
+        "note": "string"
+      },
+      "permissions": [
+        "read",
+        "write"
+      ],
+      "risk": "low",
+      "trust": "high",
+      "agent_support": [
+        "hermes",
+        "openclaw"
+      ]
+    },
+    {
+      "name": "delegate_task",
+      "agent": "hermes",
+      "identity": "subagent-orchestrator",
+      "capability": "Spawn independent subagent threads with specialized prompts",
+      "description": "Delegate tasks to background subagents with reactive wakeup",
+      "parameters": {
+        "task_name": "string",
+        "prompt": "string",
+        "tools": "list"
+      },
+      "permissions": [
+        "spawn_processes",
+        "execute"
+      ],
+      "risk": "high",
+      "trust": "high",
+      "agent_support": [
+        "hermes",
+        "agent-moe"
+      ]
+    },
+    {
+      "name": "vision_analyze",
+      "agent": "claude-code",
+      "identity": "multimodal-vision",
+      "capability": "Analyze UI screenshots, diagrams, and images with vision models",
+      "description": "Inspect visual assets and evaluate UI layouts",
+      "parameters": {
+        "image_path": "string",
+        "prompt": "string"
+      },
+      "permissions": [
+        "read"
+      ],
+      "risk": "low",
+      "trust": "high",
+      "agent_support": [
+        "claude-code",
+        "hermes"
+      ]
+    }
+  ]
+}

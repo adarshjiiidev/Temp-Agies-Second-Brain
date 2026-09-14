@@ -1,0 +1,205 @@
+{
+  "version": "2.0.0",
+  "updated_at": "2026-09-13T12:00:00Z",
+  "total_skills": 22,
+  "skills": [
+    {
+      "id": "openclaw-browser-automation",
+      "name": "Browser Automation",
+      "category": "OpenClaw Plugin",
+      "harness": "openclaw",
+      "path": "/home/adarshjii/.openclaw/plugin-skills/browser-automation",
+      "enabled": true,
+      "description": "OpenClaw plugin skill for browser-automation"
+    },
+    {
+      "id": "openclaw-canvas",
+      "name": "Canvas",
+      "category": "OpenClaw Plugin",
+      "harness": "openclaw",
+      "path": "/home/adarshjii/.openclaw/plugin-skills/canvas",
+      "enabled": true,
+      "description": "OpenClaw plugin skill for canvas"
+    },
+    {
+      "id": "openclaw-personal-context",
+      "name": "Personal Context",
+      "category": "OpenClaw Plugin",
+      "harness": "openclaw",
+      "path": "/home/adarshjii/.openclaw/plugin-skills/personal-context",
+      "enabled": true,
+      "description": "OpenClaw plugin skill for personal-context"
+    },
+    {
+      "id": "openclaw-project-resumer",
+      "name": "Project Resumer",
+      "category": "OpenClaw Plugin",
+      "harness": "openclaw",
+      "path": "/home/adarshjii/.openclaw/plugin-skills/project-resumer",
+      "enabled": true,
+      "description": "OpenClaw plugin skill for project-resumer"
+    },
+    {
+      "id": "openclaw-repository-auditor",
+      "name": "Repository Auditor",
+      "category": "OpenClaw Plugin",
+      "harness": "openclaw",
+      "path": "/home/adarshjii/.openclaw/plugin-skills/repository-auditor",
+      "enabled": true,
+      "description": "OpenClaw plugin skill for repository-auditor"
+    },
+    {
+      "id": "hermes-aegis",
+      "name": "Aegis",
+      "category": "Hermes Agies",
+      "harness": "hermes",
+      "path": "/home/adarshjii/.hermes/profiles/agies/skills/aegis",
+      "enabled": true,
+      "description": "Hermes skill suite for aegis"
+    },
+    {
+      "id": "hermes-agent-moe",
+      "name": "Agent Moe",
+      "category": "Hermes Agies",
+      "harness": "hermes",
+      "path": "/home/adarshjii/.hermes/profiles/agies/skills/agent-moe",
+      "enabled": true,
+      "description": "Hermes skill suite for agent-moe"
+    },
+    {
+      "id": "hermes-apple",
+      "name": "Apple",
+      "category": "Hermes Agies",
+      "harness": "hermes",
+      "path": "/home/adarshjii/.hermes/profiles/agies/skills/apple",
+      "enabled": true,
+      "description": "Hermes skill suite for apple"
+    },
+    {
+      "id": "hermes-autonomous-ai-agents",
+      "name": "Autonomous Ai Agents",
+      "category": "Hermes Agies",
+      "harness": "hermes",
+      "path": "/home/adarshjii/.hermes/profiles/agies/skills/autonomous-ai-agents",
+      "enabled": true,
+      "description": "Hermes skill suite for autonomous-ai-agents"
+    },
+    {
+      "id": "hermes-creative",
+      "name": "Creative",
+      "category": "Hermes Agies",
+      "harness": "hermes",
+      "path": "/home/adarshjii/.hermes/profiles/agies/skills/creative",
+      "enabled": true,
+      "description": "Hermes skill suite for creative"
+    },
+    {
+      "id": "hermes-devops",
+      "name": "Devops",
+      "category": "Hermes Agies",
+      "harness": "hermes",
+      "path": "/home/adarshjii/.hermes/profiles/agies/skills/devops",
+      "enabled": true,
+      "description": "Hermes skill suite for devops"
+    },
+    {
+      "id": "hermes-email",
+      "name": "Email",
+      "category": "Hermes Agies",
+      "harness": "hermes",
+      "path": "/home/adarshjii/.hermes/profiles/agies/skills/email",
+      "enabled": true,
+      "description": "Hermes skill suite for email"
+    },
+    {
+      "id": "hermes-karpathy",
+      "name": "Karpathy",
+      "category": "Hermes Agies",
+      "harness": "hermes",
+      "path": "/home/adarshjii/.hermes/profiles/agies/skills/karpathy",
+      "enabled": true,
+      "description": "Hermes skill suite for karpathy"
+    },
+    {
+      "id": "hermes-matt-wolfe",
+      "name": "Matt Wolfe",
+      "category": "Hermes Agies",
+      "harness": "hermes",
+      "path": "/home/adarshjii/.hermes/profiles/agies/skills/matt-wolfe",
+      "enabled": true,
+      "description": "Hermes skill suite for matt-wolfe"
+    },
+    {
+      "id": "hermes-media",
+      "name": "Media",
+      "category": "Hermes Agies",
+      "harness": "hermes",
+      "path": "/home/adarshjii/.hermes/profiles/agies/skills/media",
+      "enabled": true,
+      "description": "Hermes skill suite for media"
+    },
+    {
+      "id": "hermes-note-taking",
+      "name": "Note Taking",
+      "category": "Hermes Agies",
+      "harness": "hermes",
+      "path": "/home/adarshjii/.hermes/profiles/agies/skills/note-taking",
+      "enabled": true,
+      "description": "Hermes skill suite for note-taking"
+    },
+    {
+      "id": "hermes-productivity",
+      "name": "Productivity",
+      "category": "Hermes Agies",
+      "harness": "hermes",
+      "path": "/home/adarshjii/.hermes/profiles/agies/skills/productivity",
+      "enabled": true,
+      "description": "Hermes skill suite for productivity"
+    },
+    {
+      "id": "hermes-research",
+      "name": "Research",
+      "category": "Hermes Agies",
+      "harness": "hermes",
+      "path": "/home/adarshjii/.hermes/profiles/agies/skills/research",
+      "enabled": true,
+      "description": "Hermes skill suite for research"
+    },
+    {
+      "id": "hermes-social-media",
+      "name": "Social Media",
+      "category": "Hermes Agies",
+      "harness": "hermes",
+      "path": "/home/adarshjii/.hermes/profiles/agies/skills/social-media",
+      "enabled": true,
+      "description": "Hermes skill suite for social-media"
+    },
+    {
+      "id": "hermes-software-development",
+      "name": "Software Development",
+      "category": "Hermes Agies",
+      "harness": "hermes",
+      "path": "/home/adarshjii/.hermes/profiles/agies/skills/software-development",
+      "enabled": true,
+      "description": "Hermes skill suite for software-development"
+    },
+    {
+      "id": "hermes-systematic-file-reader",
+      "name": "Systematic File Reader",
+      "category": "Hermes Agies",
+      "harness": "hermes",
+      "path": "/home/adarshjii/.hermes/profiles/agies/skills/systematic-file-reader",
+      "enabled": true,
+      "description": "Hermes skill suite for systematic-file-reader"
+    },
+    {
+      "id": "hermes-web",
+      "name": "Web",
+      "category": "Hermes Agies",
+      "harness": "hermes",
+      "path": "/home/adarshjii/.hermes/profiles/agies/skills/web",
+      "enabled": true,
+      "description": "Hermes skill suite for web"
+    }
+  ]
+}
