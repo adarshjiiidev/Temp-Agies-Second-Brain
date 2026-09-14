@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-09-12T18:14:00",
+  "description": "ChatGPT export ingestion pipeline — configuration and tracking",
+  "pipeline": {
+    "name": "chatgpt-ingest",
+    "last_run": null,
+    "status": "idle",
+    "schedule": "daily at 03:00 via systemd timer",
+    "source_dir": "/home/adarshjii/Downloads/",
+    "extract_dir": "/tmp/aegis-chatgpt-<timestamp>",
+    "ingest_dir": "/home/adarshjii/.temporary-aegis/memory/0-Inbox/chatgpt",
+    "log_file": "/home/adarshjii/.temporary-aegis/memory/logs/chatgpt-ingest.log",
+    "privacy_filter": {
+      "redact_api_keys": true,
+      "redact_github_tokens": true,
+      "redact_passwords": true,
+      "redact_secrets": true,
+      "redact_tokens": true
+    },
+    "classification": {
+      "project_keywords": ["aegis", "world-viewer", "repusense", "chrome-extra", "project", "architecture", "refactor", "debug", "fix", "implement", "build", "feature", "deploy", "config", "setup", "install", "error", "bug", "test", "ci", "cd", "docker", "container", "server", "api", "database", "frontend", "backend", "react", "next.js", "python", "rust", "electron"],
+      "preference_keywords": ["prefer", "favorite", "best", "hate", "love", "like", "dislike", "choice", "option", "decision", "because", "reason", "why", "tool", "library", "framework", "editor", "ide", "os", "distro"],
+      "lesson_keywords": ["learned", "discovered", "figured out", "solved", "problem", "issue", "fix", "workaround", "error", "fail", "mistake", "lesson", "tip", "trick", "how to", "way to"]
+    },
+    "storage_rules": {
+      "project": "memory/1-Projects/<project>/chatgpt-<date>-<id>.md",
+      "preference": "memory/2-Areas/personal/chatgpt-preferences-<date>-<id>.md",
+      "lesson": "memory/3-Resources/chatgpt-lessons-<date>-<id>.md",
+      "general": "memory/0-Inbox/chatgpt/chatgpt-general-<date>-<id>.md"
+    },
+    "stats": {
+      "total_conversations_processed": 0,
+      "project_notes_created": 0,
+      "preference_notes_created": 0,
+      "lesson_notes_created": 0,
+      "general_notes_created": 0
+    }
+  }
+}

@@ -1,0 +1,85 @@
+2026-09-13T12:15:04 [INFO] aegis.browser | Fetching DOM: https://example.com
+2026-09-13T12:15:47 [INFO] aegis.knowledge_graph | Knowledge Graph built: 58 nodes, 3 edges
+2026-09-13T12:22:32 [INFO] aegis.knowledge_graph | Knowledge Graph built: 58 nodes, 3 edges
+2026-09-13T12:22:55 [INFO] aegis.security | Generated new AEGIS API token → /home/adarshjii/.temporary-aegis/config/aegis_api_token
+2026-09-13T12:22:55 [INFO] aegis.knowledge_graph | Knowledge Graph built: 58 nodes, 3 edges
+2026-09-13T12:23:20 [WARNING] aegis.security | Rejected request to /api/run-script — bad/missing token
+2026-09-13T12:23:20 [WARNING] aegis.server | Security reject 403 on POST /api/run-script
+2026-09-13T12:23:27 [INFO] aegis.browser | Fetching DOM: https://example.com
+2026-09-13T13:52:14 [WARNING] aegis.security | Rejected request to /api/chat — bad/missing token
+2026-09-13T13:52:14 [WARNING] aegis.server | Security reject 403 on POST /api/chat
+2026-09-13T13:52:29 [WARNING] aegis.security | Rejected request to /api/chat — bad/missing token
+2026-09-13T13:52:29 [WARNING] aegis.server | Security reject 403 on POST /api/chat
+2026-09-13T13:52:33 [DEBUG] aegis.agent_pty | Resolved command for agent 'hermes': ['/home/adarshjii/.local/bin/hermes']
+2026-09-13T13:52:33 [INFO] aegis.agent_pty | PTY started: session=hermes cmd=/home/adarshjii/.local/bin/hermes
+2026-09-13T13:52:33 [DEBUG] aegis.agent_pty | Resolved command for agent 'claude': ['/home/adarshjii/.local/bin/claude']
+2026-09-13T13:52:33 [INFO] aegis.agent_pty | PTY started: session=claude cmd=/home/adarshjii/.local/bin/claude
+2026-09-13T13:52:33 [DEBUG] aegis.agent_pty | Resolved command for agent 'codex': ['/home/adarshjii/.local/share/mise/installs/codex/latest/bin/codex']
+2026-09-13T13:52:33 [INFO] aegis.agent_pty | PTY started: session=codex cmd=/home/adarshjii/.local/share/mise/installs/codex/latest/bin/codex
+2026-09-13T13:52:33 [INFO] aegis.agent_pty | PTY started: session=deepseek cmd=python3
+2026-09-13T13:52:33 [INFO] aegis.agent_pty | PTY started: session=openclaw cmd=python3
+2026-09-13T13:52:33 [DEBUG] aegis.agent_pty | Resolved command for agent 'opencode': ['/home/adarshjii/.opencode/bin/opencode']
+2026-09-13T13:52:33 [INFO] aegis.agent_pty | PTY started: session=opencode cmd=/home/adarshjii/.opencode/bin/opencode
+2026-09-13T13:52:33 [DEBUG] aegis.agent_pty | Resolved command for agent 'bash': ['/usr/bin/bash']
+2026-09-13T13:52:33 [INFO] aegis.agent_pty | PTY started: session=bash cmd=/usr/bin/bash
+2026-09-13T13:52:34 [DEBUG] aegis.agent_pty | WS broadcast dead conn: 
+2026-09-13T13:52:34 [INFO] aegis.agent_pty | PTY started: session=deepseek cmd=python3
+2026-09-13T13:52:34 [INFO] aegis.agent_pty | PTY started: session=openclaw cmd=python3
+2026-09-13T13:53:33 [WARNING] aegis.security | Rejected request to /api/chat — bad/missing token
+2026-09-13T13:53:33 [WARNING] aegis.server | Security reject 403 on POST /api/chat
+2026-09-13T13:58:30 [WARNING] aegis.security | Rejected request to /api/chat — bad/missing token
+2026-09-13T13:58:30 [WARNING] aegis.server | Security reject 403 on POST /api/chat
+2026-09-13T13:58:39 [WARNING] aegis.security | Rejected request to /api/run-script — bad/missing token
+2026-09-13T13:58:39 [WARNING] aegis.server | Security reject 403 on POST /api/run-script
+2026-09-13T13:58:41 [WARNING] aegis.security | Rejected request to /api/run-script — bad/missing token
+2026-09-13T13:58:41 [WARNING] aegis.server | Security reject 403 on POST /api/run-script
+2026-09-13T19:32:00 [INFO] aegis.knowledge_graph | Knowledge Graph built: 58 nodes, 3 edges
+2026-09-13T22:15:26 [WARNING] aegis.security | Rejected request to /api/chat — bad/missing token
+2026-09-13T22:15:26 [WARNING] aegis.server | Security reject 403 on POST /api/chat
+2026-09-13T22:15:49 [DEBUG] aegis.agent_pty | Resolved command for agent 'hermes': ['/home/adarshjii/.local/bin/hermes']
+2026-09-13T22:15:49 [INFO] aegis.agent_pty | PTY started: session=hermes cmd=/home/adarshjii/.local/bin/hermes
+2026-09-13T22:15:49 [DEBUG] aegis.agent_pty | Resolved command for agent 'claude': ['/home/adarshjii/.local/bin/claude']
+2026-09-13T22:15:49 [INFO] aegis.agent_pty | PTY started: session=claude cmd=/home/adarshjii/.local/bin/claude
+2026-09-13T22:15:49 [DEBUG] aegis.agent_pty | Resolved command for agent 'codex': ['/home/adarshjii/.local/share/mise/installs/codex/latest/bin/codex']
+2026-09-13T22:15:49 [INFO] aegis.agent_pty | PTY started: session=codex cmd=/home/adarshjii/.local/share/mise/installs/codex/latest/bin/codex
+2026-09-13T22:15:49 [INFO] aegis.agent_pty | PTY started: session=deepseek cmd=python3
+2026-09-13T22:15:49 [INFO] aegis.agent_pty | PTY started: session=openclaw cmd=python3
+2026-09-13T22:15:49 [DEBUG] aegis.agent_pty | Resolved command for agent 'opencode': ['/home/adarshjii/.opencode/bin/opencode']
+2026-09-13T22:15:49 [INFO] aegis.agent_pty | PTY started: session=opencode cmd=/home/adarshjii/.opencode/bin/opencode
+2026-09-13T22:15:49 [DEBUG] aegis.agent_pty | Resolved command for agent 'bash': ['/usr/bin/bash']
+2026-09-13T22:15:49 [INFO] aegis.agent_pty | PTY started: session=bash cmd=/usr/bin/bash
+2026-09-13T22:15:50 [INFO] aegis.agent_pty | PTY started: session=deepseek cmd=python3
+2026-09-13T22:15:51 [INFO] aegis.agent_pty | PTY started: session=openclaw cmd=python3
+2026-09-13T22:16:42 [INFO] aegis.agent_pty | PTY started: session=deepseek cmd=python3
+2026-09-13T22:16:42 [INFO] aegis.agent_pty | PTY started: session=openclaw cmd=python3
+2026-09-13T22:16:42 [INFO] aegis.agent_pty | PTY started: session=deepseek cmd=python3
+2026-09-13T22:16:42 [INFO] aegis.agent_pty | PTY started: session=openclaw cmd=python3
+2026-09-13T22:16:55 [WARNING] aegis.security | Rejected request to /api/agent/bash/restart — bad/missing token
+2026-09-13T22:16:55 [WARNING] aegis.server | Security reject 403 on POST /api/agent/bash/restart
+2026-09-13T22:25:14 [INFO] aegis.knowledge_graph | Knowledge Graph built: 58 nodes, 3 edges
+2026-09-14T07:54:46 [INFO] aegis.knowledge_graph | Knowledge Graph built: 58 nodes, 3 edges
+2026-09-14T16:05:31 [INFO] aegis.knowledge_graph | Knowledge Graph built: 58 nodes, 3 edges
+2026-09-14T16:44:59 [WARNING] aegis.security | Rejected request to /api/planner/create-plan — bad/missing token
+2026-09-14T16:44:59 [WARNING] aegis.server | Security reject 403 on POST /api/planner/create-plan
+2026-09-14T16:44:59 [WARNING] aegis.security | Path traversal blocked: ../../etc/passwd (resolved: /home/etc/passwd)
+2026-09-14T16:45:30 [INFO] aegis.browser | Fetching DOM: https://example.com
+2026-09-14T16:49:14 [INFO] aegis.knowledge_graph | Knowledge Graph built: 58 nodes, 3 edges
+2026-09-14T17:24:25 [WARNING] aegis.security | Rejected request to /api/chat — bad/missing token
+2026-09-14T17:24:25 [WARNING] aegis.server | Security reject 403 on POST /api/chat
+2026-09-14T17:24:29 [DEBUG] aegis.agent_pty | Resolved command for agent 'hermes': ['/home/adarshjii/.local/bin/hermes']
+2026-09-14T17:24:29 [INFO] aegis.agent_pty | PTY started: session=hermes cmd=/home/adarshjii/.local/bin/hermes
+2026-09-14T17:24:29 [DEBUG] aegis.agent_pty | Resolved command for agent 'claude': ['/home/adarshjii/.local/bin/claude']
+2026-09-14T17:24:29 [INFO] aegis.agent_pty | PTY started: session=claude cmd=/home/adarshjii/.local/bin/claude
+2026-09-14T17:24:29 [DEBUG] aegis.agent_pty | Resolved command for agent 'codex': ['/home/adarshjii/.local/share/mise/installs/codex/latest/bin/codex']
+2026-09-14T17:24:29 [INFO] aegis.agent_pty | PTY started: session=codex cmd=/home/adarshjii/.local/share/mise/installs/codex/latest/bin/codex
+2026-09-14T17:24:29 [INFO] aegis.agent_pty | PTY started: session=deepseek cmd=python3
+2026-09-14T17:24:29 [INFO] aegis.agent_pty | PTY started: session=openclaw cmd=python3
+2026-09-14T17:24:29 [DEBUG] aegis.agent_pty | Resolved command for agent 'opencode': ['/home/adarshjii/.opencode/bin/opencode']
+2026-09-14T17:24:29 [INFO] aegis.agent_pty | PTY started: session=opencode cmd=/home/adarshjii/.opencode/bin/opencode
+2026-09-14T17:24:29 [DEBUG] aegis.agent_pty | Resolved command for agent 'bash': ['/usr/bin/bash']
+2026-09-14T17:24:29 [INFO] aegis.agent_pty | PTY started: session=bash cmd=/usr/bin/bash
+2026-09-14T17:24:29 [INFO] aegis.agent_pty | PTY started: session=deepseek cmd=python3
+2026-09-14T17:24:29 [DEBUG] aegis.agent_pty | WS broadcast dead conn: 
+2026-09-14T17:24:29 [DEBUG] aegis.agent_pty | WS broadcast dead conn: 
+2026-09-14T17:24:29 [INFO] aegis.agent_pty | PTY started: session=openclaw cmd=python3
+2026-09-14T19:10:37 [INFO] aegis.knowledge_graph | Knowledge Graph built: 58 nodes, 3 edges

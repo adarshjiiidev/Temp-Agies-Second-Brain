@@ -1,0 +1,40 @@
+{
+  "generated_at": "2026-09-12T17:53:00",
+  "description": "Knowledge graph relationships for TEMPORARY AEGIS",
+  "relationships": {
+    "Aegis": {
+      "type": "project",
+      "related_to": [
+        "9Router",
+        "model-providers",
+        "memory-systems",
+        "hermes"
+      ],
+      "depends_on": [],
+      "status": "active"
+    },
+    "9Router": {
+      "type": "resource",
+      "related_to": ["Aegis", "model-providers", "routing-strategy"],
+      "url": "http://127.0.0.1:20128/v1",
+      "models_available": 860
+    },
+    "model-providers": {
+      "type": "area",
+      "related_to": ["9Router", "Aegis", "routing-strategy"]
+    },
+    "routing-strategy": {
+      "type": "resource",
+      "related_to": ["Aegis", "9Router", "model-providers"]
+    },
+    "memory-systems": {
+      "type": "resource",
+      "related_to": ["Aegis"]
+    },
+    "Hermes": {
+      "type": "tool/runtime",
+      "related_to": ["Aegis"],
+      "profile_agies": true
+    }
+  }
+}

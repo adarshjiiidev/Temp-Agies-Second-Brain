@@ -1,0 +1,177 @@
+{
+  "generated_at": "2026-09-12T17:34:00",
+  "description": "Personal context for TEMPORARY AEGIS — who the user is, what they work on, how they prefer to work",
+  "user": {
+    "name": "Adarsh Jii",
+    "home": "/home/adarshjii",
+    "workspace": "/home/adarshjii/.openclaw/workspace",
+    "preferences": {
+      "communication": {
+        "style": "concise when needed, thorough when it matters",
+        "directives": [
+          {
+            "directive": "Prefer concise progress updates during implementation work",
+            "observed": "2026-09-12",
+            "status": "active",
+            "evidence": "USER.md directive"
+          }
+        ]
+      },
+      "workflow": {
+        "memory": "Uses OpenClaw workspace memory system (daily notes, USER.md, MEMORY.md)",
+        "project_management": "Uses Git for version control, has multiple projects in ~/Projects",
+        "agent_interaction": "Uses OpenClaw as primary AI interface, Hermes as secondary agent runtime"
+      },
+      "technical": {
+        "primary_os": "AGIES Linux (Arch-based)",
+        "preferred_models": "Uses 9Router for model access (860 models available). Hermes default: Solar Pro 4 free via Nous.",
+        "coding_environments": [
+          {
+            "name": "OpenClaw",
+            "role": "Primary AI gateway and desktop interface",
+            "status": "active"
+          },
+          {
+            "name": "Hermes Agent",
+            "role": "Secondary agent runtime with skills and memory",
+            "status": "active"
+          },
+          {
+            "name": "Codex",
+            "role": "Coding agent with GPT-5.6-terra default",
+            "status": "configured"
+          },
+          {
+            "name": "9Router",
+            "role": "Model routing gateway (OpenAI-compatible, port 20128)",
+            "status": "active"
+          }
+        ]
+      }
+    }
+  },
+  "active_projects": [
+    {
+      "name": "Aegis",
+      "path": "/home/adarshjii/Projects/Aegis",
+      "description": "Personal Adaptive AI Operating System — 7-layer AI OS (L1-L6 implemented, 1060 tests passing). User's own AI project.",
+      "language": "Python 3.12 + Rust (crates not compiled)",
+      "status": "active",
+      "branch": "main",
+      "last_commit": "0078650 (Initial Commit)",
+      "uncommitted_changes": ["M .agents/AGENTS.md", "M src/aegis/agentmoe/security/autonomy.py", "M src/aegis/agentmoe/security/budget_guard.py", "M src/aegis/agentmoe/workers/runtime.py", "M tests/agentmoe/security/test_security_guards.py"],
+      "architecture": "7-layer architecture: L1 Core Runtime, L2 Foundation, L3 AI Kernel (model router, providers), L4 Memory/Knowledge (3 stores), L5 Execution (pipeline, sandbox, audit), L6 Planning, L7 HCI (not started)",
+      "key_modules": ["l1_core (runtime, DI, errors)", "l2_foundation (event bus, config, crypto, persistence)", "l3_intelligence (AI kernel, router, providers)", "l4_memory (stores, graph, context, search)", "l5_execution (pipeline, permission, policy, sandbox)", "l6_planning (planner, goal decomposition)"],
+      "frameworks": ["Pydantic", "PyYAML", "aiosqlite", "structlog", "httpx"],
+      "tests": "1060 tests passing (~22s). Full suite passes since STAB-01 fix.",
+      "docs": "20+ docs in docs/ including AEGIS_MASTER_AUDIT.md, architecture docs, roadmap, risk register",
+      "known_issues": [
+        "Rust crates have compile errors (cargo not installed on this machine)",
+        "Ruff lint: 642 issues (pre-existing, not blocking)",
+        "Mypy blocked on Windows WDAC (not relevant to this Linux machine)",
+        "Redesign packages (reasoning, prompts, capabilities) present but untested"
+      ],
+      "intelligence": {
+        "this_is_the_user's_own_AI_project": "Aegis is the user's personal AI OS project. It is the architectural inspiration for TEMPORARY AEGIS. The user is deeply involved in its development.",
+        "recent_focus": "Security autonomy and budget guard improvements (uncommitted changes in agentmoe/security/)",
+        "test_focus": "AgentMOE security guard tests are being actively modified"
+      }
+    },
+    {
+      "name": "repusense",
+      "path": "/home/adarshjii/Projects/repusense",
+      "description": "Next.js project — appears to be a repository sensing/analysis tool",
+      "language": "TypeScript/Next.js",
+      "status": "active",
+      "branch": "master",
+      "last_commit": "ba97dc8 (Initial commit from Create Next App)",
+      "uncommitted_changes": [],
+      "architecture": "Next.js app with backend directory. Standard Next.js structure with app directory.",
+      "key_files": ["app/", "backend/", "package.json", "next.config.ts", "eslint.config.mjs", "AGENTS.md", "CLAUDE.md"],
+      "dependencies": "Next.js 16.3.4, React, standard Next.js stack",
+      "tests": "No test suite detected",
+      "notes": "Has hermes-parser and hermes-estree in node_modules — may integrate with Hermes"
+    },
+    {
+      "name": "world-viewer",
+      "path": "/home/adarshjii/Projects/world-viewer",
+      "description": "Electron-based desktop application — world viewer tool",
+      "language": "TypeScript/Electron",
+      "status": "built",
+      "branch": "main",
+      "last_commit": "371d443 (Complete Build)",
+      "uncommitted_changes": ["A dist/builder-debug.yml", "A dist/linux-unpacked/ (Electron build output)"],
+      "architecture": "Electron app with build/, dist/, electron/, public/ directories",
+      "key_files": ["package.json", "prompt.md (44KB — extensive prompt)", "context.md", "build/", "electron/"],
+      "dependencies": "Electron, standard Electron stack",
+      "notes": "Has a large prompt.md (44KB) — likely contains extensive AI interaction prompts. Codex trusted project."
+    },
+    {
+      "name": "chrome-extra",
+      "path": "/home/adarshjii/Projects/chrome-extra",
+      "description": "Chrome extension or Chrome-related project",
+      "language": "Unknown (minimal inspection)",
+      "status": "active",
+      "branch": "unknown",
+      "last_commit": "unknown",
+      "notes": "Git repo exists. Minimal information gathered — needs deeper analysis."
+    },
+    {
+      "name": "Work",
+      "path": "/home/adarshjii/Work",
+      "description": "Work directory with .crush subdirectory and .mise.toml",
+      "language": "Unknown",
+      "status": "unknown",
+      "notes": "Contains .crush directory (possibly Crush IDE related). .mise.toml suggests mise tool management. No git repo detected."
+    }
+  ],
+  "development_environment": {
+    "os": "AGIES Linux 4.0.3 (Arch-based, ID=omarchy)",
+    "kernel": "7.2.3-arch1-3",
+    "cpu": "12th Gen Intel i3-1215U (8 cores)",
+    "ram": "7.5 GB (1.5 GB available, 4.3 GB swap in use)",
+    "storage": "475 GB NVMe (392 GB free)",
+    "gpu": "Intel UHD Graphics (integrated, no CUDA)",
+    "software": {
+      "python": "3.11.16 (via uv)",
+      "node": "22.23.2 (system), 24.19.0 (OpenClaw)",
+      "git": "2.55.0",
+      "docker": "29.7.2",
+      "rust": "NOT installed (cargo/rustc absent)",
+      "package_managers": ["pacman", "yay (AUR)", "uv", "npm", "mise"]
+    },
+    "running_services": {
+      "9router": "port 20128 (model gateway, 860 models)",
+      "openclaw-gateway": "port 18789 (AI gateway)",
+      "lm-studio": "port 41343 (local LLM UI)",
+      "llama-server": "port 40565 (local inference, Gemma-4-E2B, 8K context)"
+    },
+    "key_tools": {
+      "gh": "GitHub CLI (NOT authenticated)",
+      "codex": "Codex coding agent (GPT-5.6-terra default)",
+      "hermes": "Hermes agent (Solar Pro 4 free default)",
+      "openclaw": "OpenClaw gateway (primary AI interface)",
+      "opencode": "OpenCode CLI available",
+      "claude": "Claude CLI available",
+      "cursor-agent": "Cursor agent available",
+      "gemini": "Gemini CLI available"
+    }
+  },
+  "user_behavior_patterns": {
+    "works_on_ai_projects": true,
+    "maintains_multiple_ai_tools": true,
+    "values_privacy": true,
+    "prefers_concise_updates": true,
+    "deeply_invests_in_ai_research": true,
+    "builds_personal_ai_systems": true,
+    "uses_multiple_model_providers": true
+  },
+  "knowledge_gaps": [
+    "User's specific goals and priorities (beyond Aegis development)",
+    "User's work activities (Work directory contents unknown)",
+    "User's preferred model choices for different tasks (beyond defaults)",
+    "User's communication preferences beyond conciseness",
+    "chrome-extra project purpose and status",
+    "repusense project purpose beyond being a Next.js app"
+  ]
+}

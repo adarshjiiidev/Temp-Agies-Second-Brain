@@ -1,0 +1,243 @@
+{
+  "generated_at": "2026-09-12T17:35:00",
+  "description": "Project Intelligence Index — hierarchical understanding of user's projects",
+  "projects": {
+    "Aegis": {
+      "id": "Aegis",
+      "path": "/home/adarshjii/Projects/Aegis",
+      "priority": "high",
+      "status": "active-development",
+      "type": "personal-ai-project",
+      "purpose": "Personal Adaptive AI Operating System — a 7-layer adaptive AI OS for ambient environment orchestration, general-purpose intelligence, second brain, and secure autonomy. This is the user's primary AI project and the architectural inspiration for TEMPORARY AEGIS.",
+      "architecture": {
+        "overview": "7-layer architecture with strict downward dependencies. L1 (Core Runtime) → L2 (Foundation) → L3 (AI Kernel) → L4 (Memory/Knowledge) → L5 (Execution) → L6 (Planning) → L7 (HCI, not started). Plus redesign packages: reasoning, prompts, capabilities.",
+        "layers": {
+          "L1_Core_Runtime": {
+            "status": "complete",
+            "components": ["runtime.py (FSM lifecycle)", "container.py (DI with 5 lifetimes)", "supervisor.py", "errors/base.py (typed error hierarchy)"],
+            "key_features": ["RuntimeState enum: CREATED→INIT→START→RUN→STOP→STOPPED", "Dependency injection with SINGLETON/SCOPED/TRANSIENT/FACTORY/LAZY", "Circular dependency detection", "Typed error hierarchy with severity/retry/code"]
+          },
+          "L2_Foundation": {
+            "status": "complete",
+            "components": ["event_bus.py", "config.py", "logging.py", "crypto/ (vault, redaction)", "persistence.py", "plugin_loader.py", "background_tasks.py"],
+            "key_features": ["Event bus for cross-service communication", "Structured logging with correlation", "Crypto vault with encryption/redaction", "Plugin loading system"]
+          },
+          "L3_AI_Kernel": {
+            "status": "complete",
+            "components": ["ai_kernel/ (kernel.py, router.py, registry.py, providers/, accounting.py, cache.py, structured.py, scrubber.py, metrics.py)"],
+            "key_features": ["5-stage model router: hard→quality→SLA→score→budget", "Model registry with 10-stage filter_candidates()", "Cost accountant with 4-point budget enforcement", "Response cache with LRU/TTL", "Structured output processor with Pydantic validation", "PII/secret scrubber with auto P0 elevation", "6 provider adapters: fake, ollama, openrouter, groq, vllm"],
+            "privacy_invariant": "P0 (secrets/PII) NEVER routes to cloud — only local models. Violation raises AIRouterPrivacyViolationError."
+          },
+          "L4_Memory_Knowledge": {
+            "status": "complete",
+            "components": ["store.py (3 stores: episodic, semantic, working)", "graph.py (knowledge graph)", "context.py (context assembly)", "search.py (full-text + semantic)", "policies.py (retention, privacy, verification)", "markdown.py (markdown loader)", "p07/ (WIP: scanners, discovery, inference)"],
+            "key_features": ["3 memory stores with different lifetimes", "Knowledge graph for relationship tracking", "Context assembly from multiple sources", "Full-text search with FTS", "Memory policies for retention and verification"]
+          },
+          "L5_Execution": {
+            "status": "complete",
+            "components": ["pipeline.py (7-stage: Plan→Permission→Policy→Execution→Audit→Verification)", "permission.py", "policy.py", "audit_chain.py", "sandbox/ (4 tiers)", "executors/"],
+            "key_features": ["7-stage execution pipeline", "Permission engine for action authorization", "Policy engine for rule enforcement", "Audit chain for full traceability", "4-tier sandbox by provenance", "Executors for different action types"]
+          },
+          "L6_Planning": {
+            "status": "implemented",
+            "components": ["planning_engine.py", "goal_decomposer.py", "planner_service.py", "dependency_graph.py", "reflection.py", "metrics.py"],
+            "key_features": ["Goal decomposition into sub-goals", "Dependency graph for task ordering", "Planner service with multiple strategies", "Reflection and metrics for improvement", "Deterministic keyword heuristics (default), AI path when reasoning_provider injected"]
+          }
+        },
+        "redisign_packages": {
+          "status": "present but untested",
+          "packages": {
+            "reasoning": "AI reasoning provider — wired to L6 via PlannerService. MockProvider tested. KernelReasoningProvider uses real AIKernel.generate() but lacks end-to-end integration test.",
+            "prompts": "15 versioned YAML prompt templates for reasoning layer",
+            "capabilities": "Capability registry — minimal test coverage"
+          }
+        }
+      },
+      "current_state": {
+        "tests": "1060 tests passing (~22s). Full suite passes.",
+        "ruff": "642 issues (pre-existing, 410 auto-fixable)",
+        "mypy": "Blocked on Windows WDAC (not relevant to Linux)",
+        "cargo": "Not installed — Rust crates cannot be verified locally",
+        "uncommitted_changes": [
+          ".agents/AGENTS.md (modified)",
+          "src/aegis/agentmoe/security/autonomy.py (modified)",
+          "src/aegis/agentmoe/security/budget_guard.py (modified)",
+          "src/aegis/agentmoe/workers/runtime.py (modified)",
+          "tests/agentmoe/security/test_security_guards.py (modified)"
+        ],
+        "recent_focus": "AgentMOE security autonomy and budget guard improvements. Security guard tests being actively modified.",
+        "known_issues": [
+          "Rust crate compile errors (missing deps rand/tempfile, syntax errors in aegis_crypto)",
+          "Redesign packages (reasoning, prompts, capabilities) present but untested/UNWIRED",
+          "Ruff lint issues are pre-existing and not blocking"
+        ]
+      },
+      "technology_stack": {
+        "languages": ["Python 3.12", "Rust (crates not compiled)"],
+        "python_deps": ["pydantic>=2.6,<3", "pydantic-settings>=2.1,<3", "PyYAML>=6.0.0", "aiosqlite>=0.20.0", "structlog>=24.0.0", "httpx>=0.27.0"],
+        "dev_deps": ["pytest>=8.0", "pytest-asyncio>=0.23", "pytest-cov>=4.1", "hypothesis>=6.90", "ruff>=0.3.0", "mypy>=1.8", "types-PyYAML"],
+        "build_system": "hatchling",
+        "package_manager": "uv (recommended), pip fallback"
+      },
+      "documentation": {
+        "total_docs": 20,
+        "key_docs": [
+          "00_VISION.md — Project vision and guiding principles",
+          "01_REQUIREMENTS.md — Requirements specification",
+          "02_ARCHITECTURE.md — Layer architecture and component map",
+          "03_TECH_STACK.md — Technology choices and rationale",
+          "04_REPOSITORY_STRUCTURE.md — Repository layout",
+          "05_SECURITY_PRIVACY.md — Security model and privacy boundaries",
+          "06_MEMORY_KNOWLEDGE.md — Memory and knowledge architecture",
+          "07_AI_STRATEGY.md — AI strategy and model selection",
+          "08_CAPABILITY_DISCOVERY.md — Capability discovery process",
+          "09_ROADMAP.md — 23-prompt milestone roadmap",
+          "10_RISKS.md — Risk register with 9+ identified risks",
+          "11_PROMPT_02_CORE_RUNTIME.md — Prompt 02 completion details",
+          "AEGIS_MASTER_AUDIT.md — Master audit report (authoritative)",
+          "HANDOFF_FOR_NEXT_AGENT.md — Handoff for continuation (superseded)",
+          "PROJECT_AEGIS_CURRENT_STATE.md — Current state (partially outdated)",
+          "P07_ARCHITECTURE_PLAN.md — P07 memory scanner architecture"
+        ]
+      },
+      "git_history": {
+        "total_commits": 8,
+        "commit_message": "All commits use 'Initial Commit' message — no narrative",
+        "branches": ["main (active)"],
+        "recent_activity": "Active development on AgentMOE security features"
+      },
+      "integration_notes": {
+        "TEMPORARY_AEGIS_RELATIONSHIP": "Aegis is the architectural blueprint for TEMPORARY AEGIS. Its concepts (layered architecture, memory tiers, execution pipeline, routing, security model) inform how the live system is configured. AEGIS L4 memory concepts map to TEMPORARY AEGIS memory schema. AEGIS L3 routing concepts map to model routing.",
+        "code_reuse": "Aegis code is not directly reused — TEMPORARY AEGIS uses existing tools (Hermes, Codex, 9Router) rather than importing Aegis. However, Aegis documentation and architectural decisions inform configuration.",
+        "testing_insights": "Aegis test suite (1060 tests) provides validation patterns. The STAB-01 fix (test suite hang) is a relevant lesson for TEMPORARY AEGIS testing."
+      }
+    },
+    "repusense": {
+      "id": "repusense",
+      "path": "/home/adarshjii/Projects/repusense",
+      "priority": "medium",
+      "status": "new",
+      "type": "web-application",
+      "purpose": "Repository sensing/analysis tool — appears to analyze repositories. Exact purpose not fully determined. Has hermes-parser and hermes-estree dependencies suggesting Hermes integration.",
+      "architecture": {
+        "overview": "Next.js 16.3.4 application with app directory structure. Has backend/ directory suggesting separate backend API.",
+        "structure": {
+          "frontend": "app/ directory (Next.js App Router)",
+          "backend": "backend/ directory (separate API?)",
+          "config": ["package.json", "next.config.ts", "eslint.config.mjs"],
+          "docs": ["AGENTS.md", "CLAUDE.md"]
+        }
+      },
+      "technology_stack": {
+        "framework": "Next.js 16.3.4",
+        "language": "TypeScript",
+        "node_modules": ["hermes-parser", "hermes-estree (Hermes integration?)"]
+      },
+      "current_state": {
+        "last_commit": "ba97dc8 (Initial commit from Create Next App)",
+        "uncommitted_changes": [],
+        "tests": "No test suite detected",
+        "notes": "Newly created project. Likely in early development. Hermes parser integration suggests it processes Hermes-related data."
+      },
+      "knowledge_gaps": [
+        "Exact purpose and functionality not determined",
+        "Backend API structure not inspected",
+        "Whether it's actively being developed or just initialized"
+      ]
+    },
+    "world-viewer": {
+      "id": "world-viewer",
+      "path": "/home/adarshjii/Projects/world-viewer",
+      "priority": "medium",
+      "status": "built",
+      "type": "desktop-application",
+      "purpose": "Electron-based desktop application for viewing world data/information. Has extensive prompt.md (44KB) suggesting significant AI interaction capabilities.",
+      "architecture": {
+        "overview": "Electron application with standard structure: build/, dist/, electron/, public/. Built and packaged for Linux.",
+        "structure": {
+          "source": "electron/ directory (Electron main process code)",
+          "build_config": "build/ directory",
+          "output": "dist/linux-unpacked/ (built application)",
+          "prompt": "prompt.md (44KB — extensive AI interaction prompts)",
+          "context": "context.md (application context for AI)"
+        }
+      },
+      "technology_stack": {
+        "framework": "Electron",
+        "language": "TypeScript/JavaScript",
+        "build_tools": ["electron-builder (inferred from dist/ structure)"],
+        "key_deps": "32612 lines in package-lock.json — substantial dependency tree"
+      },
+      "current_state": {
+        "last_commit": "371d443 (Complete Build)",
+        "uncommitted_changes": ["dist/ build output added"],
+        "status": "Built and packaged",
+        "notes": "Codex trusted project. Large prompt.md suggests this is an AI-integrated application."
+      },
+      "intelligence": {
+        "prompt_md_significance": "The 44KB prompt.md is unusually large for a prompt file. It likely contains detailed instructions for AI interaction, behavior guides, or system prompts for an integrated AI feature.",
+        "context_md": "context.md provides context for the application — likely describes what world-viewer does and how it works."
+      }
+    },
+    "chrome-extra": {
+      "id": "chrome-extra",
+      "path": "/home/adarshjii/Projects/chrome-extra",
+      "priority": "low",
+      "status": "unknown",
+      "type": "browser-extension",
+      "purpose": "Chrome extension or Chrome-related project. Purpose not yet determined.",
+      "architecture": {
+        "overview": "Git repository exists. Minimal information gathered — needs deeper analysis.",
+        "structure": "Unknown — needs inspection"
+      },
+      "current_state": {
+        "last_commit": "Unknown",
+        "uncommitted_changes": "Unknown",
+        "tests": "Unknown"
+      },
+      "knowledge_gaps": [
+        "Project purpose",
+        "Technology stack",
+        "Current state and activity level",
+        "Relationship to other projects"
+      ]
+    },
+    "Work": {
+      "id": "Work",
+      "path": "/home/adarshjii/Work",
+      "priority": "unknown",
+      "status": "unknown",
+      "type": "work-directory",
+      "purpose": "Work directory. Contains .crush subdirectory (possibly Crush IDE related) and .mise.toml for tool management.",
+      "architecture": {
+        "overview": "Not a git repository. Contains configuration files and a .crush directory.",
+        "structure": {
+          ".crush": "Crush IDE related files (presumed)",
+          ".mise.toml": "Mise tool configuration"
+        }
+      },
+      "current_state": {
+        "last_commit": "N/A (no git repo)",
+        "notes": "Not actively tracked in version control. May contain work-in-progress or configuration only."
+      },
+      "knowledge_gaps": [
+        "What work is done here",
+        "What .crush contains",
+        "Whether this is active work or archived"
+      ]
+    }
+  },
+  "project_relationships": {
+    "Aegis_is_primary": "Aegis is the user's primary AI project and the inspiration for TEMPORARY AEGIS",
+    "repusense_may_integrate_hermes": "repusense has hermes-parser dependency — may integrate with Hermes",
+    "world-viewer_is_ai_integrated": "world-viewer has 44KB prompt.md — likely AI-integrated Electron app",
+    "chrome-extra_unknown_relationship": "Purpose and relationships unknown — needs investigation"
+  },
+  "intelligence_last_updated": "2026-09-12T17:35:00",
+  "next_enrichment": [
+    "Deep inspection of repusense backend and purpose",
+    "Understanding chrome-extra purpose",
+    "Reviewing world-viewer prompt.md content (if useful for TEMPORARY AEGIS)",
+    "Checking Work/.crush contents"
+  ]
+}

@@ -1,0 +1,144 @@
+{
+  "generated_at": "2026-09-12T20:51:20.428068",
+  "agents": [
+    {
+      "id": "hermes",
+      "name": "Hermes (agies)",
+      "type": "ai-os-agent",
+      "repo": "https://github.com/nousresearch/hermes-agent",
+      "cli": "/home/adarshjii/.local/bin/hermes",
+      "command": "hermes --profile agies chat",
+      "profile": "agies",
+      "installed": true,
+      "default_model": "upstage/solar-pro4:free",
+      "modes": [
+        "standard",
+        "thinking",
+        "streaming",
+        "coding",
+        "tools"
+      ],
+      "runs_in": "cli-terminal-tab",
+      "config": "/home/adarshjii/.hermes/profiles/agies/config.yaml",
+      "skills_count": 18,
+      "dashboard_tab": "Hermes (agies)",
+      "icon": "MessageSquare",
+      "description": "Nous Research Hermes Agent with agies profile (god PC user persona, 18 skills, 20 tools)."
+    },
+    {
+      "id": "claude",
+      "name": "Claude Code",
+      "type": "anthropic-cli",
+      "repo": "https://github.com/anthropics/claude-code",
+      "cli": "/home/adarshjii/.local/share/mise/installs/claude/2.1.267/bin/claude",
+      "command": "claude",
+      "installed": true,
+      "default_model": "anthropic/claude-opus-4 (via 9Router)",
+      "modes": [
+        "standard",
+        "thinking",
+        "tools",
+        "coding"
+      ],
+      "runs_in": "cli-terminal-tab",
+      "dashboard_tab": "Claude Code",
+      "icon": "Bot",
+      "description": "Anthropic Claude Code CLI \u2014 autonomous terminal agent for deep reasoning, architectural refactoring, and code analysis."
+    },
+    {
+      "id": "codex",
+      "name": "Codex",
+      "type": "openai-agent",
+      "repo": "https://github.com/openai/codex",
+      "cli": "/home/adarshjii/.local/share/mise/installs/codex/latest/bin/codex",
+      "command": "codex",
+      "installed": true,
+      "default_model": "cl/openai/gpt-5.6-sol",
+      "modes": [
+        "standard",
+        "coding",
+        "tool-use"
+      ],
+      "runs_in": "cli-terminal-tab",
+      "dashboard_tab": "Codex",
+      "icon": "Code2",
+      "description": "OpenAI Codex CLI \u2014 specialized coding agent for rapid feature implementation, automated test runs, and debugging."
+    },
+    {
+      "id": "deepseek",
+      "name": "DeepSeek R1",
+      "type": "deepseek-agent",
+      "repo": "https://github.com/deepseek-ai",
+      "cli": "deepseek-session",
+      "command": "python3 -m backend.agent_runner --agent deepseek",
+      "installed": true,
+      "default_model": "cl/deepseek/deepseek-r1-distill-qwen-32b",
+      "modes": [
+        "thinking",
+        "coding",
+        "standard"
+      ],
+      "runs_in": "cli-terminal-tab",
+      "dashboard_tab": "DeepSeek R1",
+      "icon": "Brain",
+      "description": "DeepSeek AI harness \u2014 ultra-deep thinking and mathematical reasoning mode powered by DeepSeek R1 MoE via 9Router."
+    },
+    {
+      "id": "openclaw",
+      "name": "OpenClaw",
+      "type": "anthropic-agent",
+      "repo": "https://github.com/openclaw/openclaw",
+      "cli": "openclaw-session",
+      "command": "python3 -m backend.agent_runner --agent openclaw",
+      "installed": true,
+      "default_model": "anthropic/claude-sonnet-4",
+      "modes": [
+        "standard",
+        "thinking",
+        "claude-native"
+      ],
+      "runs_in": "cli-terminal-tab",
+      "dashboard_tab": "OpenClaw",
+      "icon": "Terminal",
+      "description": "OpenClaw Claude-native agent framework with memory synchronization and multi-step tool execution."
+    },
+    {
+      "id": "bash",
+      "name": "Host Terminal",
+      "type": "system-shell",
+      "repo": "https://www.gnu.org/software/bash/",
+      "cli": "/usr/bin/bash",
+      "command": "/usr/bin/bash",
+      "installed": true,
+      "default_model": "Host Native (Linux 64-bit)",
+      "modes": [
+        "standard",
+        "interactive"
+      ],
+      "runs_in": "cli-terminal-tab",
+      "dashboard_tab": "Host Shell",
+      "icon": "Terminal",
+      "description": "Full interactive host terminal shell with access to system tools, git, python, and systemctl."
+    },
+    {
+      "id": "9router",
+      "name": "9Router Gateway",
+      "type": "model-gateway",
+      "repo": "https://github.com/9router/9router",
+      "url": "http://127.0.0.1:20128",
+      "models_count": 870,
+      "installed": true,
+      "modes": [
+        "openai-compatible",
+        "streaming",
+        "tools",
+        "vision",
+        "thinking"
+      ],
+      "runs_in": "model-browser-tab",
+      "dashboard_tab": "9Router Models",
+      "icon": "Boxes",
+      "description": "Local OpenAI-compatible AI gateway aggregating 870 models across Anthropic, OpenAI, Google, DeepSeek, and OpenRouter."
+    }
+  ]
+}

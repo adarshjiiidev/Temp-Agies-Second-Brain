@@ -1,0 +1,50 @@
+{
+  "created_at": 1789275208.6360412,
+  "experiences": [
+    {
+      "id": "exp_1789275208_0",
+      "plan_id": null,
+      "timestamp": 1789275208.7512593,
+      "goal": "Lint and verify code in sandbox",
+      "model": "gemini/gemini-3.6-flash",
+      "tools_used": [
+        "lint_syntax",
+        "execute_sandboxed"
+      ],
+      "outcome": "SUCCESS",
+      "lessons": [
+        "Use py_compile before executing Python scripts to catch syntax errors fast."
+      ]
+    },
+    {
+      "id": "exp_1789282022_1",
+      "plan_id": null,
+      "timestamp": 1789282022.005876,
+      "goal": "Lint and verify code in sandbox",
+      "model": "gemini/gemini-3.6-flash",
+      "tools_used": [
+        "lint_syntax",
+        "execute_sandboxed"
+      ],
+      "outcome": "SUCCESS",
+      "lessons": [
+        "Use py_compile before executing Python scripts to catch syntax errors fast."
+      ]
+    },
+    {
+      "id": "exp_1789282366_2",
+      "plan_id": "10843840",
+      "timestamp": 1789282366.792634,
+      "goal": "Create a health check verification script and validate in sandbox",
+      "model": "gemini/gemini-3.7-flash",
+      "tools_used": [
+        "task_planner",
+        "code_sandbox"
+      ],
+      "outcome": "SUCCESS",
+      "lessons": [
+        "Hierarchical decomposition ensures all dependencies are linted before execution."
+      ]
+    }
+  ]
+}

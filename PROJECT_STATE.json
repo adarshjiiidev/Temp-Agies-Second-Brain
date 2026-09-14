@@ -1,0 +1,60 @@
+{
+  "project_name": "Temporary AEGIS",
+  "status": "OPERATIONAL",
+  "version": "1.0.0",
+  "last_updated": "2026-09-13T10:10:00+05:30",
+  "subsystems": {
+    "dashboard_frontend": {
+      "port": 2981,
+      "service": "aegis-frontend.service",
+      "status": "running"
+    },
+    "backend_api": {
+      "port": 8787,
+      "service": "aegis-backend.service",
+      "status": "running"
+    },
+    "model_gateway": {
+      "port": 20128,
+      "service": "9router.service",
+      "models_count": 870,
+      "status": "running"
+    },
+    "memory_consolidation": {
+      "timers": ["aegis-consolidate.timer", "aegis-consolidate-daily.timer"],
+      "vault_root": "/home/adarshjii/ObsidianVault",
+      "status": "active"
+    },
+    "vision_subsystem": {
+      "camera_device": "/dev/video0",
+      "ocr_engine": "/usr/bin/tesseract",
+      "screen_capture": "/usr/bin/grim",
+      "status": "verified"
+    },
+    "computer_control": {
+      "typing_simulator": "/usr/bin/wtype",
+      "clipboard": ["/usr/bin/wl-copy", "/usr/bin/wl-paste"],
+      "status": "verified"
+    },
+    "agent_harnesses": {
+      "hermes": "verified",
+      "claude": "verified",
+      "codex": "verified",
+      "opencode": "verified",
+      "openclaw": "verified",
+      "deepseek": "verified",
+      "bash": "verified"
+    },
+    "projects_indexed": [
+      "aegis-dashboard",
+      "Aegis",
+      "chrome-extra",
+      "repusense",
+      "world-viewer",
+      "DeepSeek-V3",
+      "hermes-agent",
+      "openclaw",
+      "opencode"
+    ]
+  }
+}
