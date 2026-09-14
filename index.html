@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>New Tab</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="glow glow-a" aria-hidden="true"></div>
+  <div class="glow glow-b" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <div class="app">
+    <!-- ══════════ TOP BAR ══════════ -->
+    <header class="topbar">
+      <div class="tb-brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="8.25" stroke="currentColor" stroke-width="1.5" opacity=".9"/>
+            <path d="M12 6.4a5.6 5.6 0 0 1 5.6 5.6" stroke="url(#g)" stroke-width="2" stroke-linecap="round"/>
+            <defs>
+              <linearGradient id="g" x1="12" y1="6.4" x2="17.6" y2="12">
+                <stop offset="0" stop-color="#fff"/>
+                <stop offset="1" stop-color="#fff" stop-opacity=".15"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </span>
+        <span class="tb-word">ox-alpha</span>
+      </div>
+
+      <div class="tb-blocks">
+        <div class="tb-block">
+          <span class="tb-k">date &amp; time</span>
+          <span class="tb-v" id="tbDate">—</span>
+        </div>
+        <div class="tb-block">
+          <span class="tb-k">session</span>
+          <span class="tb-v"><b id="tbTabs">—</b> tabs open</span>
+        </div>
+        <div class="tb-block">
+          <span class="tb-k">engine</span>
+          <span class="tb-v" id="tbEngine">Google</span>
+        </div>
+      </div>
+
+      <div class="tb-actions">
+        <button type="button" class="tb-icon" id="tgBookmarks" title="Bookmarks">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M8 2.2 9.7 5.6l3.8.55-2.75 2.68.65 3.77L8 10.8l-3.4 1.8.65-3.77L2.5 6.15l3.8-.55L8 2.2Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button type="button" class="tb-toggle" id="tgExt">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <rect x="2.5" y="2.5" width="4.6" height="4.6" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <rect x="8.9" y="2.5" width="4.6" height="4.6" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <rect x="2.5" y="8.9" width="4.6" height="4.6" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.3"/>
+            <rect x="8.9" y="8.9" width="4.6" height="4.6" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.3"/>
+          </svg>
+          extensions
+        </button>
+        <button type="button" class="tb-toggle active" id="tgAi">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M8 1.5 9.6 6l4.4 1.6L9.6 9.2 8 13.7 6.4 9.2 2 7.6 6.4 6 8 1.5Z" fill="currentColor"/>
+          </svg>
+          ox-alpha
+        </button>
+        <button type="button" class="status-pill" id="aiStatus" title="AI settings">
+          <i class="dot" id="aiDot"></i>
+          <span id="aiStatusText">set key</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ══════════ BOOKMARKS PILL BAR ══════════ -->
+    <div class="bm-bar" id="bmBar">
+      <button type="button" class="bm-arrow" id="bmLeft" aria-label="Scroll left" tabindex="-1">
+        <svg viewBox="0 0 16 16"><path d="M10 3.5 5.5 8l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="bm-scroll" id="bmScroll"></div>
+      <button type="button" class="bm-arrow" id="bmRight" aria-label="Scroll right" tabindex="-1">
+        <svg viewBox="0 0 16 16"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <a class="bm-manage" href="chrome://bookmarks" title="Open bookmark manager">all</a>
+    </div>
+
+    <!-- ══════════ HERO ══════════ -->
+    <section class="hero">
+      <div class="hero-left">
+        <h1 class="hero-clock"><span id="hm">--:--:--</span></h1>
+        <p class="hero-date" id="date">—</p>
+      </div>
+      <div class="hero-stats">
+        <div class="hstat">
+          <span class="hstat-icon">
+            <svg viewBox="0 0 20 20"><rect x="2.5" y="4" width="15" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2.5 8h15" stroke="currentColor" stroke-width="1.4"/></svg>
+          </span>
+          <span class="hstat-num" id="statTabs">—</span>
+          <span class="hstat-label">tabs open</span>
+        </div>
+        <div class="hstat">
+          <span class="hstat-icon">
+            <svg viewBox="0 0 20 20"><rect x="3" y="3" width="5.6" height="5.6" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="11.4" y="3" width="5.6" height="5.6" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="3" y="11.4" width="5.6" height="5.6" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="11.4" y="11.4" width="5.6" height="5.6" rx="1.4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+          </span>
+          <span class="hstat-num" id="statExts">—</span>
+          <span class="hstat-label">extensions on</span>
+        </div>
+        <div class="hstat">
+          <span class="hstat-icon">
+            <svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.25" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M10 6.2V10l2.6 2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </span>
+          <span class="hstat-num" id="statVisits">—</span>
+          <span class="hstat-label">visits · 24h</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ STAGE ══════════ -->
+    <section class="stage">
+      <div class="stage-core" aria-hidden="true"></div>
+      <div class="bar">
+        <div class="mode-seg" role="tablist" aria-label="Mode">
+          <button type="button" data-mode="ask" aria-selected="true">Ask</button>
+          <button type="button" data-mode="web" aria-selected="false">Web</button>
+        </div>
+        <input id="cmd" type="text" placeholder="Give ox-alpha a task…" spellcheck="false" autocomplete="off" autofocus />
+        <kbd>↵</kbd>
+      </div>
+      <div class="engines" id="engines">
+        <button type="button" data-engine="google">Google</button>
+        <button type="button" data-engine="ddg">DuckDuckGo</button>
+        <button type="button" data-engine="bing">Bing</button>
+        <button type="button" data-engine="brave">Brave</button>
+        <button type="button" data-engine="youtube">YouTube</button>
+      </div>
+    </section>
+
+    <!-- ══════════ APP DOCK ══════════ -->
+    <nav class="dock" id="dock" aria-label="Apps"></nav>
+
+    <!-- ══════════ LOWER GRID ══════════ -->
+    <section class="lower">
+      <div class="col-main">
+        <section class="glass card">
+          <header class="card-head">
+            <span class="card-title">recent activity</span>
+            <span class="card-hint" id="recentHint"></span>
+          </header>
+          <ul class="recent" id="recent"></ul>
+        </section>
+      </div>
+
+      <aside class="side">
+        <section class="glass card">
+          <header class="card-head">
+            <span class="card-title">overview</span>
+            <span class="card-hint" id="actTotal"></span>
+          </header>
+          <div class="donuts" id="donuts"></div>
+        </section>
+
+        <section class="glass card">
+          <header class="card-head">
+            <span class="card-title" id="calTitle">—</span>
+          </header>
+          <div class="cal" id="cal"></div>
+        </section>
+
+        <section class="glass card notes-card">
+          <header class="card-head">
+            <span class="card-title">scratchpad</span>
+            <span class="saved-hint" id="savedHint"></span>
+          </header>
+          <textarea id="notes" placeholder="// persists locally" spellcheck="false"></textarea>
+        </section>
+      </aside>
+    </section>
+  </div>
+
+  <!-- ══════════ AI MODAL ══════════ -->
+  <div class="overlay closed" id="aiModal" role="dialog" aria-modal="true" aria-label="ox-alpha">
+    <div class="modal modal-ai glass">
+      <header class="card-head">
+        <span class="card-title ai-title">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M8 1.5 9.6 6l4.4 1.6L9.6 9.2 8 13.7 6.4 9.2 2 7.6 6.4 6 8 1.5Z" fill="currentColor"/>
+            <path d="M13.2 11.4l.7 1.9 1.9.7-1.9.7-.7 1.9-.7-1.9-1.9-.7 1.9-.7.7-1.9Z" fill="currentColor" opacity=".55"/>
+          </svg>
+          ox-alpha
+          <span class="title-badge">agent</span>
+        </span>
+        <div class="head-actions">
+          <button type="button" id="clearChat" class="iconbtn" title="Clear conversation">
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M3 8a5 5 0 1 1 1.47 3.54M3 8V4.8M3 8h3.2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button type="button" id="openSettings" class="iconbtn" title="AI settings">
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M2 4.5h8m2.5 0H14M2 11.5h1.5M6 11.5h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+              <circle cx="11.25" cy="4.5" r="1.6" fill="none" stroke="currentColor" stroke-width="1.4"/>
+              <circle cx="4.75" cy="11.5" r="1.6" fill="none" stroke="currentColor" stroke-width="1.4"/>
+            </svg>
+          </button>
+          <button type="button" class="iconbtn modal-close" data-modal="ai" title="Close">
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M4.2 4.2l7.6 7.6M11.8 4.2l-7.6 7.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="settings" id="settings" hidden>
+        <label>
+          <span>OpenRouter API key</span>
+          <input id="keyInput" type="password" placeholder="sk-or-…" autocomplete="off" spellcheck="false" />
+        </label>
+          <label>
+            <span>Model</span>
+            <select id="modelSelect"></select>
+            <input id="modelCustom" type="text" placeholder="vendor/model-id" autocomplete="off" spellcheck="false" hidden />
+          </label>
+        <p class="set-note">Agent mode needs a tool-calling model (llama-3.3, gpt, claude, gemini…)</p>
+        <div class="set-row">
+          <a href="https://openrouter.ai/models?fmt=cards&supports_tools=true" target="_blank" rel="noreferrer">tool-capable models ↗</a>
+          <button type="button" id="saveSettings" class="save-btn">Save</button>
+        </div>
+      </div>
+
+      <div class="thread" id="thread">
+        <div class="thread-empty">
+          <p>ox-alpha is an agent — it opens tabs, searches the web and reads pages to finish tasks.</p>
+          <div class="chips">
+            <button type="button" class="chip" data-fill="Search for the top 3 articles on JavaScript event loop and open the best one.">research + read</button>
+            <button type="button" class="chip" data-fill="Find my tab with documentation and close all other duplicate tabs.">tidy tabs</button>
+            <button type="button" class="chip" data-fill="Explain git rebase vs merge with a clear example.">plain question</button>
+          </div>
+        </div>
+      </div>
+
+      <form class="askbar" id="askForm">
+        <textarea id="prompt" rows="1" placeholder="Message ox-alpha…" spellcheck="false"></textarea>
+        <button type="submit" id="sendBtn" class="send" title="Send">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M8 12.5v-9M4.2 7.2 8 3.4l3.8 3.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button type="button" id="stopBtn" class="send stop" title="Stop" hidden>
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <rect x="4.2" y="4.2" width="7.6" height="7.6" rx="1.5" fill="currentColor"/>
+          </svg>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ══════════ EXTENSIONS MODAL ══════════ -->
+  <div class="overlay closed" id="extModal" role="dialog" aria-modal="true" aria-label="Extensions">
+    <div class="modal modal-ext glass">
+      <header class="card-head">
+        <span class="card-title">extensions<span class="muted" id="extCount"></span></span>
+        <div class="head-actions">
+          <button type="button" class="iconbtn modal-close" data-modal="ext" title="Close">
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M4.2 4.2l7.6 7.6M11.8 4.2l-7.6 7.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+      <div class="modal-scroll">
+        <ul class="grid" id="extGrid" role="list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <template id="ext-template">
+    <li class="row" tabindex="0">
+      <img class="row-icon" alt="" draggable="false" />
+      <div class="row-text">
+        <span class="row-name"></span>
+        <span class="row-meta"><span class="row-version"></span><span class="row-tag"></span></span>
+      </div>
+      <button type="button" class="iconbtn row-options" title="Options" hidden>
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <circle cx="8" cy="3.4" r="1.35" fill="currentColor"/>
+          <circle cx="8" cy="8" r="1.35" fill="currentColor"/>
+          <circle cx="8" cy="12.6" r="1.35" fill="currentColor"/>
+        </svg>
+      </button>
+      <button type="button" class="iconbtn danger row-uninstall" title="Uninstall" hidden>
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M3.2 4.6h9.6M6.6 4.6V3.5a1 1 0 0 1 1-1h.8a1 1 0 0 1 1 1v1.1m-6.2 0 .6 8a1.3 1.3 0 0 0 1.3 1.2h2.6a1.3 1.3 0 0 0 1.3-1.2l.6-8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <button type="button" class="switch" role="switch" aria-checked="false">
+        <span class="knob"></span>
+      </button>
+    </li>
+  </template>
+
+  <script src="config.js"></script>
+  <script src="newtab.js"></script>
+</body>
+</html>
