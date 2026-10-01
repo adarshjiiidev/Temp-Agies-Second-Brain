@@ -15,14 +15,14 @@
   --color-text-tertiary: #6e6e6e;
   --color-text-muted: #4e4e4e;
 
-  --color-accent-primary: #8a8a8a;
-  --color-accent-hover: #b0b0b0;
-  --color-accent-highlight: #d4d4d4;
+  --color-accent-primary: #f59e0b; /* amber-500 */
+  --color-accent-hover: #fbbf24;   /* amber-400 */
+  --color-accent-highlight: #fcd34d; /* amber-300 */
 
-  --color-signal-online: #4ade80;
+  --color-signal-online: #f59e0b; /* amber replaces green for system identity */
   --color-signal-warning: #fbbf24;
   --color-signal-error: #f87171;
-  --color-signal-terminal: #4ade80;
+  --color-signal-terminal: #f59e0b;
 
   --font-sans: 'Inter', 'Outfit', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
@@ -38,9 +38,12 @@
   --text-primary: #f4f4f5;
   --text-secondary: #a1a1aa;
   --text-tertiary: #71717a;
-  --signal-online: #4ade80;
+  --signal-online: #f59e0b;
   --signal-warning: #fbbf24;
   --signal-error: #f87171;
+  
+  --aegis-amber: #f59e0b;
+  --aegis-amber-glow: rgba(245, 158, 11, 0.4);
 }
 
 * {
@@ -52,8 +55,8 @@ body {
   padding: 0;
   background-color: var(--bg);
   background-image: 
-    radial-gradient(circle at 50% 0%, rgba(30, 35, 45, 0.25) 0%, transparent 50%),
-    radial-gradient(circle at 100% 100%, rgba(20, 25, 30, 0.2) 0%, transparent 40%);
+    radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 100% 100%, rgba(245, 158, 11, 0.05) 0%, transparent 40%);
   color: var(--text-primary);
   font-family: 'Inter', system-ui, sans-serif;
   font-size: 13px;
@@ -240,3 +243,43 @@ body {
 .markdown-body a:hover {
   color: #ffffff;
 }
+
+/* ── Spatial Graph & Canvas Wire Flow Animations ── */
+@keyframes flowPulse {
+  0% {
+    stroke-dashoffset: 48;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-wire-flow {
+  stroke-dasharray: 6 18;
+  animation: flowPulse 1.8s linear infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.12);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.4s ease-in-out infinite;
+}
+
+.memory-card {
+  transition: box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+  user-select: none;
+}
+
+.memory-card:hover {
+  box-shadow: 0 20px 48px -10px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+

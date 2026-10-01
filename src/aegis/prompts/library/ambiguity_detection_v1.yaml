@@ -1,0 +1,39 @@
+id: ambiguity_detection_v1
+version: "1.0.0"
+description: >
+  Detect ambiguity in a user goal and generate targeted clarification questions.
+  Returns a structured AmbiguityReport. Used by the L6 AmbiguityDetector AI path.
+output_schema: aegis.l6_planning.reasoning.schemas.AmbiguityReportOutput
+min_context_tokens: 4096
+task_type: chat
+eval_metrics:
+  - blocking_precision
+  - question_relevance
+  - false_ambiguity_rate
+tags: [l6, planning, intent]
+template: |
+  You are the Ambiguity Detection module of AEGIS.
+  Evaluate whether the user's goal is clear enough to begin planning,
+  and if not, generate targeted questions to resolve ambiguity.
+
+  PARSED INTENT:
+  Domain: {domain}
+  Primary verb: {primary_verb}
+  Confidence: {confidence}
+  Goal text: {goal_text}
+
+  Return a JSON object matching this schema EXACTLY:
+  {schema}
+
+  Rules:
+  - is_ambiguous: true if the goal is unclear, vague, or self-contradictory
+  - blocking: true only if planning CANNOT proceed without clarification
+    (e.g. "do something" — too vague to decompose)
+  - questions: list of specific, answerable clarification questions.
+    Each question must address a SPECIFIC gap (not generic "what do you want?").
+    Maximum 5 questions.
+  - confidence: 0.0–1.0 your confidence in the ambiguity assessment
+  - conflict_detected: true if the goal contains contradictory requirements
+    (e.g. "download files without internet")
+
+  Return ONLY valid JSON. No explanation text outside the JSON.

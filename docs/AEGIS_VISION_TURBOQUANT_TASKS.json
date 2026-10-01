@@ -1,0 +1,44 @@
+[
+  {
+    "phase": "V1",
+    "task": "TurboQuant Research",
+    "status": "VERIFIED",
+    "evidence": "Identified algorithm requirements. Needs turbovec/Qdrant."
+  },
+  {
+    "phase": "V2",
+    "task": "TurboQuant Implementation",
+    "status": "NOT_CONFIGURED",
+    "evidence": "No native lightweight Python library available. Explicitly excluded to avoid fake local JSON vector implementation."
+  },
+  {
+    "phase": "C1",
+    "task": "Real Camera Discovery",
+    "status": "VERIFIED",
+    "evidence": "Implemented v4l2-ctl local discovery and nmap network scanning in camera_registry.py."
+  },
+  {
+    "phase": "C2",
+    "task": "Camera Authorization",
+    "status": "VERIFIED",
+    "evidence": "Implemented authorize_camera and enable_vision state mutations safely in registry."
+  },
+  {
+    "phase": "C3",
+    "task": "Stream Manager",
+    "status": "VERIFIED",
+    "evidence": "Implemented cv2.VideoCapture real frame extraction."
+  },
+  {
+    "phase": "C4",
+    "task": "OpenCV Engine",
+    "status": "VERIFIED",
+    "evidence": "Installed opencv-python-headless. Implemented BackgroundSubtractorMOG2 motion detection."
+  },
+  {
+    "phase": "C5",
+    "task": "Dashboard Camera Center",
+    "status": "VERIFIED",
+    "evidence": "Added `/api/cameras/*` REST endpoints."
+  }
+]

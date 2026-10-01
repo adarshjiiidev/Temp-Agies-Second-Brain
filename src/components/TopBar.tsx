@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useOS } from '../lib/store';
-import { Search, Zap, Wifi, Battery, Activity } from 'lucide-react';
+import { api } from '../lib/api';
+import { Search, Zap, Wifi, Battery, Activity, Layers, Shield } from 'lucide-react';
 
 export const TopBar: React.FC = () => {
   const {
@@ -15,6 +16,26 @@ export const TopBar: React.FC = () => {
   const [timeStr, setTimeStr] = useState('');
   const [dateStr, setDateStr] = useState('');
   const [is24Hour, setIs24Hour] = useState(true);
+  const [autonomyLevel, setAutonomyLevel] = useState<number>(2);
+  const [autonomyName, setAutonomyName] = useState<string>('LEVEL_2');
+
+  useEffect(() => {
+    api.getGovernance().then((gov) => {
+      setAutonomyLevel(gov.autonomy_level);
+      setAutonomyName(gov.level_name);
+    }).catch(() => {});
+  }, []);
+
+  const toggleGovernance = async () => {
+    const nextLevel = (autonomyLevel + 1) % 6;
+    try {
+      const res = await api.setGovernanceLevel(nextLevel);
+      setAutonomyLevel(res.autonomy_level);
+      setAutonomyName(res.level_name);
+    } catch (e) {
+      console.warn('Could not update governance level:', e);
+    }
+  };
 
   useEffect(() => {
     const updateTime = () => {
@@ -86,6 +107,26 @@ export const TopBar: React.FC = () => {
 
       {/* Right: Telemetry, 9Router, Scripts, Clock */}
       <div className="flex items-center space-x-3 text-[11px]">
+        {/* Spatial Memory Graph Button */}
+        <button
+          onClick={() => openPanel('graph')}
+          className="h-5 px-2 flex items-center space-x-1.5 border border-[#2e2e2e] bg-[#1c1c1c] hover:bg-[#242424] text-[#a0a0a0] hover:text-[#e8e8e8] transition-os"
+          title="Open Spatial Memory Graph (Neural Cards & Wires)"
+        >
+          <Layers className="w-3 h-3 text-amber-400" />
+          <span>Spatial Graph</span>
+        </button>
+
+        {/* Governance Autonomy Level Indicator */}
+        <div
+          onClick={toggleGovernance}
+          className="flex items-center space-x-1 px-1.5 h-5 border border-white/10 bg-white/5 cursor-pointer hover:bg-white/10 text-[#a0a0a0] hover:text-white transition-os"
+          title={`Governance Autonomy: Level ${autonomyLevel} (${autonomyName}) - Click to cycle autonomy`}
+        >
+          <Shield className="w-3 h-3 text-amber-400" />
+          <span className="font-semibold text-white">L{autonomyLevel}</span>
+        </div>
+
         {/* Quick Actions Trigger */}
         <button
           onClick={() => setQuickActionsOpen(true)}
@@ -100,19 +141,20 @@ export const TopBar: React.FC = () => {
           <span>{runningScript ? `Running: ${runningScript.replace('.sh', '')}` : 'Actions'}</span>
         </button>
 
-        {/* 9Router Status Indicator */}
+        {/* AI Fabric Status Indicator */}
         <div
           onClick={() => openPanel('models')}
-          title={`9Router Gateway (Port 20128): ${routerIsOk ? 'Online' : 'Offline / Stopped'}`}
+          title={`AI Model Fabric: ${routerIsOk ? 'Online (Free Round-Robin)' : 'Standby'}`}
           className="flex items-center space-x-1.5 cursor-pointer hover:text-[#e8e8e8] text-[#888888] transition-os px-1"
         >
           <span
             className={`w-2 h-2 ${routerIsOk ? 'bg-[#4a9]' : 'bg-[#c55]'}`}
           />
           <span className="text-[11px]">
-            9Router: {routerIsOk ? 'OK' : 'OFFLINE'}
+            AI Fabric: {routerIsOk ? 'OK' : 'STANDBY'}
           </span>
         </div>
+
 
         {/* Live WebSocket Indicator */}
         <div

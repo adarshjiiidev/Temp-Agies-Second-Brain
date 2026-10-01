@@ -1,0 +1,132 @@
+{
+  "python_version": "3.12.3",
+  "platform": "win32",
+  "results": [
+    {
+      "benchmark": "sha256",
+      "payload_bytes": 1024,
+      "median_ns": 1300.0,
+      "throughput_mb_s": 751.2
+    },
+    {
+      "benchmark": "sha256",
+      "payload_bytes": 65536,
+      "median_ns": 43000.0,
+      "throughput_mb_s": 1453.49
+    },
+    {
+      "benchmark": "sha256",
+      "payload_bytes": 1048576,
+      "median_ns": 707000.0,
+      "throughput_mb_s": 1414.43
+    },
+    {
+      "benchmark": "hmac_sha256",
+      "payload_bytes": 1024,
+      "median_ns": 3700.0,
+      "throughput_mb_s": 263.94
+    },
+    {
+      "benchmark": "hmac_sha256",
+      "payload_bytes": 65536,
+      "median_ns": 45900.0,
+      "throughput_mb_s": 1361.66
+    },
+    {
+      "benchmark": "hmac_sha256",
+      "payload_bytes": 1048576,
+      "median_ns": 763400.0,
+      "throughput_mb_s": 1309.93
+    },
+    {
+      "benchmark": "aesgcm_encrypt",
+      "payload_bytes": 1024,
+      "median_ns": 1300.0,
+      "throughput_mb_s": 751.2
+    },
+    {
+      "benchmark": "aesgcm_decrypt",
+      "payload_bytes": 1024,
+      "median_ns": 1300.0,
+      "throughput_mb_s": 751.2
+    },
+    {
+      "benchmark": "aesgcm_encrypt",
+      "payload_bytes": 65536,
+      "median_ns": 15500.0,
+      "throughput_mb_s": 4032.26
+    },
+    {
+      "benchmark": "aesgcm_decrypt",
+      "payload_bytes": 65536,
+      "median_ns": 15000.0,
+      "throughput_mb_s": 4166.67
+    },
+    {
+      "benchmark": "aesgcm_encrypt",
+      "payload_bytes": 1048576,
+      "median_ns": 619900.0,
+      "throughput_mb_s": 1613.16
+    },
+    {
+      "benchmark": "aesgcm_decrypt",
+      "payload_bytes": 1048576,
+      "median_ns": 601500.0,
+      "throughput_mb_s": 1662.51
+    },
+    {
+      "benchmark": "audit_verify",
+      "entry_count": 100,
+      "median_ns": 77300.0,
+      "ns_per_entry": 773.0
+    },
+    {
+      "benchmark": "audit_verify",
+      "entry_count": 1000,
+      "median_ns": 1309200.0,
+      "ns_per_entry": 1309.2
+    },
+    {
+      "benchmark": "audit_verify",
+      "entry_count": 10000,
+      "median_ns": 13286400.0,
+      "ns_per_entry": 1328.6
+    },
+    {
+      "benchmark": "search_rank",
+      "candidate_count": 100,
+      "median_ns": 44900.0,
+      "ns_per_candidate": 449.0
+    },
+    {
+      "benchmark": "search_rank",
+      "candidate_count": 1000,
+      "median_ns": 391400.0,
+      "ns_per_candidate": 391.4
+    },
+    {
+      "benchmark": "search_rank",
+      "candidate_count": 5000,
+      "median_ns": 2869800.0,
+      "ns_per_candidate": 574.0
+    },
+    {
+      "benchmark": "filesystem_scan",
+      "file_count": 500,
+      "median_ns": 3303000.0,
+      "ns_per_file": 6606.0
+    },
+    {
+      "benchmark": "filesystem_scan",
+      "file_count": 2000,
+      "median_ns": 18426600.0,
+      "ns_per_file": 9213.3
+    },
+    {
+      "benchmark": "filesystem_scan",
+      "file_count": 10000,
+      "median_ns": 81851500.0,
+      "ns_per_file": 8185.1
+    }
+  ]
+}

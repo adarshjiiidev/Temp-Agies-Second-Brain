@@ -16,7 +16,7 @@ The forensic audit (`docs/TEMPORARY_AEGIS_GAP_AUDIT.md`) identified **15 critica
 |---|---|---|---|---|
 | 1 | CORS wildcard `*` + `0.0.0.0` bind | CRITICAL | Locked to localhost origins; bound to `127.0.0.1` | ✅ FIXED |
 | 2 | Plaintext gateway token in `openclaw.json` | CRITICAL | `X-AEGIS-Token` auth (256-bit); token at chmod 600 | ✅ FIXED |
-| 3 | 71 hardcoded `/home/adarshjii/` paths | CRITICAL | All eliminated; `cfg` singleton used everywhere | ✅ FIXED |
+| 3 | 71 hardcoded `$HOME/` paths | CRITICAL | All eliminated; `cfg` singleton used everywhere | ✅ FIXED |
 | 4 | `aegis-snapshot.sh` exits 2 | CRITICAL | Fixed `grep` pipelines; verified Exit 0 | ✅ FIXED |
 | 5 | `aegis-ingest-chatgpt.sh` fails silently | CRITICAL | Clean exit 0 when no export file present | ✅ FIXED |
 | 6 | 54 hardcoded model IDs | CRITICAL | All replaced with `cfg.MODEL_*` | ✅ FIXED |

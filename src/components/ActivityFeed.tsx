@@ -19,7 +19,7 @@ export const ActivityFeed: React.FC = () => {
   const getEventIcon = (type: ActivityEvent['type']) => {
     switch (type) {
       case 'snapshot':
-        return <Camera className="w-3.5 h-3.5 text-emerald-400" />;
+        return <Camera className="w-3.5 h-3.5 text-amber-400" />;
       case 'chatgpt':
         return <Bot className="w-3.5 h-3.5 text-sky-400" />;
       case 'pattern':
@@ -34,7 +34,7 @@ export const ActivityFeed: React.FC = () => {
   const getStatusBadge = (status: ActivityEvent['status']) => {
     switch (status) {
       case 'ok':
-        return <CheckCircle className="w-3 h-3 text-emerald-400" />;
+        return <CheckCircle className="w-3 h-3 text-amber-400" />;
       case 'warn':
         return <AlertTriangle className="w-3 h-3 text-amber-400" />;
       case 'error':

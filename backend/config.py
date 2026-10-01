@@ -37,7 +37,6 @@ class AegisConfig:
         self.HOST: str = os.environ.get("AEGIS_HOST", "127.0.0.1")
         self.BACKEND_PORT: int = int(os.environ.get("AEGIS_BACKEND_PORT", "8787"))
         self.FRONTEND_PORT: int = int(os.environ.get("AEGIS_FRONTEND_PORT", "2981"))
-        self.ROUTER_PORT: int = int(os.environ.get("AEGIS_ROUTER_PORT", "20128"))
         self.CORS_ORIGINS: List[str] = [
             f"http://localhost:{self.FRONTEND_PORT}",
             f"http://127.0.0.1:{self.FRONTEND_PORT}",
@@ -50,9 +49,6 @@ class AegisConfig:
         ]
 
         # ── URLs ───────────────────────────────────────────────────────────────
-        self.ROUTER_URL: str = os.environ.get("AEGIS_ROUTER_URL", f"http://127.0.0.1:{self.ROUTER_PORT}/v1")
-        self.ROUTER_MODELS_URL: str = f"{self.ROUTER_URL}/models"
-        self.ROUTER_CHAT_URL: str = f"{self.ROUTER_URL}/chat/completions"
         self.BACKEND_URL: str = os.environ.get("AEGIS_BACKEND_URL", f"http://127.0.0.1:{self.BACKEND_PORT}")
 
         # ── Core Paths ─────────────────────────────────────────────────────────
@@ -72,13 +68,27 @@ class AegisConfig:
         self.EXPERIENCES_FILE: Path = self.AEGIS_DIR / "experiences.json"
 
         # ── Default Model IDs ──────────────────────────────────────────────────
-        self.MODEL_DEFAULT: str = os.environ.get("AEGIS_DEFAULT_MODEL", "gemini/gemini-3.8-flash")
-        self.MODEL_REASONING: str = os.environ.get("AEGIS_REASONING_MODEL", "gemini/gemini-3.7-flash")
-        self.MODEL_FAST: str = os.environ.get("AEGIS_FAST_MODEL", "gemini/gemini-3.6-flash")
-        self.MODEL_LITE: str = os.environ.get("AEGIS_LITE_MODEL", "gemini/gemini-3.5-flash-lite")
+        # AEGIS's direct multi-provider free fabric.  No gateway dependency.
+        self.FREE_CHAT_MODELS: List[str] = [
+            "cl/z-ai/glm-5.2:free",              # ① Flagship reasoning (may be rate-limited)
+            "cl/nex-agi/nex-n2.5-pro:free",      # ② Pro-tier general purpose
+            "cl/google/gemma-4-31b-it:free",     # ③ 31B params, strong general
+            "cl/cohere/north-mini-code:free",    # ④ Code specialist
+            "cl/poolside/laguna-s-2.1:free",     # ⑤ Coding-focused
+            "cl/nex-agi/nex-n2.5-mini:free",     # ⑥ Mini-tier fast
+            "cl/inclusionai/ling-3.0-flash-vl:free",  # ⑦ Vision-language flash
+            "cl/dots-studio/dots-3-note-preview:free", # ⑧ Draft/note model
+        ]
+        self.MODEL_DEFAULT: str = os.environ.get("AEGIS_DEFAULT_MODEL", "cl/nex-agi/nex-n2.5-pro:free")
+        self.MODEL_REASONING: str = os.environ.get("AEGIS_REASONING_MODEL", "cl/z-ai/glm-5.2:free")
+        self.MODEL_FAST: str = os.environ.get("AEGIS_FAST_MODEL", "cl/nex-agi/nex-n2.5-mini:free")
+        self.MODEL_LITE: str = os.environ.get("AEGIS_LITE_MODEL", "cl/dots-studio/dots-3-note-preview:free")
         self.MODEL_FALLBACK_CHAIN: List[str] = [
             self.MODEL_DEFAULT, self.MODEL_REASONING, self.MODEL_FAST, self.MODEL_LITE
         ]
+        # One model per turn, round-robin across all working free models.
+        # No slow serial cascade — each request picks the next healthy model.
+        self.CHAT_MODEL_POOL: List[str] = list(self.FREE_CHAT_MODELS)
 
         # ── Security ───────────────────────────────────────────────────────────
         self.PATH_ACCESS_GUARD: str = str(HOME)  # filesystem reads must start with this
@@ -147,6 +157,22 @@ class AegisConfig:
             if candidate.exists():
                 projects[candidate.name] = candidate
 
+        # 3b. Known non-git project roots (agies full-index 2026-09-27).
+        # cfg.PROJECTS otherwise only discovers dirs containing .git, which
+        # hides Amruthpaan, artemis, SkillOpt, school-netops, etc.
+        for candidate in [
+            HOME / "Projects" / "Amruthpaan-Mukhwaas-Store",
+            HOME / "Projects" / "artemis" / "artemis-main",
+            HOME / "Projects" / "SkillOpt",
+            HOME / "Projects" / "school-netops",
+            HOME / "Work",
+            HOME / "netops-backups",
+            HOME / "qwen-audio-agent",
+            HOME / "pinokio",
+        ]:
+            if candidate.exists() and candidate.name not in projects:
+                projects[candidate.name] = candidate
+
         # 4. Scan DeepSeek repos inside dashboard
         deepseek = self.REPO_ROOT / "repos"
         if deepseek.exists():
@@ -169,12 +195,20 @@ class AegisConfig:
                 command_str = ag.get("command", cli)
                 # Build command from registry fields
                 if cli and Path(cli).exists():
-                    # Parse command string into list if it has args
                     parts = command_str.split()
                     if parts and Path(parts[0]).exists():
                         return parts
                     return [cli]
-                # Try shutil.which fallback
+                
+                # If command_str is explicitly provided and starts with an existing binary (like python3)
+                parts = command_str.split()
+                if parts:
+                    found = shutil.which(parts[0])
+                    if found:
+                        parts[0] = found
+                        return parts
+                        
+                # Try shutil.which on cli fallback
                 binary_name = Path(cli).name if cli else agent_id
                 found = shutil.which(binary_name)
                 if found:
@@ -216,7 +250,6 @@ if __name__ == "__main__":
     print(f"VAULT:          {cfg.VAULT} ({'exists' if cfg.VAULT.exists() else 'MISSING'})")
     print(f"AEGIS_DIR:      {cfg.AEGIS_DIR}")
     print(f"REPO_ROOT:      {cfg.REPO_ROOT}")
-    print(f"ROUTER_URL:     {cfg.ROUTER_URL}")
     print(f"BACKEND_PORT:   {cfg.BACKEND_PORT}")
     print(f"MODEL_DEFAULT:  {cfg.MODEL_DEFAULT}")
     print(f"MODEL_REASONING:{cfg.MODEL_REASONING}")

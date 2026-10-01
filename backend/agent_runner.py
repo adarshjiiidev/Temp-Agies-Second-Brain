@@ -44,36 +44,25 @@ def main():
 
     if args.test:
         print(f"Testing agent harness: {agent}...")
-        if agent == "openclaw":
-            from backend.openclaw_harness import query_9router
-            res, m = query_9router("Ping test")
-            print(f"OpenClaw OK (model: {m}): {res[:80]}")
-            sys.exit(0)
-        elif agent == "deepseek":
-            from backend.deepseek_harness import query_9router
-            res, m = query_9router("1+1=")
-            print(f"DeepSeek OK (model: {m}): {res[:80]}")
+        cmd = cfg.resolve_agent_command(agent)
+        if cmd and os.path.exists(cmd[0]):
+            print(f"{agent} OK: Binary found at {cmd[0]}")
             sys.exit(0)
         else:
-            cmd = cfg.resolve_agent_command(agent)
-            if cmd and os.path.exists(cmd[0]):
-                print(f"{agent} OK: Binary found at {cmd[0]}")
-                sys.exit(0)
-            else:
-                print(f"{agent} WARNING: Binary not found at expected path, will use PATH fallback")
-                sys.exit(0)
+            print(f"{agent} WARNING: Binary not found at expected path, will use PATH fallback")
+            sys.exit(0)
 
     # ── Launch interactive session ─────────────────────────────────────────────
-    if agent == "deepseek":
-        from backend.deepseek_harness import main as run_deepseek
-        run_deepseek()
-    elif agent == "openclaw":
-        from backend.openclaw_harness import main as run_openclaw
-        run_openclaw()
-    else:
-        cmd = cfg.resolve_agent_command(agent) + (args.args or [])
-        log.info("Launching: %s", cmd)
-        subprocess.run(cmd)
+    cmd = cfg.resolve_agent_command(agent) + (args.args or [])
+    log.info("Launching: %s", cmd)
+    
+    # If the resolved command is just invoking this runner again, we have a recursive loop.
+    # Fallback to the binary if it exists.
+    if len(cmd) >= 3 and "agent_runner" in cmd[2] and f"--agent {agent}" in " ".join(cmd):
+        log.error("Recursive dispatch detected for %s. Ensure AGENT_REGISTRY points to the actual binary.", agent)
+        sys.exit(1)
+        
+    subprocess.run(cmd)
 
 
 if __name__ == "__main__":

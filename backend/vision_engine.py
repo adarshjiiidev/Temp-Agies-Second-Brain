@@ -15,8 +15,19 @@ import time
 import base64
 import tempfile
 import subprocess
+import cv2
+import numpy as np
 from pathlib import Path
 from typing import Optional, Dict, Any
+
+_repo_root = Path(__file__).resolve().parent.parent
+if str(_repo_root) not in sys.path:
+    sys.path.insert(0, str(_repo_root))
+
+from backend.logger import get_logger
+from backend.linux_intelligence import linux_intelligence
+
+log = get_logger("vision_engine")
 
 class VisionEngine:
     def __init__(self):
@@ -26,6 +37,70 @@ class VisionEngine:
         self.tesseract_bin = "/usr/bin/tesseract"
         self.grim_bin = "/usr/bin/grim"
         self.ffmpeg_bin = "/usr/bin/ffmpeg"
+        self.background_subtractor = cv2.createBackgroundSubtractorMOG2(history=500, varThreshold=16, detectShadows=False)
+
+    def capture_frame(self, camera_uri: str) -> Optional[np.ndarray]:
+        """Capture a single frame using OpenCV."""
+        if not self.camera_enabled:
+            log.warning("Vision engine disabled. Capture denied.")
+            return None
+        
+        cap = cv2.VideoCapture(camera_uri)
+        if not cap.isOpened():
+            log.error(f"Failed to open camera: {camera_uri}")
+            return None
+            
+        ret, frame = cap.read()
+        cap.release()
+        
+        if ret:
+            return frame
+        return None
+
+    def process_motion(self, frame: np.ndarray, camera_id: str) -> Optional[Dict[str, Any]]:
+        """Run basic motion detection and generate an event if motion is found."""
+        if frame is None:
+            return None
+            
+        # Resource Governor Check (core-aware: throttle only when 1m load > 2x cores)
+        metrics = linux_intelligence.get_system_metrics()
+        try:
+            import os as _os
+            cores = _os.cpu_count() or 4
+            load = float(metrics.get("load_average", "0 0 0").split()[0])
+            if load > cores * 2:
+                log.warning(f"Resource Governor: High load ({load} on {cores} cores). Throttling vision engine.")
+                return None
+        except Exception:
+            pass
+            
+        # Optional: Apply privacy mask before processing
+        for region in self.privacy_mask_regions:
+            x, y, w, h = region
+            cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 0), -1)
+
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray = cv2.GaussianBlur(gray, (21, 21), 0)
+        
+        fgmask = self.background_subtractor.apply(gray)
+        contours, _ = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        motion_detected = False
+        for contour in contours:
+            if cv2.contourArea(contour) > 1000:  # Minimum area threshold
+                motion_detected = True
+                break
+                
+        if motion_detected:
+            # Generate event
+            return {
+                "event_id": f"evt-{int(time.time())}",
+                "camera_id": camera_id,
+                "timestamp": time.time(),
+                "type": "MOTION_DETECTED",
+                "confidence": 0.85
+            }
+        return None
 
     def set_camera_state(self, enabled: bool) -> dict:
         """Explicit user toggle for camera hardware access."""
@@ -166,24 +241,27 @@ class VisionEngine:
             "stream": False
         }
 
+        from backend.free_router import resolve_keys
+        keys = resolve_keys()
+        o_key = keys.get("OPENROUTER_API_KEY", "")
+        if not o_key:
+            return "Vision reasoning requires OPENROUTER_API_KEY.", "vision/offline"
+
+        headers = {
+            "Authorization": f"Bearer {o_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "http://localhost:2981",
+            "X-Title": "AEGIS Vision Subsystem",
+        }
+
         try:
             req = urllib.request.Request(
-                "http://127.0.0.1:20128/v1/chat/completions",
+                "https://openrouter.ai/api/v1/chat/completions",
                 data=json.dumps(payload).encode("utf-8"),
-                headers={"Content-Type": "application/json"}
+                headers=headers
             )
             with urllib.request.urlopen(req, timeout=35) as resp:
                 raw = resp.read().decode("utf-8", errors="replace")
-                if "data:" in raw:
-                    chunks = []
-                    for line in raw.splitlines():
-                        if line.startswith("data: ") and line.strip() != "data: [DONE]":
-                            try:
-                                d = json.loads(line[6:])
-                                piece = d.get("choices", [{}])[0].get("delta", {}).get("content") or d.get("choices", [{}])[0].get("message", {}).get("content")
-                                if piece: chunks.append(piece)
-                            except: pass
-                    return "".join(chunks).strip(), model
                 try:
                     d = json.loads(raw)
                     return d.get("choices", [{}])[0].get("message", {}).get("content", "").strip(), model
@@ -191,6 +269,7 @@ class VisionEngine:
                     return raw.strip(), model
         except Exception as e:
             return f"Multimodal Vision Error: {e}", model
+
 
 vision_engine = VisionEngine()
 

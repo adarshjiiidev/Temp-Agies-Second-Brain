@@ -66,7 +66,7 @@ export const PCMonitor: React.FC = () => {
             title="Refresh System Stats"
             className="w-5 h-5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 transition-os"
           >
-            <RefreshCw className={`w-3 h-3 ${refreshing ? 'animate-spin text-emerald-400' : ''}`} />
+            <RefreshCw className={`w-3 h-3 ${refreshing ? 'animate-spin text-amber-400' : ''}`} />
           </button>
         </div>
       }
@@ -91,7 +91,7 @@ export const PCMonitor: React.FC = () => {
           </div>
 
           <div className="text-[10px] text-zinc-500 flex items-center space-x-2">
-            <span className={`w-1.5 h-1.5 rounded-full ${isSocketConnected ? 'bg-emerald-400 animate-pulse-live' : 'bg-amber-400'}`} />
+            <span className={`w-1.5 h-1.5 rounded-full ${isSocketConnected ? 'bg-amber-400 animate-pulse-live' : 'bg-amber-400'}`} />
             <span>Updated {new Date(timestamp).toLocaleTimeString()}</span>
           </div>
         </div>
@@ -106,7 +106,7 @@ export const PCMonitor: React.FC = () => {
                 <div className="glass-panel p-3 rounded-sm space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-1.5 text-zinc-300">
-                      <Cpu className="w-3.5 h-3.5 text-emerald-400" />
+                      <Cpu className="w-3.5 h-3.5 text-amber-400" />
                       <span className="font-semibold text-xs">Physical Memory (RAM)</span>
                     </div>
                     <span className="text-xs font-semibold text-white">{ramPercent}%</span>
@@ -191,7 +191,7 @@ export const PCMonitor: React.FC = () => {
               <div className="glass-panel p-3 rounded-sm space-y-2">
                 <div className="flex items-center justify-between text-xs font-semibold text-zinc-200">
                   <div className="flex items-center space-x-1.5">
-                    <Activity className="w-3.5 h-3.5 text-emerald-400" />
+                    <Activity className="w-3.5 h-3.5 text-amber-400" />
                     <span>Top Processes by Memory Consumption</span>
                   </div>
                   <button
@@ -217,7 +217,7 @@ export const PCMonitor: React.FC = () => {
                       {processes.slice(0, 6).map((p) => (
                         <tr key={p.pid} className="hover:bg-white/[0.02]">
                           <td className="py-1 text-zinc-400">{p.pid}</td>
-                          <td className="py-1 text-emerald-400 font-medium">{p.mem}%</td>
+                          <td className="py-1 text-amber-400 font-medium">{p.mem}%</td>
                           <td className="py-1 text-zinc-300">{p.cpu}%</td>
                           <td className="py-1 text-zinc-400">{p.user}</td>
                           <td className="py-1 text-zinc-300 truncate max-w-xs">{p.command}</td>
@@ -252,7 +252,7 @@ export const PCMonitor: React.FC = () => {
                       <tr key={p.pid} className="hover:bg-white/[0.02]">
                         <td className="py-1 text-zinc-400">{p.pid}</td>
                         <td className="py-1 text-zinc-400">{p.user}</td>
-                        <td className="py-1 text-emerald-400 font-medium">{p.mem}%</td>
+                        <td className="py-1 text-amber-400 font-medium">{p.mem}%</td>
                         <td className="py-1 text-zinc-300">{p.cpu}%</td>
                         <td className="py-1 text-zinc-200 truncate max-w-md">{p.command}</td>
                       </tr>
@@ -280,7 +280,7 @@ export const PCMonitor: React.FC = () => {
                       <span
                         className={`text-[10px] px-1.5 py-0.2 border ${
                           data.state === 'UP'
-                            ? 'bg-emerald-400/10 border-emerald-400/30 text-emerald-400'
+                            ? 'bg-amber-400/10 border-amber-400/30 text-amber-400'
                             : 'bg-zinc-800 border-zinc-700 text-zinc-500'
                         }`}
                       >
@@ -302,7 +302,7 @@ export const PCMonitor: React.FC = () => {
           {activeTab === 'ports' && (
             <div className="glass-panel p-3 rounded-sm space-y-3">
               <div className="flex items-center space-x-1.5 text-xs font-semibold text-zinc-200">
-                <Radio className="w-3.5 h-3.5 text-emerald-400" />
+                <Radio className="w-3.5 h-3.5 text-amber-400" />
                 <span>Listening TCP Ports ({ports.length})</span>
               </div>
               <div className="overflow-x-auto">
@@ -317,7 +317,7 @@ export const PCMonitor: React.FC = () => {
                   <tbody className="divide-y divide-white/5 text-[11px]">
                     {ports.map((p, idx) => (
                       <tr key={idx} className="hover:bg-white/[0.02]">
-                        <td className="py-1 text-emerald-400 font-medium">{p.state}</td>
+                        <td className="py-1 text-amber-400 font-medium">{p.state}</td>
                         <td className="py-1 text-white">{p.local_addr}</td>
                         <td className="py-1 text-zinc-400 truncate max-w-md">{p.process || '-'}</td>
                       </tr>

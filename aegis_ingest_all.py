@@ -15,7 +15,7 @@ from pathlib import Path
 from datetime import datetime, timezone
 from collections import defaultdict
 
-HOME = Path("/home/adarshjii")
+HOME = Path.home()
 PROJECTS_DIR = HOME / "Projects"
 VAULT = HOME / "ObsidianVault"
 AGIES_DIR = VAULT / "agies"

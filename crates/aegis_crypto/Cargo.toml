@@ -1,0 +1,22 @@
+[package]
+name = "aegis_crypto"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+aegis_ffi_common = { path = "../aegis_ffi_common" }
+sha2 = "0.10"
+hmac = "0.12"
+aes-gcm = "0.10"
+rand = "0.8"
+base64 = "0.22"
+pyo3 = { version = "0.20", features = ["extension-module"], optional = true }
+
+[features]
+default = []
+python = ["pyo3"]
+
+[lib]
+name = "aegis_crypto"
+path = "src/lib.rs"
+crate-type = ["lib", "cdylib"]

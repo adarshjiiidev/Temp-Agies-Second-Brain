@@ -26,7 +26,7 @@ No working architectures were recreated. All existing modules (Aegis L1-L6, L3 A
 
 ### 2. Elimination of Hardcoded Paths (Phase 2)
 - **Central Config Single Source of Truth:** `backend/config.py` now resolves all paths relative to runtime `Path.home()` and `AegisConfig`.
-- **Backend Codebase Sweep:** Eliminated all 71 instances of `/home/adarshjii` across all backend modules:
+- **Backend Codebase Sweep:** Eliminated all 71 instances of `$HOME` across all backend modules:
   - `server.py` — 0 hardcoded paths remaining
   - `agent_pty.py` — 0 hardcoded paths remaining
   - `agent_runner.py` — 0 hardcoded paths remaining

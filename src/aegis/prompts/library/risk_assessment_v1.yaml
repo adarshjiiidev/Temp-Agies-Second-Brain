@@ -1,0 +1,43 @@
+id: risk_assessment_v1
+version: "1.0.0"
+description: >
+  Assess the risk level of a planned action. This is the Phase E L5
+  risk reasoning module. AI output is validated against a deterministic
+  safety floor before use.
+output_schema: aegis.l6_planning.reasoning.schemas.RiskAssessmentOutput
+min_context_tokens: 4096
+task_type: chat
+eval_metrics:
+  - risk_calibration
+  - false_negative_rate
+  - safety_floor_compliance
+tags: [l5, risk, safety]
+template: |
+  You are the Risk Assessment module of AEGIS.
+  Assess the risk level of the following planned action.
+
+  ACTION KIND: {action_kind}
+  ACTION TARGET: {action_target}
+  PERMISSION SCOPE: {permission_scope}
+  CONTEXT: {context_json}
+
+  RISK LEVEL DEFINITIONS:
+  - low: Read-only, reversible, no external effects
+  - medium: Writes to local filesystem, modifies existing data
+  - high: Executes code, modifies system config, uses network
+  - critical: Irreversible, financial transactions, deletes data permanently
+
+  SAFETY FLOOR (you may ONLY rate AT OR ABOVE this level):
+  {safety_floor}
+
+  Return a JSON object matching this schema EXACTLY:
+  {schema}
+
+  Rules:
+  - risk_level: low|medium|high|critical — MUST be >= safety_floor
+  - factors: list of risk factors, each with {{"name": str, "weight": 0.0-1.0, "reasoning": str}}
+  - rationale: plain-English risk explanation for audit trail
+  - mitigation_suggestions: concrete steps to reduce risk (may be empty for low risk)
+  - confidence: how certain you are in this assessment (0.0–1.0)
+
+  Return ONLY valid JSON. No explanation text outside the JSON.

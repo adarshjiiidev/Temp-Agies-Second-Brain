@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-09-12T20:51:20.428068",
+  "generated_at": "2026-09-18T21:40:17.189035",
   "agents": [
     {
       "id": "hermes",
       "name": "Hermes (agies)",
       "type": "ai-os-agent",
       "repo": "https://github.com/nousresearch/hermes-agent",
-      "cli": "/home/adarshjii/.local/bin/hermes",
+      "cli": "~/.local/bin/hermes",
       "command": "hermes --profile agies chat",
       "profile": "agies",
       "installed": true,
@@ -19,7 +19,7 @@
         "tools"
       ],
       "runs_in": "cli-terminal-tab",
-      "config": "/home/adarshjii/.hermes/profiles/agies/config.yaml",
+      "config": "~/.hermes/profiles/agies/config.yaml",
       "skills_count": 18,
       "dashboard_tab": "Hermes (agies)",
       "icon": "MessageSquare",
@@ -30,10 +30,10 @@
       "name": "Claude Code",
       "type": "anthropic-cli",
       "repo": "https://github.com/anthropics/claude-code",
-      "cli": "/home/adarshjii/.local/share/mise/installs/claude/2.1.267/bin/claude",
+      "cli": "~/.local/share/mise/installs/claude/latest/bin/claude",
       "command": "claude",
       "installed": true,
-      "default_model": "anthropic/claude-opus-4 (via 9Router)",
+      "default_model": "configured by its AEGIS adapter",
       "modes": [
         "standard",
         "thinking",
@@ -50,7 +50,7 @@
       "name": "Codex",
       "type": "openai-agent",
       "repo": "https://github.com/openai/codex",
-      "cli": "/home/adarshjii/.local/share/mise/installs/codex/latest/bin/codex",
+      "cli": "~/.local/share/mise/installs/codex/latest/bin/codex",
       "command": "codex",
       "installed": true,
       "default_model": "cl/openai/gpt-5.6-sol",
@@ -81,7 +81,7 @@
       "runs_in": "cli-terminal-tab",
       "dashboard_tab": "DeepSeek R1",
       "icon": "Brain",
-      "description": "DeepSeek AI harness \u2014 ultra-deep thinking and mathematical reasoning mode powered by DeepSeek R1 MoE via 9Router."
+      "description": "DeepSeek reasoning harness exposed as an AEGIS capability."
     },
     {
       "id": "openclaw",
@@ -103,27 +103,6 @@
       "description": "OpenClaw Claude-native agent framework with memory synchronization and multi-step tool execution."
     },
     {
-      "id": "opencode",
-      "name": "OpenCode CLI",
-      "type": "acp-agent",
-      "repo": "https://github.com/opencode-ai",
-      "cli": "/home/adarshjii/.opencode/bin/opencode",
-      "command": "/home/adarshjii/.opencode/bin/opencode",
-      "installed": true,
-      "default_model": "opencode/frontier",
-      "modes": [
-        "tui",
-        "acp",
-        "mcp",
-        "interactive",
-        "headless"
-      ],
-      "runs_in": "cli-terminal-tab",
-      "dashboard_tab": "OpenCode",
-      "icon": "Layers",
-      "description": "OpenCode autonomous agent TUI, ACP (Agent Client Protocol) server, and MCP (Model Context Protocol) plugin manager."
-    },
-    {
       "id": "bash",
       "name": "Host Terminal",
       "type": "system-shell",
@@ -142,24 +121,43 @@
       "description": "Full interactive host terminal shell with access to system tools, git, python, and systemctl."
     },
     {
-      "id": "9router",
-      "name": "9Router Gateway",
-      "type": "model-gateway",
-      "repo": "https://github.com/9router/9router",
-      "url": "http://127.0.0.1:20128",
-      "models_count": 870,
+      "id": "frontier",
+      "name": "Frontier execution capability",
+      "type": "agent-runtime",
+      "repo": "https://github.com/ApodexAI/FrontierAgent.git",
+      "local": "~/Work/FrontierAgent",
+      "cli": "~/Work/FrontierAgent/.venv/bin/python",
+      "command": "python -m apodex -p <task> --mode react|agent_team --no-tui",
+      "installed": false,
+      "license": "Apache-2.0",
+      "default_model": "free-quota via AEGIS free fabric (OpenRouter free tier)",
+      "modes": ["react", "agent_team", "resume"],
+      "runs_in": "aegis-managed-subprocess",
+      "icon": "Rocket",
+      "capabilities": ["frontier.react", "frontier.agent_team", "frontier.resume", "frontier.trace"],
+      "adapter": "frontier_adapter",
+      "workspace_support": true,
+      "memory_support": true,
+      "context_support": true,
+      "session_support": true,
+      "ingest_support": true,
+      "runs_root": "~/.temporary-aegis/frontier_runs",
+      "description": "Internal ReAct and agent-team executor. AEGIS owns task, session, context, policy, result, and dashboard identity."
+    },
+    {
+      "id": "opencode",
+      "name": "OpenCode",
+      "type": "coding-agent",
+      "cli": "~/.local/share/mise/installs/opencode/latest/opencode",
+      "command": "opencode",
       "installed": true,
-      "modes": [
-        "openai-compatible",
-        "streaming",
-        "tools",
-        "vision",
-        "thinking"
-      ],
-      "runs_in": "model-browser-tab",
-      "dashboard_tab": "9Router Models",
-      "icon": "Boxes",
-      "description": "Local OpenAI-compatible AI gateway aggregating 870 models across Anthropic, OpenAI, Google, DeepSeek, and OpenRouter."
+      "default_model": "via AEGIS free fabric",
+      "modes": ["standard", "coding", "tools"],
+      "runs_in": "cli-terminal-tab",
+      "dashboard_tab": "OpenCode",
+      "icon": "Code2",
+      "sessions": "~/.local/share/opencode/opencode.db (SQLite)",
+      "description": "OpenCode CLI — coding execution backend with AEGIS context bridge; sessions ingested to Obsidian."
     }
   ]
 }

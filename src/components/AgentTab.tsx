@@ -209,7 +209,7 @@ export const AgentTab: React.FC<AgentTabProps> = ({
       <div className="flex items-center justify-between px-3 py-2 bg-neutral-900/80 border-b border-white/10 text-xs backdrop-blur-sm">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 font-medium text-neutral-200">
-            <TermIcon className="w-3.5 h-3.5 text-emerald-400" />
+            <TermIcon className="w-3.5 h-3.5 text-amber-400" />
             <span>{agentName}</span>
           </div>
 
@@ -221,7 +221,7 @@ export const AgentTab: React.FC<AgentTabProps> = ({
 
           {model && (
             <div className="flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded text-[11px] text-neutral-400 border border-white/5">
-              <Cpu className="w-3 h-3 text-cyan-400" />
+              <Cpu className="w-3 h-3 text-orange-400" />
               <span className="truncate max-w-[140px]">{model}</span>
               {fallbackModel && (
                 <span className="text-[10px] text-amber-400/80 ml-1" title={`1:1 Fallback: ${fallbackModel}`}>
@@ -238,7 +238,7 @@ export const AgentTab: React.FC<AgentTabProps> = ({
             <span
               className={`w-2 h-2 rounded-full ${
                 connectionStatus === 'connected'
-                  ? 'bg-emerald-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]'
+                  ? 'bg-amber-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]'
                   : connectionStatus === 'connecting'
                   ? 'bg-amber-400 animate-pulse'
                   : 'bg-red-500'

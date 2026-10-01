@@ -50,6 +50,52 @@ class CognitiveMemoryEngine:
         self.decisions_file = self.agies_dir / "DECISIONS.md"
         self.briefing_file = self.agies_dir / "DAILY_BRIEFING.md"
         self.tasks_dir = self.agies_dir / "tasks"
+        self._file_cache: List[Path] = []
+        self._cache_time: float = 0
+        self._short_term_memory: List[Dict[str, Any]] = []
+
+    def add_short_term_memory(self, event: str, ttl_seconds: int = 3600):
+        self._short_term_memory.append({
+            "event": event,
+            "expires_at": time.time() + ttl_seconds
+        })
+
+    def get_short_term_memory(self) -> List[str]:
+        now = time.time()
+        self._short_term_memory = [m for m in self._short_term_memory if m["expires_at"] > now]
+        return [m["event"] for m in self._short_term_memory]
+        
+    def _get_memory_files(self) -> List[Path]:
+        """Returns cached markdown files to eliminate repeated rglob over the vault."""
+        now = time.time()
+        if now - self._cache_time < 30 and self._file_cache:
+            return self._file_cache
+            
+        candidates: List[Path] = []
+        # 1. Project living memories
+        projects_mem_dir = self.agies_dir / "PROJECTS"
+        if projects_mem_dir.exists():
+            candidates.extend(projects_mem_dir.glob("*/MEMORY.md"))
+
+        # 2. Key agies docs
+        for key_file in [self.decisions_file, self.briefing_file]:
+            if key_file.exists():
+                candidates.append(key_file)
+
+        # 3. Tasks
+        if self.tasks_dir.exists():
+            candidates.extend(self.tasks_dir.glob("TASK_*.md"))
+
+        # 4. Obsidian memory dir
+        memory_dir = self.vault_root / "memory"
+        if memory_dir.exists():
+            for p in memory_dir.rglob("*.md"):
+                if not any(ign in p.parts for ign in [".git", ".obsidian", ".trash"]):
+                    candidates.append(p)
+                    
+        self._file_cache = candidates
+        self._cache_time = now
+        return candidates
 
     def query_temporal_activity(self, timeframe: str = "today") -> dict:
         """
@@ -166,30 +212,7 @@ class CognitiveMemoryEngine:
             return []
 
         scored_results = []
-
-        # Collect candidate markdown files
-        candidates: List[Path] = []
-
-        # 1. Project living memories
-        projects_mem_dir = self.agies_dir / "PROJECTS"
-        if projects_mem_dir.exists():
-            candidates.extend(projects_mem_dir.glob("*/MEMORY.md"))
-
-        # 2. Key agies docs
-        for key_file in [self.decisions_file, self.briefing_file]:
-            if key_file.exists():
-                candidates.append(key_file)
-
-        # 3. Tasks
-        if self.tasks_dir.exists():
-            candidates.extend(self.tasks_dir.glob("TASK_*.md"))
-
-        # 4. Obsidian memory dir
-        memory_dir = self.vault_root / "memory"
-        if memory_dir.exists():
-            for p in memory_dir.rglob("*.md"):
-                if not any(ign in p.parts for ign in [".git", ".obsidian", ".trash"]):
-                    candidates.append(p)
+        candidates = self._get_memory_files()
 
         for filepath in candidates:
             try:

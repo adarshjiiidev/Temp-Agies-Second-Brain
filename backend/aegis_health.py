@@ -26,7 +26,6 @@ log = get_logger("aegis_health")
 
 class AegisHealthSystem:
     def __init__(self):
-        self.router_url = cfg.ROUTER_MODELS_URL
         self.backend_url = f"http://127.0.0.1:{cfg.BACKEND_PORT}/api/pc-state"
         self.frontend_url = f"http://127.0.0.1:{cfg.FRONTEND_PORT}"
         self.vault_path = cfg.VAULT
@@ -36,16 +35,15 @@ class AegisHealthSystem:
         failed_count = 0
         degraded_count = 0
 
-        # 1. 9Router Gateway
+        # 1. Multi-Provider Free Model Fabric
         try:
-            req = urllib.request.Request(self.router_url)
-            with urllib.request.urlopen(req, timeout=6) as resp:
-                data = json.loads(resp.read().decode())
-                models = data.get("data", [])
-                results["9router"] = {"status": "HEALTHY", "models_count": len(models)}
+            from backend.free_router import get_free_router_health
+            f_health = get_free_router_health()
+            results["model_fabric"] = {"status": "HEALTHY" if f_health["status"] == "running" else "DEGRADED", "models_count": f_health["available_models"]}
         except Exception as e:
-            results["9router"] = {"status": "FAILED", "error": str(e)}
+            results["model_fabric"] = {"status": "FAILED", "error": str(e)}
             failed_count += 1
+
 
         # 2. Backend API
         try:

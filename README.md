@@ -2,7 +2,7 @@
 
 **Personal AI Operating System Dashboard** — a Vite + React 19 + TypeScript + Tailwind SPA that serves as the control plane for a complete local-first AI system.
 
-**Live:** `http://localhost:2981` | **API:** `http://127.0.0.1:8787` | **9Router:** `http://127.0.0.1:20128`
+**Live:** `http://localhost:2981` | **API:** `http://127.0.0.1:2981/api` | **AI Fabric:** Multi-Provider Free (OpenRouter + Groq)
 
 ---
 
@@ -11,10 +11,10 @@
 A grayscale, sparse-signal AI OS dashboard that gives you:
 
 - **Chat panel** — talk to Agies (the Hermes "agies" profile) directly in the dashboard
-- **Vault explorer** — browse your entire Obsidian vault with a tree view
-- **Knowledge graph** — visual graph of 58 nodes connecting projects, agents, tools, models, and decisions
+- **Vault explorer** — browse your entire Obsidian vault with tree and living constellation graph views
+- **Knowledge graph** — visual graph connecting projects, agents, tools, models, and decisions
 - **Skills panel** — 27 cataloged skills across OpenClaw and Hermes
-- **Models panel** — 4-tier model router with verified fallback chain
+- **Models panel** — multi-provider free model fabric with auto round-robin and verified fallback chain
 - **Agent tabs** — 6 togglable PTY terminals (Hermes, Claude Code, Codex, DeepSeek R1, OpenClaw, Bash)
 - **PC monitor** — live system stats
 - **Activity feed** — system events log
@@ -37,9 +37,10 @@ FastAPI Backend (port 8787)
     ├── /api/files/tree      → vault file tree
     ├── /api/memory/search   → TF-IDF ranked memory retrieval
     ├── /api/memory/temporal → daily activity reconstruction
-    ├── /api/graph           → 58-node knowledge graph
-    ├── /api/skills          → 27 cataloged skills
-    ├── /api/models          → model router + 9Router proxy
+    ├── /api/graph           → knowledge graph
+    ├── /api/skills          → cataloged skills
+    ├── /api/models          → free model router & health
+
     ├── /api/agents          → agent registry + PTY endpoints
     ├── /api/agents/:id/pty  → WebSocket PTY for agent tabs
     ├── /api/run-script      → systemd script execution (token-gated)

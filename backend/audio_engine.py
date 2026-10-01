@@ -116,18 +116,31 @@ class AudioEngine:
                 "temperature": 0.1
             }
 
+            from backend.free_router import resolve_keys
+            keys = resolve_keys()
+            o_key = keys.get("OPENROUTER_API_KEY", "")
+            if not o_key:
+                return {"success": False, "error": "Transcription requires OPENROUTER_API_KEY."}
+
+            headers = {
+                "Authorization": f"Bearer {o_key}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "http://localhost:2981",
+                "X-Title": "AEGIS Audio Subsystem",
+            }
+
             req = urllib.request.Request(
-                "http://127.0.0.1:20128/v1/chat/completions",
+                "https://openrouter.ai/api/v1/chat/completions",
                 data=json.dumps(payload).encode(),
-                headers={"Content-Type": "application/json"}
+                headers=headers
             )
             with urllib.request.urlopen(req, timeout=15) as resp:
                 data = json.loads(resp.read().decode())
                 text = data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
                 return {"success": True, "transcription": text}
         except Exception as e:
-            # Fallback if multimodal audio format is not supported by endpoint
             return {"success": False, "error": f"Transcription fallback: {str(e)}"}
+
 
 audio_engine = AudioEngine()
 

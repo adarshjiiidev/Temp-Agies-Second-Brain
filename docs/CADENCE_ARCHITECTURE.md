@@ -19,20 +19,23 @@ SNAPSHOT     — Daily   — Full system state capture, experience archival
 
 All background cadences are managed as `systemd --user` units. They run independently of the frontend or user interaction.
 
-### Timer: `aegis-consolidate` (Every 15 Minutes)
+### Timer: `aegis-consolidate` (Every 15 Minutes & Daily 3PM)
 
-**Unit file:** `~/.config/systemd/user/aegis-consolidate.timer`  
-**Script:** `~/.temporary-aegis/scripts/aegis-consolidate.sh`
+**Unit files:**
+- `~/.config/systemd/user/aegis-consolidate.timer` (15-minute rhythm)
+- `~/.config/systemd/user/aegis-consolidate-daily.timer` (Daily 3:00 PM deep run)
+- `~/.config/systemd/user/aegis-consolidate-shutdown.service` (Triggered on shutdown target)
+**Service & Exec:** `~/.config/systemd/user/aegis-consolidate.service` running `aegis-dashboard/aegis_consolidate.py` via Python venv  
 
 **What it does on each tick:**
-1. Scans all registered projects (`cfg.PROJECTS`)
-2. Fetches recent git commits (last 24h) per project
-3. Writes living memory notes to `ObsidianVault/memory/1-Projects/<name>/LIVING_MEMORY.md`
-4. Rebuilds the TF-IDF index in `memory_engine.py`
-5. Refreshes knowledge graph nodes from registries
-6. Logs outcome to `~/.temporary-aegis/logs/consolidate.log`
+1. Scans multi-agent sessions: Antigravity IDE (`~/.gemini/antigravity-ide/brain`, `~/.config/Antigravity IDE/logs`), Codex, Claude, Hermes (`~/.hermes/profiles/agies`), and Temporary AEGIS (`~/.temporary-aegis`).
+2. Consolidates structured knowledge into `ObsidianVault/agies/` (topic notes, living project memory, decision logs).
+3. Redacts sensitive tokens (`sk-*`, `ghp_*`) deterministically before writing notes.
+4. Updates living memory notes per project in `ObsidianVault/memory/1-Projects/<name>/LIVING_MEMORY.md`.
+5. Rebuilds TF-IDF index cache in `backend/memory_engine.py`.
+6. Refreshes knowledge graph nodes from registries and writes consolidation log.
 
-**Why 15 minutes:** Balances freshness against git noise. Projects change fast but not every second.
+**Why 15 minutes:** Balances real-time cross-agent awareness with low CPU/disk footprint.
 
 ---
 

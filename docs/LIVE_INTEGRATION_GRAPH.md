@@ -86,9 +86,10 @@
 - **Was:** AttributeError when called
 - **Now:** Method added with avg_latency and success_rate calculations
 
-### GAP-7: /api/health returns 404
-- **State:** Route is `/api/health/full` and `/api/monitor/health`, not `/api/health`
-- **Severity:** LOW — existing routes work; documentation issue only
+### GAP-7: /api/health endpoint [REPAIRED]
+- **Was:** Returned 404 (only `/api/health/full` and `/api/monitor/health` existed)
+- **Now:** Route `@app.get("/api/health")` added to `backend/server.py` returning `{"status": "ok", "service": "aegis-backend"}`
+- **Evidence:** Verified active route in FastAPI application map
 
 ### GAP-8: screen_intel fails from systemd context
 - **State:** `grim` requires WAYLAND_DISPLAY env var; systemd unit doesn't have it

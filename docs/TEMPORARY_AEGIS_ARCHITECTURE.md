@@ -85,7 +85,7 @@ Camera OCR      Screen
 - **OpenClaw & DeepSeek R1:** Claude-native loop and extended reasoning harnesses.
 
 ### Layer 4: Cognitive Memory Layer
-- **Hub:** `/home/adarshjii/ObsidianVault/` structured in PARA (`1-Projects`, `2-Areas`, `3-Resources`, `4-Archives`).
+- **Hub:** `$HOME/ObsidianVault/` structured in PARA (`1-Projects`, `2-Areas`, `3-Resources`, `4-Archives`).
 - **Living Memory:** `~/ObsidianVault/agies/PROJECTS/` maintaining real-time summaries for all 9 workspace projects.
 - **Systematic File Index:** Real-time crawler scanning all source files, line counts, and signatures.
 

@@ -11,6 +11,11 @@ import {
   Clock,
   Share2,
   Terminal,
+  Target,
+  LayoutList,
+  Network,
+  Mic,
+  Stethoscope,
 } from 'lucide-react';
 
 interface DockItem {
@@ -24,15 +29,20 @@ export const Dock: React.FC = () => {
   const { openPanels, activePanel, togglePanel, focusPanel, setQuickActionsOpen } = useOS();
 
   const dockItems: DockItem[] = [
-    { id: 'chat', label: 'Chat', icon: <MessageSquare className="w-4 h-4" />, shortcut: '1' },
-    { id: 'vault', label: 'Vault', icon: <FolderTree className="w-4 h-4" />, shortcut: '2' },
-    { id: 'graph', label: 'Graph', icon: <Share2 className="w-4 h-4 text-[#38bdf8]" />, shortcut: '3' },
-    { id: 'agents', label: 'Agent CLIs', icon: <Terminal className="w-4 h-4 text-emerald-400" />, shortcut: '4' },
-    { id: 'pc', label: 'PC Mon', icon: <Cpu className="w-4 h-4" />, shortcut: '5' },
-    { id: 'skills', label: 'Skills', icon: <Compass className="w-4 h-4" />, shortcut: '6' },
-    { id: 'models', label: 'Models', icon: <Boxes className="w-4 h-4" />, shortcut: '7' },
-    { id: 'tools', label: 'Tools', icon: <Wrench className="w-4 h-4" />, shortcut: '8' },
-    { id: 'activity', label: 'Feed', icon: <Clock className="w-4 h-4" />, shortcut: '9' },
+    { id: 'home',   label: 'Home',    icon: <Target      className="w-4 h-4 text-amber-400" />, shortcut: 'H' },
+    { id: 'chat',   label: 'Chat',    icon: <MessageSquare className="w-4 h-4" />,              shortcut: '1' },
+    { id: 'tasks',  label: 'Tasks',   icon: <LayoutList  className="w-4 h-4 text-amber-400" />, shortcut: 'T' },
+    { id: 'vault',  label: 'Vault',   icon: <FolderTree  className="w-4 h-4" />,                shortcut: '2' },
+    { id: 'graph',  label: 'Graph',   icon: <Share2      className="w-4 h-4 text-[#38bdf8]" />,shortcut: '3' },
+    { id: 'agents', label: 'Agents',  icon: <Terminal    className="w-4 h-4 text-amber-400" />, shortcut: '4' },
+    { id: 'system', label: 'System',  icon: <Network     className="w-4 h-4 text-violet-400" />,shortcut: 'S' },
+    { id: 'pc',     label: 'PC Mon',  icon: <Cpu         className="w-4 h-4" />,                shortcut: '5' },
+    { id: 'skills', label: 'Skills',  icon: <Compass     className="w-4 h-4" />,                shortcut: '6' },
+    { id: 'models', label: 'Models',  icon: <Boxes       className="w-4 h-4" />,                shortcut: '7' },
+    { id: 'tools',  label: 'Tools',   icon: <Wrench      className="w-4 h-4" />,                shortcut: '8' },
+    { id: 'voice',  label: 'Voice',   icon: <Mic         className="w-4 h-4 text-sky-400" />,  shortcut: 'V' },
+    { id: 'doctor', label: 'Doctor',  icon: <Stethoscope className="w-4 h-4 text-emerald-400" />, shortcut: 'D' },
+    { id: 'activity',label: 'Feed',   icon: <Clock       className="w-4 h-4" />,                shortcut: '9' },
   ];
 
   const handleDockClick = (id: PanelId) => {

@@ -100,25 +100,28 @@ cfg.resolve_agent_command(id) → spawns PTY subprocess
 
 ## 5. Model Registry & 9Router Matrix
 
-**Source:** `registries/MODEL_REGISTRY.json` + `cfg.MODEL_*`
+**Source:** `registries/MODEL_REGISTRY.json` + `cfg.MODEL_*` / `cfg.FREE_CHAT_MODELS`
 
 | Model ID | Role | Use Cases |
 |---|---|---|
-| `gemini/gemini-3.8-flash` | Default | General chat, code, synthesis |
-| `gemini/gemini-3.7-flash` | Reasoning | Multi-step planning, decomposition |
-| `gemini/gemini-3.6-flash` | Fast | Quick lookups, classification |
-| `gemini/gemini-3.5-flash-lite` | Lite | High-volume, low-latency tasks |
+| `cl/nex-agi/nex-n2.5-pro:free` | Default (`cfg.MODEL_DEFAULT`) | General chat, code synthesis, architecture |
+| `cl/z-ai/glm-5.2:free` | Reasoning (`cfg.MODEL_REASONING`) | Deep extended thinking, math proofs |
+| `cl/nex-agi/nex-n2.5-mini:free` | Fast (`cfg.MODEL_FAST`) | Ultra-low latency chat, quick Q&A |
+| `cl/dots-studio/dots-3-note-preview:free` | Lite (`cfg.MODEL_LITE`) | High-volume note & context drafting |
+| `cl/google/gemma-4-31b-it:free` | Frontier General | 31B open weights reasoning |
+| `cl/cohere/north-mini-code:free` | Coding Specialist | Code generation and debugging |
+| `cl/inclusionai/ling-3.0-flash-vl:free` | Multimodal Vision | Screen OCR and visual UI understanding |
 
-**9Router selection logic (`model_router.py`):**
+**9Router dynamic selection logic (`model_router.py`):**
 ```
-IF task contains "plan" / "design" / "architect"  → gemini-3.7-flash
-IF task contains "quick" / "classify" / "check"   → gemini-3.6-flash
-IF task is bulk / repetitive                        → gemini-3.5-lite
-DEFAULT                                             → gemini-3.8-flash
-FALLBACK CHAIN: [3.8 → 3.7 → 3.6 → 3.5-lite]
+IF task contains "think" / "prove" / "math"       → cfg.MODEL_REASONING (glm-5.2)
+IF task contains "code" / "refactor" / "build"     → cfg.MODEL_DEFAULT (nex-n2.5-pro) or north-mini-code
+IF task contains "quick" / "classify" / "ping"     → cfg.MODEL_FAST (nex-n2.5-mini)
+IF task is note drafting / summary                 → cfg.MODEL_LITE (dots-3-note)
+FALLBACK CHAIN: [DEFAULT → REASONING → FAST → LITE] (Zero serial latency; round-robin per turn)
 ```
 
-9Router health is monitored in `/api/diagnostics/deep` (real-time latency per model).
+9Router health is monitored in `/api/diagnostics/deep` and `/api/9router-health`.
 
 ---
 
@@ -162,24 +165,24 @@ Currently keyword-matching. Architecture is designed to swap in embedding-based 
 ## 7. Knowledge Graph — Capability Inventory
 
 **File:** `backend/knowledge_graph.py`  
-**Nodes:** 58 (dynamic, registry-driven)  
-**Endpoint:** `GET /api/knowledge-graph`
+**Nodes:** Relational graph from filesystem scan + registries  
+**Endpoints:** `GET /api/graph` (unified graph data) & `GET /api/obsidian-graph` (Obsidian canvas graph)
 
 Node types:
-| Type | Count | Description |
-|---|---|---|
-| `project` | 9–17 | Workspace projects (live filesystem scan) |
-| `agent` | 6–8 | Registered agents |
-| `tool` | 9–10 | Registered tools |
-| `model` | 4–20 | Available LLMs |
-| `decision` | 3+ | Architectural decisions (from EXPERIENCES) |
+| Type | Description |
+|---|---|
+| `Project` | Workspace projects (scanned dynamically from `cfg.PROJECTS`) |
+| `Agent` | Registered agents (`cfg.AGENT_REGISTRY`) |
+| `Tool` | Registered operational tools (`registries/TOOL_REGISTRY.json`) |
+| `Model` | Verified models from `registries/MODEL_REGISTRY.json` |
+| `Decision` | Key architectural records from `DECISIONS.md` / `EXPERIENCES` |
 
-Edge types: `USES`, `CONTAINS`, `DEPENDS_ON`, `MANAGES`, `ROUTES_TO`
+Edge types: `POWERED_BY`, `DECIDED`, `USES_TOOL`, `USES_MODEL`
 
 The graph powers:
-- `ObsidianGraph.tsx` — visual capability inventory
-- `/api/search/unified` — cross-system search
-- `task_planner.py` — tool selection for planning
+- `ObsidianGraph.tsx` — live interactive visual link canvas
+- `/api/search/unified` — unified search across graph nodes and vault markdown notes
+- `task_planner.py` — tool selection for multi-step planning
 
 ---
 

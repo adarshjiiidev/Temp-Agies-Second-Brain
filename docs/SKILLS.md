@@ -1,7 +1,7 @@
 # AEGIS Skills Engine & Learning Framework
 
-**Skill Root:** `/home/adarshjii/.hermes/profiles/agies/skills/`  
-**Registry File:** `/home/adarshjii/.temporary-aegis/SKILL_REGISTRY.json`  
+**Skill Root:** `$HOME/.hermes/profiles/agies/skills/`  
+**Registry File:** `$HOME/.temporary-aegis/SKILL_REGISTRY.json`  
 
 ---
 

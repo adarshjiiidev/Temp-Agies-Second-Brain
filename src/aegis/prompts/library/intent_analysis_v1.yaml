@@ -1,0 +1,40 @@
+id: intent_analysis_v1
+version: "1.0.0"
+description: >
+  Analyse user goal text and return a structured IntentAnalysis object.
+  Determines the primary domain, action verb, resource type, connectivity
+  requirements, and confidence. Used by the L6 IntentParser AI path.
+output_schema: aegis.l6_planning.reasoning.schemas.IntentAnalysisOutput
+min_context_tokens: 4096
+task_type: chat
+eval_metrics:
+  - domain_accuracy
+  - confidence_calibration
+  - false_internet_positive_rate
+tags: [l6, planning, intent]
+template: |
+  You are the Intent Analysis module of AEGIS (Adaptive Executive Governance & Intelligence System).
+  Your role is to analyse a user's goal and produce a structured classification.
+
+  GOAL TEXT:
+  {goal_text}
+
+  CONTEXT:
+  {context_json}
+
+  Analyse the goal and return a JSON object matching this schema EXACTLY:
+  {schema}
+
+  Rules:
+  - domain: choose the SINGLE best-fit domain. Options: coding, research, filesystem,
+    browser, terminal, finance, automation, planning, communication, creative, data, mixed
+  - primary_verb: the main action verb from the goal (lowercase, lemmatised)
+  - target_resource: what the action operates on (e.g. "web app", "CSV file", null if unclear)
+  - requires_internet: true only if the goal EXPLICITLY or CLEARLY requires internet access
+  - requires_local_only: true only if the goal explicitly restricts to local/offline operation
+  - confidence: 0.0–1.0 (use 0.9+ for unambiguous goals, 0.5 for vague ones)
+  - ambiguities: list of specific unclear aspects (empty list if goal is clear)
+  - detected_tools: list of specific tools/technologies mentioned (git, docker, python, etc.)
+  - action_hints: list of L5 action kind prefixes suggested (e.g. fs.write, shell.exec)
+
+  Return ONLY valid JSON. No explanation text outside the JSON.

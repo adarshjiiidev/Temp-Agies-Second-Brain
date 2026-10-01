@@ -1,0 +1,16 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/aegis_ffi_common",
+    "crates/aegis_crypto",
+    "crates/aegis_audit_chain",
+    "crates/aegis_search_core",
+    "crates/aegis_graph_core",
+    "benches/bench_rust",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+license = "Proprietary"

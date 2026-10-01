@@ -1,0 +1,223 @@
+{
+  "$schema": "aegis.system-manifest.v1",
+  "description": "Declarative AEGIS system topology. This file holds NO status, health, or verdict values - those are measured by backend/status_probes.py at request time. A node that declares no probe is rendered NOT_PROBED, never PASS.",
+  "nodes": [
+    {
+      "id": "aegis_core",
+      "label": "AEGIS Core",
+      "type": "core",
+      "description": "Config, state directory, and core module wiring",
+      "source": "backend/config.py",
+      "probe": "aegis_core",
+      "doctor": true
+    },
+    {
+      "id": "context",
+      "label": "Context Engine",
+      "type": "core",
+      "description": "Project, memory, and git context envelope",
+      "source": "backend/context_router.py",
+      "probe": "context_engine",
+      "doctor": true
+    },
+    {
+      "id": "planner",
+      "label": "Planner",
+      "type": "core",
+      "description": "Task decomposition and routing",
+      "source": "backend/task_planner.py",
+      "probe": "planner",
+      "doctor": true
+    },
+    {
+      "id": "memory",
+      "label": "Memory (mem0)",
+      "type": "memory",
+      "description": "Long-term memory record store",
+      "source": "backend/mem0_engine.py",
+      "probe": "memory_mem0",
+      "doctor": true
+    },
+    {
+      "id": "memory_turboquant",
+      "label": "Memory (TurboQuant)",
+      "type": "memory",
+      "description": "Retrieval cache backing /api/search",
+      "source": "backend/turboquant_store.py",
+      "probe": "memory_turboquant",
+      "doctor": true
+    },
+    {
+      "id": "memory_cognitive",
+      "label": "Memory (Cognitive)",
+      "type": "memory",
+      "description": "Temporal and causal memory queries",
+      "source": "backend/memory_engine.py",
+      "probe": "memory_cognitive",
+      "doctor": true
+    },
+    {
+      "id": "knowledge_graph",
+      "label": "Knowledge Graph",
+      "type": "memory",
+      "description": "Derived entity and relation graph",
+      "source": "backend/knowledge_graph.py",
+      "probe": "knowledge_graph",
+      "doctor": true
+    },
+    {
+      "id": "obsidian",
+      "label": "Obsidian Vault",
+      "type": "memory",
+      "description": "Human-readable persistent notes",
+      "probe": "obsidian",
+      "external": "obsidian vault filesystem",
+      "doctor": true
+    },
+    {
+      "id": "capabilities",
+      "label": "Capabilities",
+      "type": "capability",
+      "description": "Skill discovery from real agent manifests",
+      "source": "backend/skill_registry.py",
+      "probe": "skills",
+      "doctor": true
+    },
+    {
+      "id": "ecc_skills",
+      "label": "ECC Skills",
+      "type": "skill",
+      "description": "ECC hooks, rules, and learning loop",
+      "source": "backend/integrations/ecc/adapter.py",
+      "probe": "ecc_skills",
+      "doctor": true
+    },
+    {
+      "id": "model_router",
+      "label": "Model Fabric",
+      "type": "core",
+      "description": "Free multi-provider routing pool",
+      "source": "backend/free_router.py",
+      "probe": "model_fabric",
+      "doctor": true
+    },
+    {
+      "id": "frontier",
+      "label": "FrontierAgent",
+      "type": "executor",
+      "description": "ReAct and AgentTeam executor",
+      "source": "backend/frontier_adapter.py",
+      "probe": "frontier",
+      "external": "ApodexAI/FrontierAgent",
+      "doctor": true
+    },
+    {
+      "id": "multica",
+      "label": "Multica",
+      "type": "executor",
+      "description": "Agent daemon and lifecycle",
+      "source": "backend/integrations/multica/adapter.py",
+      "probe": "multica",
+      "external": "multica-ai/multica",
+      "doctor": true
+    },
+    {
+      "id": "voicestudio",
+      "label": "VoiceStudio",
+      "type": "capability",
+      "description": "ASR and TTS boundary",
+      "source": "backend/integrations/voicestudio/adapter.py",
+      "probe": "voice",
+      "doctor": true
+    },
+    {
+      "id": "browser",
+      "label": "Browser Actuator",
+      "type": "capability",
+      "description": "Playwright/CDP browser automation",
+      "source": "backend/browser_tool.py",
+      "probe": "browser",
+      "doctor": true
+    },
+    {
+      "id": "opencode",
+      "label": "OpenCode",
+      "type": "ide",
+      "description": "AI coding IDE adapter",
+      "source": "backend/execution_core.py",
+      "probe": "opencode",
+      "external": "opencode binary",
+      "doctor": true
+    },
+    {
+      "id": "hermes",
+      "label": "Hermes",
+      "type": "ide",
+      "description": "Primary AEGIS agent harness",
+      "probe": "hermes",
+      "external": "hermes-agent venv",
+      "doctor": true
+    },
+    {
+      "id": "l5_governance",
+      "label": "L5 Governance",
+      "type": "core",
+      "description": "Deterministic autonomy and policy boundary",
+      "source": "backend/governance.py",
+      "probe": "governance",
+      "doctor": true
+    },
+    {
+      "id": "ingest_daemon",
+      "label": "Ingest Daemon",
+      "type": "daemon",
+      "description": "Polls external agents and traces for new context",
+      "source": "backend/ingest_daemon.py",
+      "probe": "ingest_daemon",
+      "doctor": true
+    },
+    {
+      "id": "scheduled_jobs",
+      "label": "Scheduled Jobs",
+      "type": "daemon",
+      "description": "systemd user timers driving learn/consolidate/ingest",
+      "probe": "scheduled_jobs",
+      "external": "systemd user timers",
+      "doctor": true
+    }
+  ],
+  "services": [
+    {
+      "name": "Backend API",
+      "probe": "backend_api",
+      "description": "FastAPI socket proven by a self health request"
+    }
+  ],
+  "edges": [
+    { "source": "aegis_core", "target": "context" },
+    { "source": "aegis_core", "target": "planner" },
+    { "source": "aegis_core", "target": "memory" },
+    { "source": "aegis_core", "target": "l5_governance" },
+    { "source": "context", "target": "memory" },
+    { "source": "context", "target": "obsidian" },
+    { "source": "planner", "target": "capabilities" },
+    { "source": "planner", "target": "model_router" },
+    { "source": "memory", "target": "memory_turboquant", "label": "retrieval" },
+    { "source": "memory", "target": "memory_cognitive", "label": "temporal" },
+    { "source": "memory", "target": "knowledge_graph", "label": "derived" },
+    { "source": "memory", "target": "obsidian" },
+    { "source": "capabilities", "target": "ecc_skills" },
+    { "source": "capabilities", "target": "frontier" },
+    { "source": "capabilities", "target": "multica" },
+    { "source": "capabilities", "target": "voicestudio" },
+    { "source": "capabilities", "target": "browser" },
+    { "source": "capabilities", "target": "opencode" },
+    { "source": "capabilities", "target": "hermes" },
+    { "source": "frontier", "target": "model_router", "label": "llm" },
+    { "source": "frontier", "target": "memory", "label": "results" },
+    { "source": "hermes", "target": "memory", "label": "sessions" },
+    { "source": "ingest_daemon", "target": "memory", "label": "context" },
+    { "source": "scheduled_jobs", "target": "memory", "label": "consolidate" }
+  ]
+}
+

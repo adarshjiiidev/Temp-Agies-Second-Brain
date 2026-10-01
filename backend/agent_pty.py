@@ -171,28 +171,26 @@ class SessionManager:
         Reads AGENT_REGISTRY.json → discovers binary → returns command list.
         Falls back to /usr/bin/bash for unknown agents.
         """
-        # Special cases that need extra args and aren't pure CLI binaries
-        HARNESS_AGENTS = {"deepseek", "openclaw"}
-        if agent_id in HARNESS_AGENTS:
-            return ["python3", "-m", f"backend.{agent_id}_harness"]
-
         cmd = cfg.resolve_agent_command(agent_id)
         log.debug("Resolved command for agent '%s': %s", agent_id, cmd)
         return cmd
 
-    def get_or_create_session(self, agent_id: str) -> PTYSession:
-        if agent_id not in self.sessions or not self.sessions[agent_id].is_running:
-            cmd = self.get_command_for_agent(agent_id)
-            session = PTYSession(session_id=agent_id, command=cmd)
-            session.start()
-            self.sessions[agent_id] = session
-        return self.sessions[agent_id]
+    def get_or_create_session(self, agent_id: str, cwd: Optional[str] = None) -> PTYSession:
+        if agent_id in self.sessions and self.sessions[agent_id].is_running:
+            return self.sessions[agent_id]
+        cmd = self.get_command_for_agent(agent_id)
+        session = PTYSession(session_id=agent_id, command=cmd, cwd=cwd)
+        session.start()
+        self.sessions[agent_id] = session
+        return session
 
     def restart_session(self, agent_id: str) -> PTYSession:
-        if agent_id in self.sessions:
-            self.sessions[agent_id].stop()
+        previous = self.sessions.get(agent_id)
+        cwd = previous.cwd if previous else None
+        if previous:
+            previous.stop()
         cmd = self.get_command_for_agent(agent_id)
-        session = PTYSession(session_id=agent_id, command=cmd)
+        session = PTYSession(session_id=agent_id, command=cmd, cwd=cwd)
         session.start()
         self.sessions[agent_id] = session
         return session

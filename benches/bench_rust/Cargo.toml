@@ -1,0 +1,31 @@
+[package]
+name = "bench_rust"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dev-dependencies]
+aegis_ffi_common  = { path = "../../crates/aegis_ffi_common" }
+aegis_crypto      = { path = "../../crates/aegis_crypto" }
+aegis_audit_chain = { path = "../../crates/aegis_audit_chain" }
+aegis_search_core = { path = "../../crates/aegis_search_core" }
+aegis_graph_core  = { path = "../../crates/aegis_graph_core" }
+criterion = { version = "0.5", features = ["html_reports"] }
+rand      = "0.8"
+tempfile  = "3"
+
+[[bench]]
+name = "crypto"
+harness = false
+
+[[bench]]
+name = "audit"
+harness = false
+
+[[bench]]
+name = "search"
+harness = false
+
+[[bench]]
+name = "graph"
+harness = false

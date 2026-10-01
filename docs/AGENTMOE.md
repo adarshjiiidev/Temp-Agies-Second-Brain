@@ -51,10 +51,21 @@
 
 | Tool Name | Handler | Risk Level | Trust | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `filesystem_read` | `agent_moe.tool_fs_read` | Low | High | Reads file slices with offset and line limits. |
+| `filesystem_read` | `agent_moe.tool_fs_read` | Low | High | Reads file slices with offset and line limits (safe_path guarded). |
 | `filesystem_write`| `agent_moe.tool_fs_write`| Medium | High | Writes files within authorized workspace boundaries. |
-| `terminal_run`    | `agent_moe.tool_terminal_run` | High | Medium | Executes bash commands with timeout limits. |
+| `terminal_run`    | `agent_moe.tool_terminal_run` | High | Medium | Executes bash commands with timeout limits (allowlist verified). |
 | `screen_ocr`      | `agent_moe.tool_screen_ocr` | Low | High | Captures Wayland desktop screen and extracts text via Tesseract. |
-| `camera_snapshot` | `agent_moe.tool_camera_snapshot` | Medium | High | Takes a single frame from `/dev/video0` when permitted. |
+| `camera_snapshot` | `agent_moe.tool_camera_snapshot` | Medium | High | Takes a single frame from `/dev/video0` when permitted (HARD_DENY default). |
 | `clipboard_sync`  | `agent_moe.tool_clipboard` | Low | High | Reads and writes Wayland clipboard via wl-copy/wl-paste. |
 | `project_inspect` | `agent_moe.tool_project_inspect` | Low | High | Analyzes project file trees across all 9 workspaces. |
+| `browser_navigate`| `agent_moe.tool_browser_navigate` | Medium | High | Headless Chrome DOM navigation and markdown content extraction. |
+| `browser_screenshot`| `agent_moe.tool_browser_screenshot`| Low | High | Headless Chrome full-page PNG capture for visual evaluation. |
+
+---
+
+## 4. Governance Integration
+
+All tool executions pass through `backend/governance.py` (`governance_engine.authorize(tool_name, actor, params)`):
+- Hard denies unauthorized camera/mic operations.
+- Enforces strict path traversal limits (`safe_path`).
+- Prevents command injection and blocks non-allowlisted commands.

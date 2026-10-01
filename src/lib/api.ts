@@ -82,7 +82,6 @@ export interface CuratedModel {
 export interface ModelRegistryData {
   generated_at?: string;
   total_available?: number;
-  "9router_url"?: string;
   hermes_default?: {
     model: string;
     provider: string;
@@ -193,9 +192,15 @@ export interface PCState {
 }
 
 export interface RouterHealth {
-  status: 'running' | 'stopped' | 'error';
+  status: 'running' | 'online' | 'stopped' | 'error' | 'degraded';
   code?: number;
+  openrouter?: boolean;
+  groq?: boolean;
+  active_free_models?: number;
+  available_models?: number;
+  engine?: string;
 }
+
 
 export interface ScriptRunResult {
   success: boolean;
@@ -215,18 +220,133 @@ export interface ChatMessage {
   classification?: TaskClassification;
 }
 
+export interface KnowledgeGraphNode {
+  id: string;
+  label: string;
+  type: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface KnowledgeGraphEdge {
+  source: string;
+  target: string;
+  relation: string;
+}
+
+export interface KnowledgeGraphData {
+  nodes: KnowledgeGraphNode[];
+  edges: KnowledgeGraphEdge[];
+  counts: Record<string, number>;
+}
+
+export interface ObsidianGraphNode {
+  id: string;
+  name: string;
+  path: string;
+  category: 'projects' | 'areas' | 'resources' | 'archives' | 'mocs';
+  size: number;
+}
+
+export interface ObsidianGraphData {
+  nodes: ObsidianGraphNode[];
+  edges: KnowledgeGraphEdge[];
+}
+
+// ── Phase 6: AEGIS Unified Task Board ─────────────────────────────────────────
+export interface AegisTask {
+  id: string;
+  status: 'BACKLOG' | 'READY' | 'RUNNING' | 'BLOCKED' | 'VERIFYING' | 'DONE' | 'FAILED' | 'NOT_CONFIGURED';
+  task: string;
+  project: string;
+  kind: string;
+  parallelism: number;
+  long_horizon: boolean;
+  created_at: number;
+  updated_at: number;
+  selected?: { id: string; name: string; status: string; score: number };
+  result?: Record<string, unknown>;
+  events?: Array<{ at: number; type: string; actor: string }>;
+}
+
+// ── Phase 7: Unified Skills Registry ─────────────────────────────────────────
+export interface UnifiedSkill {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  requirements: string[];
+  tools: string[];
+  risk: string;
+  permissions: string[];
+  source: string; // 'ECC' | 'FrontierAgent' | 'Multica' | 'AEGIS' | 'VoiceStudio'
+}
+
+// ── Phase 4: Voice Status ─────────────────────────────────────────────────────
+export interface VoiceStatus {
+  engine: string;
+  available: boolean;
+  mic_state: 'OFF' | 'READY' | 'LISTENING' | 'PROCESSING';
+  tts_state: 'IDLE' | 'SPEAKING';
+  recent_transcripts: Array<{ text: string; timestamp: number }>;
+}
+
+// ── Phase 10: System Graph ─────────────────────────────────────────────────────
+export interface SystemGraphNode {
+  id: string;
+  label: string;
+  type: 'core' | 'executor' | 'memory' | 'skill' | 'ide' | 'capability';
+  status: string;
+  implementation?: string;
+  description?: string;
+}
+
+export interface SystemGraphData {
+  nodes: SystemGraphNode[];
+  edges: Array<{ source: string; target: string; label?: string }>;
+}
+
+// ── Phase 16: AEGIS Doctor ─────────────────────────────────────────────────────
+export interface DoctorCheck {
+  name: string;
+  status: 'PASS' | 'WARN' | 'FAIL' | 'NOT_CONFIGURED' | 'NOT_SUPPORTED';
+  message?: string;
+}
+
+// ── Phase 5: IDE Adapters ─────────────────────────────────────────────────────
+export interface IdeAdapterInfo {
+  id: string;
+  name: string;
+  installed: boolean;
+  status: 'AVAILABLE' | 'NOT_CONFIGURED' | 'RUNNING' | 'FAILED';
+  capabilities: string[];
+  memory_bridge: boolean;
+  context_bridge: boolean;
+}
+
 const API_BASE = '/api';
 
-async function fetchJson<T>(endpoint: string, options?: RequestInit): Promise<T> {
+async function fetchJson<T>(endpoint: string, options?: RequestInit, _retried = false): Promise<T> {
   const url = `${API_BASE}${endpoint}`;
-  const res = await fetch(url, options);
+  const res = await fetch(url, { credentials: 'same-origin', ...options });
+  if (res.status === 403 && !_retried && (options?.method ?? 'GET') !== 'GET') {
+    // Local HMI: establish the HttpOnly chat session, then retry once.
+    try {
+      await fetch(`${API_BASE}/chat/session`, { credentials: 'same-origin' });
+      return fetchJson<T>(endpoint, options, true);
+    } catch {
+      // fall through to the 403 error below
+    }
+  }
   if (!res.ok) {
-    throw new Error(`API Error ${res.status}: ${res.statusText}`);
+    const body = await res.json().catch(() => null);
+    const detail = typeof body?.detail === 'string' ? body.detail : res.statusText;
+    throw new Error(`API Error ${res.status}: ${detail}`);
   }
   return res.json();
 }
 
 export const api = {
+  establishChatSession: () => fetchJson<{ status: string }>('/chat/session', { credentials: 'same-origin' }),
   // Vault
   getVaultStructure: () => fetchJson<VaultStructure>('/vault'),
   getMemoryFiles: () => fetchJson<MemoryFile[]>('/memory-files'),
@@ -234,6 +354,8 @@ export const api = {
   searchVault: (q: string) => fetchJson<SearchResult[]>(`/search?q=${encodeURIComponent(q)}`),
   getMOCs: () => fetchJson<MOCItem[]>('/mocs'),
   getProjects: () => fetchJson<ProjectItem[]>('/projects'),
+  getGraph: () => fetchJson<KnowledgeGraphData>('/graph'),
+  getObsidianGraph: () => fetchJson<ObsidianGraphData>('/obsidian-graph'),
 
   // Registries & Agents
   getSkills: () => fetchJson<Record<string, SkillItem>>('/skills'),
@@ -247,7 +369,8 @@ export const api = {
 
   // System
   getPCState: () => fetchJson<PCState>('/pc-state'),
-  get9RouterHealth: () => fetchJson<RouterHealth>('/9router-health'),
+  getModelHealth: () => fetchJson<RouterHealth>('/model-health'),
+
 
   // Scripts
   runScript: (script: string) =>
@@ -269,6 +392,146 @@ export const api = {
   getAgiesMemories: () => fetchJson<Array<{ path: string; name: string; size: number; content: string }>>('/agies-memories'),
   getConfigFiles: () => fetchJson<Array<{ path: string; name: string; preview: string }>>('/config-files'),
   getChatGPTTracking: () => fetchJson<Record<string, unknown>>('/chatgpt-tracking'),
+
+  // Agent Supervisor
+  getSupervisorTasks: () => fetchJson<{ active_tasks: Record<string, unknown> }>('/supervisor/tasks'),
+  dispatchSupervisorTask: (project: string, goal: string, subtasks: Array<Record<string, unknown>>) =>
+    fetchJson<{ status: string; task_id: string }>('/supervisor/dispatch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ project, goal, subtasks }),
+    }),
+  getSupervisorTaskStatus: (taskId: string) => fetchJson<Record<string, unknown>>(`/supervisor/tasks/${taskId}`),
+
+  // Governance & Autonomy
+  getGovernance: () => fetchJson<{ autonomy_level: number; level_name: string }>('/governance'),
+  setGovernanceLevel: (level: number) =>
+    fetchJson<{ status: string; autonomy_level: number; level_name: string }>('/governance/level', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ level }),
+    }),
+
+  // Context Router
+  assembleContext: (q: string) => fetchJson<Record<string, unknown>>(`/context/assemble?q=${encodeURIComponent(q)}`),
+
+  // TurboQuant Knowledge Store
+  searchTurboQuant: (q: string, limit = 5) => fetchJson<{ results: Array<Record<string, unknown>> }>(`/turboquant/search?q=${encodeURIComponent(q)}&limit=${limit}`),
+  ingestTurboQuant: (sourceId: string, content: string, metadata: Record<string, unknown> = {}) =>
+    fetchJson<{ status: string; source_id: string }>('/turboquant/ingest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source_id: sourceId, content, metadata }),
+    }),
+
+  // Mem0 Personalized Memory Layer
+  mem0Add: (text: string, category = 'general', metadata: Record<string, unknown> = {}) =>
+    fetchJson<{ status: string; memory: Record<string, unknown> }>('/memory/mem0/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, category, metadata }),
+    }),
+  mem0Search: (q: string, limit = 5) => fetchJson<{ results: Array<Record<string, unknown>> }>(`/memory/mem0/search?q=${encodeURIComponent(q)}&limit=${limit}`),
+  mem0GetAll: (limit = 50) => fetchJson<{ memories: Array<Record<string, unknown>> }>(`/memory/mem0/all?limit=${limit}`),
+
+  // Cloudroom Workspaces & Command Guard
+  getCloudroomWorkspaces: () => fetchJson<{ workspaces: Array<Record<string, unknown>> }>('/cloudroom/workspaces'),
+  validateCommandGuard: (command: string, workspace?: string) =>
+    fetchJson<{ allowed: boolean; risk_level: string; reason: string; command: string; autonomy_level?: number }>('/cloudroom/guard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ command, workspace }),
+    }),
+
+  // FrontierAgent Execution Backend
+  frontierStatus: () => fetchJson<Record<string, unknown>>('/frontier/status'),
+  frontierRuns: (limit = 20) => fetchJson<{ runs: Array<Record<string, unknown>> }>(`/frontier/runs?limit=${limit}`),
+  frontierRun: (task: string, opts: { mode?: string; project?: string; max_turns?: number } = {}) =>
+    fetchJson<Record<string, unknown>>('/frontier/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ task, mode: opts.mode ?? 'react', project: opts.project ?? '', max_turns: opts.max_turns ?? 20 }),
+    }),
+  frontierTrace: (session: string, limit = 50) =>
+    fetchJson<{ session: string; lines: Array<Record<string, unknown>> }>(`/frontier/trace/${session}?limit=${limit}`),
+
+  // Spatial Mode (one-by-one lanes)
+  spatialSweep: (projects?: string[], task = '', dryRun = true) =>
+    fetchJson<Record<string, unknown>>('/spatial/sweep', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projects, task, dry_run: dryRun }),
+    }),
+  spatialStatus: (limit = 20) => fetchJson<Record<string, unknown>>(`/spatial/status?limit=${limit}`),
+
+  // Universal Ingest (auto-reading)
+  ingestRun: (maxPerAgent = 3) =>
+    fetchJson<Record<string, unknown>>('/ingest/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ max_per_agent: maxPerAgent }),
+    }),
+
+  // Learn Loop (auto-research)
+  learnRun: (topic?: string) =>
+    fetchJson<Record<string, unknown>>('/learn/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic: topic ?? '' }),
+    }),
+
+  // Preferences
+  getPreferences: () => fetchJson<{ sections: string[]; profile: Record<string, unknown> }>('/preferences'),
+
+  // Research Lab
+  labProfile: (name: string) => fetchJson<Record<string, unknown>>(`/lab/profile/${name}`),
+  labCheck: (targetId: string, capability: string) =>
+    fetchJson<{ result: string }>('/lab/check', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target_id: targetId, capability }),
+    }),
+
+  // Org Cameras
+  orgCameraStatus: () => fetchJson<Record<string, unknown>>('/org-cameras/status'),
+
+  // AEGIS Task Board (Phase 6)
+  getTasks: (limit = 50) => fetchJson<{ tasks: AegisTask[] }>(`/tasks?limit=${limit}`),
+  createTask: (task: string, project?: string, kind?: string) =>
+    fetchJson<AegisTask>('/tasks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ task, project: project ?? '', kind: kind ?? 'general' }),
+    }),
+  dispatchTask: (taskId: string) =>
+    fetchJson<AegisTask>(`/tasks/${taskId}/dispatch`, { method: 'POST' }),
+
+  // Unified Skills Registry (Phase 7) — now maps /api/skills which returns normalized list
+  getUnifiedSkills: () => fetchJson<{ skills: UnifiedSkill[] }>('/skills'),
+
+  // Voice Interface (Phase 4)
+  voiceTranscribe: (audioBase64: string) =>
+    fetchJson<{ transcript: string }>('/voice/transcribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ audio: audioBase64 }),
+    }),
+  voiceSpeak: (text: string) =>
+    fetchJson<{ audio_url: string }>('/voice/speak', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    }),
+  voiceStatus: () => fetchJson<VoiceStatus>('/voice/status'),
+
+  // System Graph (Phase 10)
+  getSystemGraph: () => fetchJson<SystemGraphData>('/system/graph'),
+
+  // AEGIS Doctor/Health (Phase 16)
+  aegisDoctor: () => fetchJson<{ checks: DoctorCheck[] }>('/health/doctor'),
+
+  // IDE Adapter Registry (Phase 5)
+  getIdeAdapters: () => fetchJson<{ adapters: IdeAdapterInfo[] }>('/ide-adapters'),
 };
 
 // WebSocket real-time subscription
@@ -351,3 +614,92 @@ export class RealtimeSocket {
 }
 
 export const realtimeSocket = new RealtimeSocket();
+
+// ── LM Studio local model management ───────────────────────────────────────────
+// LM Studio exposes a v1 REST API on port 1234 by default.
+// The backend proxies these calls; the browser never talks to LM Studio directly.
+// Models are stored on disk under ~/.lmstudio/models/.
+export const LMSTUDIO_DEFAULT_MODEL = 'qwen3.5-2b-uncensored-hauhaucs-aggressive';
+
+export async function loadLocalModel(model_id = LMSTUDIO_DEFAULT_MODEL): Promise<void> {
+  const resp = await fetch('/api/local-model/load', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: model_id }),
+  });
+  if (!resp.ok) throw new Error(`loadLocalModel: HTTP ${resp.status}`);
+}
+
+export async function unloadLocalModel(model_id = LMSTUDIO_DEFAULT_MODEL): Promise<void> {
+  const resp = await fetch('/api/local-model/unload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: model_id }),
+  });
+  if (!resp.ok) throw new Error(`unloadLocalModel: HTTP ${resp.status}`);
+}
+
+export interface LocalModelInfo {
+  id: string;
+  name: string;
+  size?: string;
+  loaded?: boolean;
+  type?: string;
+  progress?: number; // 0..1 download progress
+}
+
+export async function listLocalModels(): Promise<LocalModelInfo[]> {
+  const resp = await fetch('/api/local-model/status');
+  if (!resp.ok) throw new Error(`listLocalModels: HTTP ${resp.status}`);
+  const data = (await resp.json()) as { models?: LocalModelInfo[]; error?: string };
+  return data.models || [];
+}
+
+export async function downloadLocalModel(model_id: string): Promise<void> {
+  const resp = await fetch('/api/local-model/download', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model_id }),
+  });
+  if (!resp.ok) throw new Error(`downloadLocalModel: HTTP ${resp.status}`);
+}
+
+// ============================================================================
+// Camera & Vision Interfaces
+// ============================================================================
+export interface CameraData {
+  name: string;
+  uri: string;
+  type: string;
+  authorized: boolean;
+  vision_enabled: boolean;
+  recording_enabled: boolean;
+}
+
+export interface CameraRegistryState {
+  cameras: Record<string, CameraData>;
+}
+
+export async function getCameras(): Promise<CameraRegistryState> {
+  const resp = await fetch('/api/cameras');
+  if (!resp.ok) throw new Error(`getCameras: HTTP ${resp.status}`);
+  return await resp.json();
+}
+
+export async function discoverCameras(): Promise<{ status: string; discovered: CameraData[] }> {
+  const resp = await fetch('/api/cameras/discover', { method: 'POST' });
+  if (!resp.ok) throw new Error(`discoverCameras: HTTP ${resp.status}`);
+  return await resp.json();
+}
+
+export async function authorizeCamera(camId: string): Promise<any> {
+  const resp = await fetch(`/api/cameras/${camId}/authorize`, { method: 'POST' });
+  if (!resp.ok) throw new Error(`authorizeCamera: HTTP ${resp.status}`);
+  return await resp.json();
+}
+
+export async function enableCameraVision(camId: string): Promise<any> {
+  const resp = await fetch(`/api/cameras/${camId}/vision/enable`, { method: 'POST' });
+  if (!resp.ok) throw new Error(`enableCameraVision: HTTP ${resp.status}`);
+  return await resp.json();
+}

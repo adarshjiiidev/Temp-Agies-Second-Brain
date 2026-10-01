@@ -10,7 +10,7 @@
 2. **Strict Secret Redaction:**
    - Patterns matching API keys (`sk-...`, `ey...`, `ghp_...`), passwords, SSH keys (`id_rsa`, `id_ed25519`), and `.env` credentials are automatically sanitized with `[REDACTED]` across all logs and memory notes.
 3. **Workspace Boundary Enforcement:**
-   - File reads and writes are strictly restricted to authorized user directories under `/home/adarshjii/`.
+   - File reads and writes are strictly restricted to authorized user directories under `$HOME/`.
    - Access to `/etc/shadow`, `/root`, or sensitive system areas is blocked by policy.
 4. **Sensor Privacy:**
    - Camera default is `HARD_DENY`.

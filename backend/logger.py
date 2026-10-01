@@ -13,12 +13,48 @@ Usage:
 
 import logging
 import logging.handlers
+import json
+import re
+from datetime import datetime
 from pathlib import Path
 from backend.config import cfg
 
 _LOG_FILE = cfg.LOGS_DIR / "aegis.log"
-_LOG_FMT = "%(asctime)s [%(levelname)s] %(name)s | %(message)s"
-_DATE_FMT = "%Y-%m-%dT%H:%M:%S"
+
+class SecretScrubber:
+    """Removes sensitive tokens from log messages."""
+    # Pattern looks for typical hex tokens or generic secrets
+    _token_pattern = re.compile(r'([0-9a-fA-F]{32,64})|(Bearer\s+[^\s"]+)')
+    
+    @classmethod
+    def scrub(cls, text: str) -> str:
+        if not text: return text
+        return cls._token_pattern.sub("[REDACTED]", str(text))
+
+class JSONFormatter(logging.Formatter):
+    def format(self, record: logging.LogRecord) -> str:
+        msg = self.record_to_msg(record)
+        msg = SecretScrubber.scrub(msg)
+        
+        log_obj = {
+            "timestamp": datetime.fromtimestamp(record.created).isoformat(),
+            "level": record.levelname,
+            "component": record.name.split('.')[-1] if '.' in record.name else record.name,
+            "message": msg
+        }
+        # Include extra structured fields if present
+        for field in ["task_id", "agent_id", "project_id", "event", "trace_id", "latency_ms", "tokens_used", "tool"]:
+            if hasattr(record, field):
+                log_obj[field] = getattr(record, field)
+                
+        # Include exception if present
+        if record.exc_info:
+            log_obj["exception"] = SecretScrubber.scrub(self.formatException(record.exc_info))
+            
+        return json.dumps(log_obj)
+
+    def record_to_msg(self, record: logging.LogRecord) -> str:
+        return record.getMessage()
 
 # Root AEGIS logger — all child loggers inherit this handler
 _root = logging.getLogger("aegis")
@@ -30,13 +66,14 @@ if not _root.handlers:
         _LOG_FILE, maxBytes=5 * 1024 * 1024, backupCount=3, encoding="utf-8"
     )
     fh.setLevel(logging.DEBUG)
-    fh.setFormatter(logging.Formatter(_LOG_FMT, datefmt=_DATE_FMT))
+    fh.setFormatter(JSONFormatter())
     _root.addHandler(fh)
 
     # Stderr — WARNING and above only (keeps terminal clean)
     sh = logging.StreamHandler()
     sh.setLevel(logging.WARNING)
-    sh.setFormatter(logging.Formatter(_LOG_FMT, datefmt=_DATE_FMT))
+    # Stderr gets regular format for human readability
+    sh.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(name)s | %(message)s", datefmt="%Y-%m-%dT%H:%M:%S"))
     _root.addHandler(sh)
 
 

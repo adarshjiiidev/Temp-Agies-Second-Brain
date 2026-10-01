@@ -28,9 +28,9 @@
 | Tool | Path / Version | Status |
 | :--- | :--- | :--- |
 | **Python 3** | `/usr/bin/python3` (3.14) & `~/.hermes/hermes-agent/venv/bin/python` | Active (FastAPI, httpx, numpy, PIL, sounddevice installed) |
-| **Node.js** | `/home/adarshjii/.local/share/mise/installs/node/22/bin/node` (v22) | Active |
-| **npm** | `/home/adarshjii/.local/share/mise/installs/node/22/bin/npm` | Active |
-| **Rust / Cargo** | `/home/adarshjii/.cargo/bin/rustc`, `cargo` | Active |
+| **Node.js** | `$HOME/.local/share/mise/installs/node/22/bin/node` (v22) | Active |
+| **npm** | `$HOME/.local/share/mise/installs/node/22/bin/npm` | Active |
+| **Rust / Cargo** | `$HOME/.cargo/bin/rustc`, `cargo` | Active |
 | **Docker** | `/usr/bin/docker` | Installed |
 | **Git** | `/usr/bin/git` | Active across all 9 workspaces |
 | **Tesseract OCR** | `/usr/bin/tesseract` | Verified: processed actual screen OCR |
@@ -44,10 +44,10 @@
 
 | Agent | CLI Executable / Config | Status & Capabilities |
 | :--- | :--- | :--- |
-| **Hermes Agent** | `/home/adarshjii/.local/bin/hermes` (`--profile agies`) | 18 skills, 20 tools, unified memory index |
-| **Claude Code** | `/home/adarshjii/.local/share/mise/installs/claude/latest/claude` | Autonomous coding CLI, tool use, 9Router routed |
-| **Codex CLI** | `/home/adarshjii/.local/share/mise/installs/codex/latest/bin/codex` | Code synthesis, refactoring, test execution |
-| **OpenCode** | `/home/adarshjii/.opencode/bin/opencode` (184MB binary) | TUI, ACP (Agent Client Protocol), MCP server manager |
+| **Hermes Agent** | `$HOME/.local/bin/hermes` (`--profile agies`) | 18 skills, 20 tools, unified memory index |
+| **Claude Code** | `$HOME/.local/share/mise/installs/claude/latest/claude` | Autonomous coding CLI, tool use, 9Router routed |
+| **Codex CLI** | `$HOME/.local/share/mise/installs/codex/latest/bin/codex` | Code synthesis, refactoring, test execution |
+| **OpenCode** | `$HOME/.opencode/bin/opencode` (184MB binary) | TUI, ACP (Agent Client Protocol), MCP server manager |
 | **OpenClaw** | `backend/openclaw_harness.py` & `~/.openclaw/workspace` | Claude-native agent harness, memory-synced |
 | **DeepSeek R1** | `backend/deepseek_harness.py` | Extended reasoning harness with `<think>` tag parsing |
 
@@ -84,12 +84,12 @@
 
 ## 6. Personal Projects & Dev Repositories
 
-1. `aegis-dashboard` (`/home/adarshjii/aegis-dashboard`) — Web UI & PTY control plane.
-2. `Aegis` (`/home/adarshjii/Projects/Aegis`) — Rust/Python core adaptive AI OS.
-3. `chrome-extra` (`/home/adarshjii/Projects/chrome-extra`) — Browser extension agent.
-4. `repusense` (`/home/adarshjii/Projects/repusense`) — Next.js repository intelligence app.
-5. `world-viewer` (`/home/adarshjii/Projects/world-viewer`) — Electron desktop 3D spatial globe.
-6. `DeepSeek-V3` (`/home/adarshjii/aegis-dashboard/repos/DeepSeek-V3`) — MoE inference codebase.
-7. `hermes-agent` (`/home/adarshjii/.hermes/hermes-agent`) — Multi-agent evaluation & gateway.
-8. `openclaw` (`/home/adarshjii/.openclaw/workspace`) — Claude-native workspace.
-9. `opencode` (`/home/adarshjii/.opencode`) — OpenCode ACP/MCP runtime.
+1. `aegis-dashboard` (`$HOME/aegis-dashboard`) — Web UI & PTY control plane.
+2. `Aegis` (`$HOME/Projects/Aegis`) — Rust/Python core adaptive AI OS.
+3. `chrome-extra` (`$HOME/Projects/chrome-extra`) — Browser extension agent.
+4. `repusense` (`$HOME/Projects/repusense`) — Next.js repository intelligence app.
+5. `world-viewer` (`$HOME/Projects/world-viewer`) — Electron desktop 3D spatial globe.
+6. `DeepSeek-V3` (`$HOME/aegis-dashboard/repos/DeepSeek-V3`) — MoE inference codebase.
+7. `hermes-agent` (`$HOME/.hermes/hermes-agent`) — Multi-agent evaluation & gateway.
+8. `openclaw` (`$HOME/.openclaw/workspace`) — Claude-native workspace.
+9. `opencode` (`$HOME/.opencode`) — OpenCode ACP/MCP runtime.

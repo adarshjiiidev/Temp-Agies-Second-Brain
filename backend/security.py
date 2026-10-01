@@ -15,6 +15,9 @@ Never logged, never exposed in responses.
 import os
 import secrets
 import stat
+import time
+import hmac
+import hashlib
 from pathlib import Path
 from fastapi import Request, HTTPException
 from backend.config import cfg
@@ -39,6 +42,13 @@ PUBLIC_ENDPOINTS = {
     "/api/tools",
     "/api/notes",
     "/api/memory/search",
+    "/api/memory/mem0/search",
+    "/api/memory/mem0/all",
+    "/api/governance",
+    "/api/cloudroom/workspaces",
+    "/api/supervisor/tasks",
+    "/api/turboquant/search",
+    "/api/cameras",
     "/api/graph",
     "/api/status",
     "/",
@@ -51,8 +61,11 @@ ALLOWED_SCRIPTS = {
     "aegis-snapshot",
     "aegis-ingest",
     "aegis-ingest-chatgpt",
+    "aegis-ingest-chats",
+    "aegis-ai-ingest",
     "aegis-consolidate",
     "aegis-learn",
+    "aegis-learn-patterns",
     "aegis-index",
 }
 
@@ -77,6 +90,26 @@ def _ensure_token() -> str:
 
 # Load once at import time
 API_TOKEN: str = _ensure_token()
+
+# This session is deliberately scoped to conversational inference only. It is
+# not accepted by the generic mutation guard for scripts, agents, or filesystem
+# actions, and the browser never receives the underlying API token.
+CHAT_SESSION_COOKIE = "aegis_chat_session"
+CHAT_SESSION_TTL_SECONDS = 8 * 60 * 60
+
+def create_chat_session() -> str:
+    expires = str(int(time.time()) + CHAT_SESSION_TTL_SECONDS)
+    signature = hmac.new(API_TOKEN.encode(), f"chat:{expires}".encode(), hashlib.sha256).hexdigest()
+    return f"{expires}.{signature}"
+
+def has_valid_chat_session(request: Request) -> bool:
+    value = request.cookies.get(CHAT_SESSION_COOKIE, "")
+    try:
+        expires, signature = value.split(".", 1)
+        expected = hmac.new(API_TOKEN.encode(), f"chat:{expires}".encode(), hashlib.sha256).hexdigest()
+        return int(expires) >= time.time() and secrets.compare_digest(signature, expected)
+    except (ValueError, TypeError):
+        return False
 
 
 def check_token(request: Request) -> bool:
@@ -128,10 +161,34 @@ def safe_agent_id(agent_id: str) -> str:
 
 def safe_script_id(script_id: str) -> str:
     """Validate script identifier against allowlist."""
-    clean = script_id.strip().rstrip(".sh")
+    clean = script_id.strip().removesuffix(".sh")
     if clean not in ALLOWED_SCRIPTS:
         raise HTTPException(status_code=400, detail=f"Unknown script: {script_id!r}")
     return clean
+
+
+import re
+_ID_PATTERN = re.compile(r"^[a-zA-Z0-9_.-]{1,128}$")
+
+def safe_session_id(session_id: str) -> str:
+    if not _ID_PATTERN.match(session_id):
+        raise HTTPException(status_code=400, detail="Invalid session ID format")
+    return session_id
+
+def safe_project_id(project_id: str) -> str:
+    if not _ID_PATTERN.match(project_id):
+        raise HTTPException(status_code=400, detail="Invalid project ID format")
+    return project_id
+
+def safe_camera_id(camera_id: str) -> str:
+    if not _ID_PATTERN.match(camera_id):
+        raise HTTPException(status_code=400, detail="Invalid camera ID format")
+    return camera_id
+
+def safe_schedule_id(schedule_id: str) -> str:
+    if not _ID_PATTERN.match(schedule_id):
+        raise HTTPException(status_code=400, detail="Invalid schedule ID format")
+    return schedule_id
 
 
 if __name__ == "__main__":

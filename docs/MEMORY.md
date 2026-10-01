@@ -1,7 +1,7 @@
 # AEGIS Cognitive Memory System
 
-**Storage Location:** `/home/adarshjii/ObsidianVault/`  
-**Consolidation Pipeline:** `/home/adarshjii/aegis-dashboard/aegis_consolidate.py`  
+**Storage Location:** `$HOME/ObsidianVault/`  
+**Consolidation Pipeline:** `$HOME/aegis-dashboard/aegis_consolidate.py`  
 **Automated Timers:** `aegis-consolidate.timer` (15 min) & `aegis-consolidate-daily.timer` (daily 3PM)  
 
 ---

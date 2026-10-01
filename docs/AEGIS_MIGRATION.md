@@ -8,7 +8,7 @@
   - `aegis-backend.service` (FastAPI + PTY bridge on `:8787`)
   - `aegis-consolidate.timer` (15-min background sync)
   - `9router.service` (Model gateway on `:20128`)
-- Ingests memory into `/home/adarshjii/ObsidianVault/`
+- Ingests memory into `$HOME/ObsidianVault/`
 - Employs AgentMoe capability fabric for vision, OCR, computer control, and multi-agent harnesses.
 
 ---

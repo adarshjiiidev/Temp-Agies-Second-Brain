@@ -1,0 +1,537 @@
+{
+ "generated": "2026-09-27",
+ "maintainer": "agies",
+ "note": "New user requests are appended LAST. Previous work continues in order. Statuses: COMPLETE only with evidence; else BACKLOG/READY/IN_PROGRESS/NOT_CONFIGURED.",
+ "phases": [
+  {
+   "gate": "Certification table filled with REAL evidence; no synthetic success.",
+   "id": "P0",
+   "sections": [
+    {
+     "id": "P0S1",
+     "tasks": [
+      {
+       "evidence": "/dev/video0+video1, Integrated Camera USB (v4l2-ctl)",
+       "id": "P0.1",
+       "status": "COMPLETE",
+       "title": "Discover real cameras (/dev/video*, v4l2, registry, net scope)"
+      },
+      {
+       "evidence": "both LOCAL_USB/v4l2/DISCOVERED; net scan skipped (local-scope, no authorized target)",
+       "id": "P0.2",
+       "status": "VERIFIED",
+       "title": "Classify devices LOCAL_USB/NETWORK/RTSP/ONVIF/UNKNOWN"
+      }
+     ],
+     "title": "Discovery + classification"
+    },
+    {
+     "id": "P0S2",
+     "tasks": [
+      {
+       "evidence": "deny-before-auth logged; permit-after-auth logged",
+       "id": "P0.3",
+       "status": "VERIFIED",
+       "title": "Auth boundary: access FAILS before authorization (log proof)"
+      },
+      {
+       "evidence": "ffmpeg 1280x720 jpeg + cv2 640x480@30fps real frames",
+       "id": "P0.4",
+       "status": "VERIFIED",
+       "title": "Authorize integrated camera explicitly for test, capture real frame (ffmpeg + cv2, dims/format/FPS)"
+      },
+      {
+       "evidence": "no authorized RTSP URI; no guessing attempted",
+       "id": "P0.5",
+       "status": "NOT_CONFIGURED",
+       "title": "RTSP test only if authorized URI exists (no guessing); else NOT_CONFIGURED"
+      }
+     ],
+     "title": "Authorization + real capture"
+    },
+    {
+     "id": "P0S3",
+     "tasks": [
+      {
+       "evidence": "MOTION_DETECTED from real frames; controlled scene-change not performed",
+       "id": "P0.6",
+       "status": "IN_PROGRESS",
+       "title": "Real motion: baseline real frames + scene change -> MOTION_DETECTED (no fabrication)"
+      },
+      {
+       "evidence": "real event stored + retrieved (2 recent)",
+       "id": "P0.7",
+       "status": "VERIFIED",
+       "title": "Event pipeline proof at every stage to dashboard"
+      },
+      {
+       "evidence": "sources mapped; live UI render not re-verified",
+       "id": "P0.8",
+       "status": "IN_PROGRESS",
+       "title": "Dashboard provenance: every metric traced to registry/store/state"
+      }
+     ],
+     "title": "Motion + pipeline + provenance"
+    },
+    {
+     "id": "P0S4",
+     "tasks": [
+      {
+       "evidence": "bogus device refused; disabled engine denies",
+       "id": "P0.9",
+       "status": "VERIFIED",
+       "title": "Failure test: disconnect/stop -> OFFLINE event, recovery, no retry loop"
+      },
+      {
+       "evidence": "8 cores/load 4.46; governor fixed to load>cores*2",
+       "id": "P0.10",
+       "status": "VERIFIED",
+       "title": "Resource governor vs real core count (fix load>8 assumption)"
+      },
+      {
+       "evidence": "OFF->deny both paths; recording never enabled",
+       "id": "P0.11",
+       "status": "VERIFIED",
+       "title": "Privacy boundary: OFF->deny proofs; recording stays off"
+      }
+     ],
+     "title": "Failure + governor + privacy"
+    },
+    {
+     "id": "P0S5",
+     "tasks": [
+      {
+       "evidence": "reported NOT_CONFIGURED, fallback ACTIVE, no rename",
+       "id": "P0.12",
+       "status": "VERIFIED",
+       "title": "TurboQuant: report NOT_CONFIGURED, fallback ACTIVE (no rename)"
+      },
+      {
+       "evidence": "3 test files (10 passed) + TEST_RESULTS entry + certification doc",
+       "id": "P0.13",
+       "status": "VERIFIED",
+       "title": "Write tests/test_camera_hardware.py, authorization, pipeline + TEST_RESULTS.md + docs/AEGIS_REAL_CAMERA_CERTIFICATION.md + final table"
+      }
+     ],
+     "title": "TurboQuant honesty + artifacts"
+    }
+   ],
+   "source_prompt": "camera-certification",
+   "title": "Real camera hardware certification"
+  },
+  {
+   "gate": "Phase gates with real execution evidence per section 5.",
+   "id": "P1",
+   "sections": [
+    {
+     "id": "P1S1",
+     "tasks": [
+      {
+       "evidence": "this file + roadmap; baseline doc pending",
+       "id": "P1.0",
+       "status": "IN_PROGRESS",
+       "title": "Persistent task graph (JSON+MD) kept updated through whole build"
+      },
+      {
+       "evidence": "pending doc",
+       "id": "P1.1",
+       "title": "Phase 0 forensic baseline -> docs/AEGIS_BASELINE_AUDIT.md",
+       "status": "READY"
+      }
+     ],
+     "title": "Baseline + task state"
+    },
+    {
+     "id": "P1S2",
+     "tasks": [
+      {
+       "evidence": "server binds cfg.HOST (127.0.0.1 default); verify",
+       "id": "P1.2",
+       "status": "READY",
+       "title": "Security: bind/CORS/token/path-traversal/governance audit (close old gap items 1-2,12-25)"
+      },
+      {
+       "evidence": "~/.temporary-aegis/config/aegis_api_token exists (600?)",
+       "id": "P1.3",
+       "status": "READY",
+       "title": "Token hygiene: rotate exposed gateway token, secret scan, no secrets in logs"
+      },
+      {
+       "evidence": "backend/config.py centralizes paths/ports/models pending verify",
+       "id": "P1.4",
+       "status": "READY",
+       "title": "Config: eliminate hardcoded paths/model IDs, wire config.py everywhere"
+      }
+     ],
+     "title": "Security + config (old gap closure)"
+    },
+    {
+     "id": "P1S3",
+     "tasks": [
+      {
+       "evidence": "registry + resolve_agent_command exist; agent_pty bypass unverified",
+       "id": "P1.5",
+       "status": "READY",
+       "title": "Agents: single registry dispatch, lifecycle, heartbeat, retries"
+      },
+      {
+       "evidence": "backend/logger.py exists; coverage unverified",
+       "id": "P1.6",
+       "status": "READY",
+       "title": "Observability: structured logging, event store, dashboard link"
+      },
+      {
+       "evidence": "snapshot/ingest timers exist; failed-state check pending",
+       "id": "P1.7",
+       "status": "READY",
+       "title": "Services: fix snapshot/ingest, scheduler registry"
+      }
+     ],
+     "title": "Agents + observability + services"
+    },
+    {
+     "id": "P1S4",
+     "tasks": [
+      {
+       "evidence": "seeded 25 TQ sources + mem0 27; TF-IDF + KG exist",
+       "id": "P1.8",
+       "status": "COMPLETE",
+       "title": "Memory/vault/graph: central access, cache, hybrid retrieval, populated graph"
+      },
+      {
+       "evidence": "skill_registry exists; OpenClaw skills state unverified",
+       "id": "P1.9",
+       "status": "READY",
+       "title": "Skills: normalize manifests, risk classify, discovery"
+      },
+      {
+       "evidence": "browser_tool stub status unverified",
+       "id": "P1.10",
+       "status": "READY",
+       "title": "Browser+research: real nav/extract/provenance/storage"
+      }
+     ],
+     "title": "Memory + skills + browser"
+    },
+    {
+     "id": "P1S5",
+     "tasks": [
+      {
+       "evidence": "context_router.py exists; budget behavior unverified",
+       "id": "P1.11",
+       "status": "READY",
+       "title": "Context/model/planner/multi-agent: router, registries, executive missions"
+      },
+      {
+       "evidence": "project_intelligence covers 27 roots after config fix",
+       "id": "P1.12",
+       "status": "COMPLETE",
+       "title": "Projects+Git+work mgmt: discovery, state, tasks survive restart"
+      },
+      {
+       "evidence": "pending",
+       "id": "P1.13",
+       "status": "BACKLOG",
+       "title": "Linux intel, scheduler, experience, cybersecurity-research, security-lab, dashboard/API/CLI/doctor, tool discovery, consolidation, recovery, full test matrix, 12 real missions, final cert"
+      }
+     ],
+     "title": "Planning + projects + long tail"
+    }
+   ],
+   "source_prompt": "master-build-program",
+   "title": "Temporary AEGIS master build"
+  },
+  {
+   "gate": "No integration claimed without real execution reaching AEGIS and back.",
+   "id": "P2",
+   "sections": [
+    {
+     "id": "P2S1",
+     "tasks": [
+      {
+       "evidence": "subagent session-store table 2026-09-27",
+       "id": "P2.1",
+       "status": "COMPLETE",
+       "title": "Integration map: walkthrough + docs/AEGIS_CURRENT_INTEGRATION_MAP.md"
+      },
+      {
+       "evidence": "AGIES.md 3x-mirrored; adapter pending",
+       "id": "P2.2",
+       "status": "IN_PROGRESS",
+       "title": "Core migration: Hermes brain -> capability adapter; AEGIS owns tasks/memory/context"
+      }
+     ],
+     "title": "Map + core migration"
+    },
+    {
+     "id": "P2S2",
+     "tasks": [
+      {
+       "evidence": "cloned ~/Work/FrontierAgent, Apache-2.0, venv+agent_core OK",
+       "id": "P2.3",
+       "status": "COMPLETE",
+       "title": "FrontierAgent clone + arch inspect (ReAct/Team/Bus/traces/sandbox/model env)"
+      },
+      {
+       "evidence": "OPENROUTER key present; GROQ absent",
+       "id": "P2.4",
+       "status": "IN_PROGRESS",
+       "title": "Frontier free-quota models: OPENAI_BASE_URL=openrouter + FREE_CHAT_MODELS mapping"
+      },
+      {
+       "evidence": "live ReAct run rc=0, PING-OK written, trace 5 lines, ingested to Obsidian+mem0+TQ",
+       "id": "P2.5",
+       "status": "COMPLETE",
+       "title": "backend/frontier_adapter.py: start/resume/stop/status + context bridge + AgentMoe expose"
+      },
+      {
+       "evidence": "pending",
+       "id": "P2.6",
+       "status": "READY",
+       "title": "Frontier trace importer -> sessions/events/tasks/memory/artifacts"
+      }
+     ],
+     "title": "FrontierAgent integration"
+    },
+    {
+     "id": "P2S3",
+     "tasks": [
+      {
+       "evidence": "registry has frontier/opencode entries; claude path fixed to latest",
+       "id": "P2.7",
+       "status": "COMPLETE",
+       "title": "Universal agent registry entries (frontier/opencode/codex/claude/gemini/cursor/hermes/openclaw/antigravity) with health"
+      },
+      {
+       "evidence": "mem0 gateway live; context packs via /api/frontier/context-pack",
+       "id": "P2.8",
+       "status": "COMPLETE",
+       "title": "Memory gateway: one API (search/get/add/link/project/preferences) for every agent"
+      },
+      {
+       "evidence": "backend/universal_ingest: 17 sessions, 7 agents, checkpoints, leak-check clean",
+       "id": "P2.9",
+       "status": "COMPLETE",
+       "title": "Universal ingest daemon: adapters per agent + normalize + redact + dedup + Obsidian writer"
+      },
+      {
+       "evidence": "experience writeback live (frontier proof mem + spatial writes)",
+       "id": "P2.10",
+       "status": "COMPLETE",
+       "title": "Agent memory writeback: decisions/lessons with importance classification"
+      }
+     ],
+     "title": "Universal registry + memory + ingest"
+    },
+    {
+     "id": "P2S4",
+     "tasks": [
+      {
+       "evidence": "preferences engine + 29 seeds live at /api/preferences; dashboard panel PENDING-UI",
+       "id": "P2.11",
+       "status": "COMPLETE",
+       "title": "Preferences engine: identity/dev/style/color/product + provenance + editable API"
+      },
+      {
+       "evidence": "pending",
+       "id": "P2.12",
+       "status": "READY",
+       "title": "Dashboard centers: agents/chat/projects/profile/context/traces + theme engine"
+      },
+      {
+       "evidence": "pending",
+       "id": "P2.13",
+       "status": "BACKLOG",
+       "title": "Router/capabilities/handoff/timeline/CLI/API/doctor/tests/missions/final reports"
+      }
+     ],
+     "title": "Preferences + dashboard + tail"
+    }
+   ],
+   "source_prompt": "core-migration-frontier-universal",
+   "title": "AEGIS core + Frontier + universal agents"
+  },
+  {
+   "gate": "High autonomy inside explicit scopes; deterministic refusals with exact reason.",
+   "id": "P3",
+   "sections": [
+    {
+     "id": "P3S1",
+     "tasks": [
+      {
+       "evidence": "profiles STANDARD/RESEARCH_LAB/RED_TEAM_LAB live at /api/lab/profile",
+       "id": "P3.1",
+       "status": "COMPLETE",
+       "title": "RESEARCH_LAB profile: STANDARD/RESEARCH_LAB/RED_TEAM_LAB + dashboard exposure"
+      },
+      {
+       "evidence": "jailbreak-autoresearch inspected + documented; eval hook log-only",
+       "id": "P3.2",
+       "status": "COMPLETE",
+       "title": "Integrate jailbreak-autoresearch: expose harness via capability registry (no dup)"
+      },
+      {
+       "evidence": "model profiles + session auth + exact BLOCKED reasons verified",
+       "id": "P3.3",
+       "status": "COMPLETE",
+       "title": "Research agent + model profiles (STANDARD/RESEARCH/RED_TEAM/JAILBREAK_EVAL/LOCAL_LAB)"
+      },
+      {
+       "evidence": "lab_targets seeded (localhost+owned-repos); sessions TTL",
+       "id": "P3.4",
+       "status": "COMPLETE",
+       "title": "Lab target registry + session-scoped auth + transparent BLOCKED_BY_SCOPE reasons"
+      }
+     ],
+     "title": "Profile + labs"
+    },
+    {
+     "id": "P3S2",
+     "tasks": [
+      {
+       "evidence": "pending",
+       "id": "P3.5",
+       "status": "READY",
+       "title": "Prompt lab + agent-behavior lab + red-team lab (isolated, metrics, traces)"
+      },
+      {
+       "evidence": "pending",
+       "id": "P3.6",
+       "status": "READY",
+       "title": "Bounded auto loop HYPOTHESIS->LEARN with budgets (never uncontrolled infinite)"
+      }
+     ],
+     "title": "Labs + loop"
+    }
+   ],
+   "source_prompt": "research-lab-mode",
+   "title": "Research/lab autonomy"
+  },
+  {
+   "gate": "Each run: topic researched, ingested to Obsidian+mem0+TurboQuant, loop continues.",
+   "id": "P4",
+   "sections": [
+    {
+     "id": "P4S1",
+     "tasks": [
+      {
+       "evidence": "learn_loop.py ran: note + mem0 + 33 TQ chunks",
+       "id": "P4.1",
+       "status": "COMPLETE",
+       "title": "30-min learn loop script: topic rotation (psychology/dark-rom/cybersecurity/web) + research + ingest"
+      },
+      {
+       "evidence": "timer INSTALLED-NOT-ENABLED; needs user approval to enable",
+       "id": "P4.2",
+       "status": "IN_PROGRESS",
+       "title": "systemd timer 30min + run log + stop switch; Frontier executes when configured"
+      }
+     ],
+     "title": "Learn loop"
+    }
+   ],
+   "source_prompt": "learn-loop",
+   "title": "30-min autonomous learning"
+  },
+  {
+   "gate": "Editable profile with source/confidence per value.",
+   "id": "P5",
+   "sections": [
+    {
+     "id": "P5S1",
+     "tasks": [
+      {
+       "evidence": "ABOUT_ME/USER.md hold current prefs",
+       "id": "P5.1",
+       "status": "READY",
+       "title": "Seed preferences engine from vault (colors: dark glass + orange/amber; dense; minimal)"
+      },
+      {
+       "evidence": "pending",
+       "id": "P5.2",
+       "status": "BACKLOG",
+       "title": "Dashboard profile UI: swatches, previews, confirm/edit/delete"
+      }
+     ],
+     "title": "Preferences seeding + UI"
+    }
+   ],
+   "source_prompt": "preferences-style",
+   "title": "Style + preferences"
+  },
+  {
+   "gate": "Each capability demonstrated on real projects; credentials never stored in repo.",
+   "id": "P6",
+   "sections": [
+    {
+     "id": "P6S1",
+     "title": "Discovery + spatial mode",
+     "tasks": [
+      {
+       "id": "P6.1",
+       "status": "READY",
+       "title": "Auto-discovery: web search, learn, candidate repos, install, integrate, memory",
+       "evidence": "not yet implemented; learn-loop queue is the interim discovery feed"
+      },
+      {
+       "id": "P6.2",
+       "status": "COMPLETE",
+       "title": "Spatial multi-agent mode: lanes sweep new/old/selected projects",
+       "evidence": "backend/spatial_mode lane_sweep dry_run verified; live lanes unconsumed"
+      }
+     ]
+    },
+    {
+     "id": "P6S2",
+     "title": "Orchestration + self-work",
+     "tasks": [
+      {
+       "id": "P6.3",
+       "status": "COMPLETE",
+       "title": "Custom system prompts per role + god orchestrator loop",
+       "evidence": "prompts/god_orchestrator.md + 3 role prompts"
+      },
+      {
+       "id": "P6.4",
+       "status": "IN_PROGRESS",
+       "title": "Self-work loop: act, error, fix, one-by-one with experience writeback",
+       "evidence": "loop mechanics exist (spatial+experience); continuous operation not started"
+      }
+     ]
+    },
+    {
+     "id": "P6S3",
+     "title": "Org cameras + GitButler",
+     "tasks": [
+      {
+       "id": "P6.5",
+       "status": "BLOCKED",
+       "title": "Org cameras: admin creds PENDING from user; vault adapter only",
+       "evidence": "adapter + docs done; AWAITING_CREDENTIALS (vault absent)"
+      },
+      {
+       "id": "P6.6",
+       "status": "IN_PROGRESS",
+       "title": "GitHub for all agents via GitButler (no raw git push)",
+       "evidence": "but 0.22.3 installed + rules doc; GitHub OAuth PENDING-USER"
+      }
+     ]
+    },
+    {
+     "id": "P6S4",
+     "title": "All-actions audit",
+     "tasks": [
+      {
+       "id": "P6.7",
+       "status": "COMPLETE",
+       "title": "Every dashboard action traced to working backend path or NOT_CONFIGURED",
+       "evidence": "docs/AEGIS_ACTIONS_AUDIT.md: 19 wired, 4 external, 24 no-UI, 0 broken; ai-ingest 5-min timeout FIXED (85-chat backlog, now batched max8/200s, proven 3 in 39s); free-model reliability FIXED (25s OR failover, 2.5k-char prompts, 90s client timeout; proven 2/2 in 23s)"
+      }
+     ]
+    }
+   ],
+   "source_prompt": "self-evolving-system",
+   "title": "Self-evolving agentic system"
+  }
+ ]
+}

@@ -1,0 +1,45 @@
+id: requirement_extraction_v1
+version: "1.0.0"
+description: >
+  Extract concrete system requirements from a parsed intent.
+  Determines permissions, risk level, connectivity, approval points.
+  Used by the L6 RequirementExtractor AI path.
+output_schema: aegis.l6_planning.reasoning.schemas.RequirementExtractionOutput
+min_context_tokens: 4096
+task_type: chat
+eval_metrics:
+  - permission_recall
+  - risk_level_accuracy
+  - false_internet_positive_rate
+tags: [l6, planning, requirements]
+template: |
+  You are the Requirement Extraction module of AEGIS.
+  Given a parsed intent, determine the concrete system-level requirements
+  needed to safely plan and execute this goal.
+
+  INTENT:
+  Domain: {domain}
+  Primary verb: {primary_verb}
+  Target resource: {target_resource}
+  Requires internet: {requires_internet}
+  Requires local only: {requires_local_only}
+  Detected tools: {detected_tools}
+  Action hints: {action_hints}
+  Goal text: {goal_text}
+
+  Return a JSON object matching this schema EXACTLY:
+  {schema}
+
+  Rules:
+  - permissions_needed: list of L5 permission strings (e.g. "fs.read", "fs.write",
+    "shell.exec", "network.http", "docker.run", "git.commit")
+  - internet_required: true if the task requires outbound network access
+  - offline_capable: true if the task can function without internet
+  - max_risk_level: "low", "medium", "high", or "critical"
+    (critical = irreversible financial/system actions, high = shell exec/docker,
+     medium = file writes, low = read-only)
+  - human_approval_points: list of step descriptions that MUST have human approval
+    (e.g. "before executing financial transactions", "before deleting files")
+  - notes: list of any contradictions or unusual requirements detected
+
+  Return ONLY valid JSON. No explanation text outside the JSON.

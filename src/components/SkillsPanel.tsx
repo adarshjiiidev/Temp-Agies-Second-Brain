@@ -96,7 +96,7 @@ export const SkillsPanel: React.FC = () => {
                 >
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-white group-hover:text-emerald-400 transition-os truncate text-xs">
+                      <span className="font-semibold text-white group-hover:text-amber-400 transition-os truncate text-xs">
                         {skill.name}
                       </span>
                       <span className="text-[10px] uppercase px-1.5 py-0.2 bg-white/5 border border-white/10 text-zinc-300">
@@ -115,7 +115,7 @@ export const SkillsPanel: React.FC = () => {
 
                   <div className="flex items-center justify-between pt-3 mt-2 border-t border-white/5 text-[10px] text-zinc-400">
                     <span className="flex items-center space-x-1">
-                      <Sparkles className="w-2.5 h-2.5 text-emerald-400" />
+                      <Sparkles className="w-2.5 h-2.5 text-amber-400" />
                       <span>{skill.confidence ? `${Math.round(skill.confidence * 100)}% conf` : 'Loaded'}</span>
                     </span>
                     <span className="text-zinc-500 group-hover:text-white transition-os">
@@ -135,7 +135,7 @@ export const SkillsPanel: React.FC = () => {
               {/* Modal Header */}
               <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
                 <div className="flex items-center space-x-2">
-                  <Compass className="w-4 h-4 text-emerald-400" />
+                  <Compass className="w-4 h-4 text-amber-400" />
                   <span className="font-semibold text-sm text-white">{activeSkill.name}</span>
                   <span className="text-[10px] px-1.5 py-0.2 bg-white/10 border border-white/20 text-zinc-300">
                     {activeSkill.category || 'Skill'}
@@ -182,7 +182,7 @@ export const SkillsPanel: React.FC = () => {
                       <ul className="space-y-1 bg-white/[0.02] p-2.5 border border-white/5 rounded-xs text-zinc-300">
                         {activeSkill.inputs.map((inp, idx) => (
                           <li key={idx} className="text-[11px] flex items-center space-x-1.5">
-                            <span className="w-1 h-1 bg-emerald-400 rounded-full" />
+                            <span className="w-1 h-1 bg-amber-400 rounded-full" />
                             <span>{inp}</span>
                           </li>
                         ))}

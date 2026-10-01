@@ -72,7 +72,7 @@ export const ToolsPanel: React.FC = () => {
                   ? 'text-red-400 bg-red-400/10 border-red-400/30'
                   : tool.risk === 'medium'
                   ? 'text-amber-400 bg-amber-400/10 border-amber-400/30'
-                  : 'text-emerald-400 bg-emerald-400/10 border-emerald-400/30';
+                  : 'text-amber-400 bg-amber-400/10 border-amber-400/30';
 
               return (
                 <div
@@ -110,7 +110,7 @@ export const ToolsPanel: React.FC = () => {
                       {tool.schema && (
                         <div className="space-y-0.5">
                           <span className="text-zinc-500 text-[10px] uppercase">Parameter Schema:</span>
-                          <pre className="p-2 bg-black/40 border border-white/5 rounded-xs overflow-x-auto text-[10px] text-emerald-400">
+                          <pre className="p-2 bg-black/40 border border-white/5 rounded-xs overflow-x-auto text-[10px] text-amber-400">
                             {tool.schema}
                           </pre>
                         </div>

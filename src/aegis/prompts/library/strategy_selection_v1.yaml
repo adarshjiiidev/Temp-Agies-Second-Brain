@@ -1,0 +1,47 @@
+id: strategy_selection_v1
+version: "1.0.0"
+description: >
+  Select the optimal planning strategy given the mission context, user
+  preferences, and detected requirements. Used by the L6 StrategyEngine AI path.
+output_schema: aegis.l6_planning.reasoning.schemas.StrategySelectionOutput
+min_context_tokens: 4096
+task_type: chat
+eval_metrics:
+  - strategy_appropriateness
+  - offline_compliance
+  - privacy_compliance
+tags: [l6, planning, strategy]
+template: |
+  You are the Strategy Selection module of AEGIS.
+  Select the most appropriate planning strategy for this mission.
+
+  MISSION:
+  Goal: {goal_text}
+  Domain: {domain}
+  Requires internet: {requires_internet}
+  Requires local only: {requires_local_only}
+  Max risk level: {max_risk_level}
+  User preference: {user_preference}
+  Context flags: {context_flags_json}
+
+  AVAILABLE STRATEGIES:
+  - balanced: General-purpose. Balances speed, safety, and quality.
+  - developer_mode: Optimised for coding tasks. Allows shell/git/docker.
+  - research_mode: Optimised for information gathering. Allows network.
+  - privacy_first: Maximises local execution. Minimises data exposure.
+  - offline_first: Forces all operations to work without internet.
+  - speed_first: Minimises latency. May sacrifice thoroughness.
+  - safe_mode: Maximum approval gates. Conservative risk tolerance.
+
+  Return a JSON object matching this schema EXACTLY:
+  {schema}
+
+  Rules:
+  - If requires_local_only=true, strategy MUST be privacy_first or offline_first
+  - If domain=coding, prefer developer_mode unless overridden
+  - If domain=research, prefer research_mode unless overridden
+  - If max_risk_level=critical, prefer safe_mode
+  - User preference overrides domain defaults (but not safety constraints)
+  - confidence: how certain you are this is the right strategy (0.0–1.0)
+
+  Return ONLY valid JSON. No explanation text outside the JSON.

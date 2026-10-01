@@ -79,49 +79,41 @@ def format_thinking_output(text: str) -> str:
         return f"{formatted_thought}\n{final_ans}"
     return text
 
-def query_9router(prompt: str, preferred_model: str = None) -> tuple[str, str]:
-    """Query 9Router with automatic fallback through reasoning models."""
-    url = "http://127.0.0.1:20128/v1/chat/completions"
-    
-    models_to_try = [preferred_model] if preferred_model else []
-    for m in REASONING_MODELS:
-        if m not in models_to_try:
-            models_to_try.append(m)
-
-    last_error = ""
-    for model in models_to_try:
-        payload = {
-            "model": model,
-            "messages": [
-                {
-                    "role": "system",
-                    "content": (
-                        "You are DeepSeek R1, an advanced reasoning model. "
-                        "Thoroughly analyze constraints and prove correctness. "
-                        "When reasoning, use <think>...</think> tags to articulate your internal chain of thought."
-                    )
-                },
-                {"role": "user", "content": prompt}
-            ],
-            "temperature": 0.5,
-            "stream": False
-        }
-        try:
-            req = urllib.request.Request(
-                url,
-                data=json.dumps(payload).encode("utf-8"),
-                headers={"Content-Type": "application/json"}
+def query_deepseek(prompt: str, preferred_model: str = None) -> tuple[str, str]:
+    """Query multi-provider free model fabric with reasoning fallback."""
+    import asyncio
+    from backend.free_router import query_free_chat
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are DeepSeek R1, an advanced reasoning model. "
+                "Thoroughly analyze constraints and prove correctness. "
+                "When reasoning, use <think>...</think> tags to articulate your internal chain of thought."
             )
-            with urllib.request.urlopen(req, timeout=35) as resp:
-                raw = resp.read()
-                ans = parse_sse_stream(raw)
-                if ans:
-                    return format_thinking_output(ans), model
-        except Exception as e:
-            last_error = str(e)
-            continue
+        },
+        {"role": "user", "content": prompt}
+    ]
+    try:
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
 
-    return f"{AMBER}[9Router Reasoning Warning: All models failed. Last error: {last_error}]{RESET}\nVerified solution for: {prompt}", models_to_try[0]
+        if loop and loop.is_running():
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(asyncio.run, query_free_chat(messages, preferred_model or "auto"))
+                ans, model = future.result()
+        else:
+            ans, model = asyncio.run(query_free_chat(messages, preferred_model or "auto"))
+        return format_thinking_output(ans), model
+    except Exception as e:
+        return f"{AMBER}[AI Reasoning Warning: {e}]{RESET}\nVerified solution for: {prompt}", preferred_model or "auto"
+
+def query_9router(prompt: str, preferred_model: str = None) -> tuple[str, str]:
+    return query_deepseek(prompt, preferred_model)
+
 
 def main():
     print(BANNER)

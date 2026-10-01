@@ -1,6 +1,6 @@
 # AEGIS Unified Tool Layer
 
-**Tool Registry:** `/home/adarshjii/.temporary-aegis/TOOL_REGISTRY.json`  
+**Tool Registry:** `$HOME/.temporary-aegis/TOOL_REGISTRY.json`  
 **Execution Fabric:** `backend/agent_moe.py`  
 
 ---

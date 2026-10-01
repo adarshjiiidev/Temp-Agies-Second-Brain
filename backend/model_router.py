@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 AEGIS Intelligent Dynamic Model Router
-Matches task intent, complexity, and latency requirements to verified 9Router models.
+Matches task intent, complexity, and latency requirements to AEGIS's direct
+multi-provider free model fabric.
 Maintains live performance statistics, fallback chains, and verifier/critic mode.
 """
 
@@ -62,7 +63,8 @@ VERIFIED_MODEL_PROFILES = {
 
 class ModelRouter:
     def __init__(self, gateway_url: Optional[str] = None):
-        self.gateway_url = gateway_url or cfg.ROUTER_URL
+        # Kept only for API compatibility. Routing is performed by free_router.
+        self.gateway_url = gateway_url or "aegis-free-fabric"
         self.stats: Dict[str, Dict[str, Any]] = {
             m: {"calls": 0, "successes": 0, "failures": 0, "total_time": 0.0}
             for m in VERIFIED_MODEL_PROFILES
@@ -97,64 +99,30 @@ class ModelRouter:
         return chain
 
     def query(self, messages: List[Dict[str, str]], preferred_model: Optional[str] = None, temperature: float = 0.3) -> tuple[str, str]:
-        """Query 9Router with automatic fallback through verified models."""
-        last_user_msg = ""
-        for m in reversed(messages):
-            if m.get("role") == "user":
-                last_user_msg = str(m.get("content", ""))
-                break
-
-        primary = preferred_model or self.route_task(last_user_msg)
-        chain = self.get_fallback_chain(primary)
-
-        last_error = ""
-        for model in chain:
-            t0 = time.time()
-            self.stats[model]["calls"] += 1
-            payload = {
-                "model": model,
-                "messages": messages,
-                "temperature": temperature,
-                "stream": False
-            }
+        """Query multi-provider free model fabric with automatic fallback."""
+        import asyncio
+        from backend.free_router import query_free_chat
+        try:
             try:
-                req = urllib.request.Request(
-                    f"{self.gateway_url}/chat/completions",
-                    data=json.dumps(payload).encode("utf-8"),
-                    headers={"Content-Type": "application/json"}
-                )
-                with urllib.request.urlopen(req, timeout=35) as resp:
-                    raw = resp.read().decode("utf-8", errors="replace")
-                    elapsed = time.time() - t0
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = None
 
-                    ans = ""
-                    if "data:" in raw:
-                        parts = []
-                        for line in raw.splitlines():
-                            if line.startswith("data: ") and line.strip() != "data: [DONE]":
-                                try:
-                                    d = json.loads(line[6:])
-                                    p = d.get("choices", [{}])[0].get("delta", {}).get("content") or d.get("choices", [{}])[0].get("message", {}).get("content")
-                                    if p: parts.append(p)
-                                except: pass
-                        ans = "".join(parts).strip()
-                    else:
-                        try:
-                            d = json.loads(raw)
-                            ans = d.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
-                        except:
-                            ans = raw.strip()
+            if loop and loop.is_running():
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    future = executor.submit(asyncio.run, query_free_chat(messages, preferred_model or "auto"))
+                    ans, used = future.result()
+            else:
+                ans, used = asyncio.run(query_free_chat(messages, preferred_model or "auto"))
 
-                    if ans:
-                        self.stats[model]["successes"] += 1
-                        self.stats[model]["total_time"] += elapsed
-                        return ans, model
-            except Exception as e:
-                self.stats[model]["failures"] += 1
-                last_error = str(e)
-                continue
+            if used in self.stats:
+                self.stats[used]["calls"] += 1
+                self.stats[used]["successes"] += 1
+            return ans, used
+        except Exception as e:
+            return f"⚠️ Free Model Router Error: {e}", preferred_model or "auto"
 
-        return f"⚠️ 9Router Model Router Error: All models failed. Last error: {last_error}", chain[0]
 
     def verify_with_critic(self, task: str, solution: str) -> dict:
         """Dual-model verification: Coder creates solution -> Critic verifies correctness."""
@@ -169,7 +137,7 @@ Does this solution satisfy all requirements and contain zero defects? Output a J
 "critique": "brief critique"
 """
         messages = [{"role": "user", "content": critic_prompt}]
-        verdict_raw, m = self.query(messages, preferred_model="gemini/gemini-3.7-flash", temperature=0.1)
+        verdict_raw, m = self.query(messages, preferred_model=cfg.MODEL_REASONING, temperature=0.1)
         try:
             clean = verdict_raw
             if "```json" in clean:
@@ -198,11 +166,11 @@ if __name__ == "__main__":
     print("Testing Intelligent Model Router...")
     r = model_router.route_task("Write a Python function to compute topological sort")
     print("Route for coding task:", r)
-    assert r == "gemini/gemini-3.6-flash", f"Unexpected route: {r}"
+    assert r == cfg.MODEL_FAST, f"Unexpected route: {r}"
 
     r_math = model_router.route_task("Prove that there are infinitely many prime numbers")
     print("Route for math proof:", r_math)
-    assert r_math == "gemini/gemini-3.7-flash", f"Unexpected route: {r_math}"
+    assert r_math == cfg.MODEL_REASONING, f"Unexpected route: {r_math}"
 
     ans, used = model_router.query([{"role": "user", "content": "Return the word 'ROUTER_ONLINE'"}])
     print(f"Router query response ({used}): {ans}")

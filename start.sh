@@ -1,9 +1,9 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+# TEMPORARY AEGIS DASHBOARD LAUNCHER
 
-cd /home/adarshjii/aegis-dashboard
+cd "$HOME/aegis-dashboard" || { echo "Run from dashboard root."; exit 1; }
 
-# ── Kill existing processes ───────────────────────────────────────────────────
+echo "=== STARTING TEMPORARY AEGIS DASHBOARD ==="
 
 pkill -f "server.py" 2>/dev/null || true
 pkill -f "python.*http.server.*2981" 2>/dev/null || true

@@ -1,0 +1,40 @@
+id: recovery_planning_v1
+version: "1.0.0"
+description: >
+  Generate realistic failure scenarios and recovery strategies for a task plan.
+  Used by the L6 RecoveryPlanner AI path.
+output_schema: aegis.l6_planning.reasoning.schemas.RecoveryPlanningOutput
+min_context_tokens: 8192
+task_type: chat
+eval_metrics:
+  - scenario_coverage
+  - recovery_practicality
+tags: [l6, planning, recovery]
+template: |
+  You are the Recovery Planning module of AEGIS.
+  Identify the realistic failure modes for this plan and define
+  concrete recovery strategies.
+
+  GOAL: {goal_text}
+  DOMAIN: {domain}
+  MAX RISK LEVEL: {max_risk_level}
+
+  TASKS:
+  {tasks_json}
+
+  Return a JSON object matching this schema EXACTLY:
+  {schema}
+
+  Rules:
+  - scenarios: 2–6 failure scenarios (focus on HIGH probability and HIGH impact)
+  - Each scenario must have:
+    - failure_mode: specific, concrete failure description
+    - affected_task_hints: list of action_hint prefixes of affected tasks
+    - probability: low|medium|high (how likely is this failure?)
+    - recovery_strategy: concrete steps to recover (not "try again")
+    - rollback_possible: can the system undo the partial work?
+    - estimated_recovery_seconds: how long recovery takes (60–3600)
+  - global_fallback: what to do if ALL recovery strategies fail
+  - Focus on technical failures, not user errors
+
+  Return ONLY valid JSON. No explanation text outside the JSON.

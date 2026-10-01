@@ -111,7 +111,7 @@ class KnowledgeGraph:
                         models_added.add(mid)
                         label = mid.split("/")[-1] if "/" in mid else mid
                         self.add_node(f"model:{mid}", label, "Model", {
-                            "provider": m.get("provider", "9Router"),
+                            "provider": m.get("provider", "Free Model Fabric"),
                             "context_length": m.get("context_length", 1048576),
                         })
             except Exception as e:
@@ -120,7 +120,7 @@ class KnowledgeGraph:
         if not models_added:
             for mid in cfg.MODEL_FALLBACK_CHAIN:
                 label = mid.split("/")[-1]
-                self.add_node(f"model:{mid}", label, "Model", {"provider": "9Router"})
+                self.add_node(f"model:{mid}", label, "Model", {"provider": "Free Model Fabric"})
 
         # 5. Key Decisions (from DECISIONS.md if present)
         dec_file = cfg.AGIES_VAULT / "DECISIONS.md"
@@ -143,13 +143,169 @@ class KnowledgeGraph:
             })
             self.add_edge("proj:aegis-dashboard", "dec:vite_migration", "DECIDED")
 
-            self.add_node("dec:sse_streaming", "Direct 9Router SSE Chunk Parser", "Decision", {
+            self.add_node("dec:free_fabric", "Multi-Provider Free Router Architecture", "Decision", {
                 "project": "aegis-dashboard",
-                "rationale": "Directly handle 9Router event-stream format with zero-copy forwarding",
+                "rationale": "Independent high-speed failover across OpenRouter & Groq free tiers",
             })
-            self.add_edge("proj:aegis-dashboard", "dec:sse_streaming", "DECIDED")
+            self.add_edge("proj:aegis-dashboard", "dec:free_fabric", "DECIDED")
+
+
+        # 6. Chat conversations (must be last — depends on project nodes being present)
+        self._build_chat_graph()
 
         log.info("Knowledge Graph built: %d nodes, %d edges", len(self.nodes), len(self.edges))
+
+    def _build_chat_graph(self):
+        """Enrich the graph with chat conversations and their project/topic links."""
+        import re
+        chat_tracking = cfg.HOME / ".temporary-aegis" / "config" / "chat_ingestion_tracking.json"
+        if not chat_tracking.exists():
+            return
+
+        try:
+            tracking = json.loads(chat_tracking.read_text())
+        except Exception:
+            return
+
+        # Source tool nodes
+        source_tools = {
+            "antigravity": ("tool:antigravity-ide", "Antigravity IDE", "AI IDE"),
+            "claude-code":  ("tool:claude-code",    "Claude Code",     "AI CLI"),
+            "opencode":     ("tool:opencode",        "OpenCode",        "AI IDE"),
+            "codex":        ("tool:codex",           "Codex CLI",       "AI CLI"),
+        }
+        for src, (nid, label, category) in source_tools.items():
+            if nid not in self.nodes:
+                self.add_node(nid, label, "Tool", {"category": category, "source": src})
+
+        # Project keyword map — project node id → keywords to match in chat title/content
+        project_keywords = {
+            "proj:aegis-dashboard": ["aegis", "dashboard", "backend", "server", "camera", "vision",
+                                      "turboquant", "fastapi", "governance", "memory", "skill"],
+            "proj:chrome-extra":   ["chrome", "extension", "glassmorphism", "chrome-extra"],
+            "proj:world-viewer":   ["world-viewer", "world viewer", "cesium", "geospatial", "market terminal"],
+            "proj:repusense":      ["repusense", "pybackend"],
+            "proj:opencode":       ["opencode", "router", "acp"],
+        }
+
+        # Topic hub nodes
+        topics = {
+            "topic:linux":        ("Linux & System", "Topic"),
+            "topic:ai-tooling":   ("AI Tooling & IDEs", "Topic"),
+            "topic:debugging":    ("Debugging & Crashes", "Topic"),
+            "topic:ui-design":    ("UI Design", "Topic"),
+            "topic:networking":   ("Networking & Security", "Topic"),
+            "topic:research":     ("Research", "Topic"),
+        }
+        topic_keywords = {
+            "topic:linux":      ["linux", "systemd", "boot", "Plymouth", "kernel", "shutdown", "omarchy", "capslock", "speaker"],
+            "topic:ai-tooling": ["opencode", "antigravity", "hermes", "codex", "claude", "model", "llm", "groq", "openrouter"],
+
+            "topic:debugging":  ["crash", "debug", "error", "fix", "sigsegv", "sigill", "coredump", "traceback"],
+            "topic:ui-design":  ["glassmorphism", "dark theme", "design", "qml", "ui", "ux", "elegant", "login"],
+            "topic:networking": ["network", "monitoring", "school", "internet", "security", "camera", "ip"],
+            "topic:research":   ["research", "learn", "explore"],
+        }
+        for tid, (label, ntype) in topics.items():
+            if tid not in self.nodes:
+                self.add_node(tid, label, ntype, {})
+
+        # Process each tracked conversation
+        for key, info in tracking.items():
+            source = info.get("source", "")
+            title = info.get("title", key)
+            output_file = info.get("output_file", "")
+            msg_count = info.get("messages", 0)
+            ingested_at = info.get("ingested_at", "")[:10]
+
+            if not output_file or not title:
+                continue
+
+            # Unique node id from key
+            chat_nid = f"chat:{key.replace(':', '_')}"
+            if chat_nid in self.nodes:
+                continue
+
+            self.add_node(chat_nid, title, "Chat", {
+                "source": source,
+                "messages": msg_count,
+                "date": ingested_at,
+                "file": Path(output_file).name,
+            })
+
+            # Link to source tool
+            tool_nid = source_tools.get(source, (None,))[0]
+            if tool_nid:
+                self.add_edge(chat_nid, tool_nid, "USED_TOOL")
+
+            # Link to projects by keyword
+            title_lower = title.lower()
+            for proj_nid, kws in project_keywords.items():
+                if any(kw in title_lower for kw in kws):
+                    if proj_nid in self.nodes:
+                        self.add_edge(chat_nid, proj_nid, "DISCUSSES_PROJECT")
+
+            # Link to topic hubs by keyword
+            for topic_nid, kws in topic_keywords.items():
+                if any(kw in title_lower for kw in kws):
+                    self.add_edge(chat_nid, topic_nid, "COVERS_TOPIC")
+
+        # Discover new projects from OpenCode session directories
+        import sqlite3 as _sq
+        oc_db = cfg.HOME / ".local" / "share" / "opencode" / "opencode.db"
+        if oc_db.exists():
+            try:
+                conn = _sq.connect(f"file:{oc_db}?mode=ro", uri=True)
+                c = conn.cursor()
+                c.execute("SELECT DISTINCT directory FROM session WHERE directory IS NOT NULL AND directory != '/' AND time_archived IS NULL")
+                for (d,) in c.fetchall():
+                    p = Path(d)
+                    if not p.exists():
+                        continue
+                    proj_nid = f"proj:{p.name}"
+                    if proj_nid not in self.nodes:
+                        self.add_node(proj_nid, p.name, "Project", {
+                            "path": str(p),
+                            "stack": "Discovered via OpenCode",
+                            "exists": True,
+                        })
+                        log.info("Graph: discovered new project from OpenCode: %s", p.name)
+                conn.close()
+            except Exception as e:
+                log.warning("Graph: OpenCode project discovery failed: %s", e)
+
+        # 7. Merge supplement if present
+        supplement_path = cfg.HOME / ".temporary-aegis" / "config" / "knowledge_graph_supplement.json"
+        if supplement_path.exists():
+            try:
+                sup = json.loads(supplement_path.read_text())
+                for n in sup.get("nodes", []):
+                    nid = n.get("id")
+                    if nid:
+                        if nid not in self.nodes:
+                            self.nodes[nid] = n
+                        else:
+                            # Update metadata if supplement has richer fields
+                            if "metadata" in n:
+                                self.nodes[nid].setdefault("metadata", {}).update(n["metadata"])
+                existing_edge_keys = {(e["source"], e["target"], e.get("relation", "")) for e in self.edges}
+                for e in sup.get("edges", []):
+                    key = (e.get("source"), e.get("target"), e.get("relation", ""))
+                    if key not in existing_edge_keys and e.get("source") in self.nodes and e.get("target") in self.nodes:
+                        self.edges.append(e)
+                        existing_edge_keys.add(key)
+            except Exception as ex:
+                log.warning("Could not merge knowledge_graph_supplement.json: %s", ex)
+
+        log.info("Chat graph enrichment done: %d total nodes, %d total edges",
+                 len(self.nodes), len(self.edges))
+
+    def rebuild(self):
+        """Re-scan filesystem, registries, chat history, and supplement to rebuild the graph."""
+        self._build_graph()
+        return self.get_graph_data()
+
+
 
     def get_graph_data(self) -> Dict[str, Any]:
         """Returns nodes and edges formatted for visualization."""
@@ -164,6 +320,8 @@ class KnowledgeGraph:
                 "tools": sum(1 for n in self.nodes.values() if n["type"] == "Tool"),
                 "models": sum(1 for n in self.nodes.values() if n["type"] == "Model"),
                 "decisions": sum(1 for n in self.nodes.values() if n["type"] == "Decision"),
+                "chats": sum(1 for n in self.nodes.values() if n["type"] == "Chat"),
+                "topics": sum(1 for n in self.nodes.values() if n["type"] == "Topic"),
             }
         }
 

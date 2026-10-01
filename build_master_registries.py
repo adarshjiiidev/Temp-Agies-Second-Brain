@@ -9,9 +9,10 @@ import urllib.request
 from datetime import datetime
 from pathlib import Path
 
-DEST_DIR = Path("/home/adarshjii/aegis-dashboard/registries")
+HOME = Path.home()
+DEST_DIR = HOME / "aegis-dashboard" / "registries"
 DEST_DIR.mkdir(parents=True, exist_ok=True)
-ALT_DIR = Path("/home/adarshjii/.temporary-aegis")
+ALT_DIR = HOME / ".temporary-aegis"
 ALT_DIR.mkdir(parents=True, exist_ok=True)
 
 # ── 1. MODEL REGISTRY ─────────────────────────────────────────────────────────
@@ -328,14 +329,14 @@ def build_agent_registry():
             "name": "Hermes (agies)",
             "type": "ai-os-agent",
             "repo": "https://github.com/nousresearch/hermes-agent",
-            "cli": "/home/adarshjii/.local/bin/hermes",
+            "cli": "~/.local/bin/hermes",
             "command": "hermes --profile agies chat",
             "profile": "agies",
             "installed": True,
             "default_model": "upstage/solar-pro4:free",
             "modes": ["standard", "thinking", "streaming", "coding", "tools"],
             "runs_in": "cli-terminal-tab",
-            "config": "/home/adarshjii/.hermes/profiles/agies/config.yaml",
+            "config": "~/.hermes/profiles/agies/config.yaml",
             "skills_count": 18,
             "dashboard_tab": "Hermes (agies)",
             "icon": "MessageSquare",
@@ -346,7 +347,7 @@ def build_agent_registry():
             "name": "Claude Code",
             "type": "anthropic-cli",
             "repo": "https://github.com/anthropics/claude-code",
-            "cli": "/home/adarshjii/.local/share/mise/installs/claude/2.1.267/bin/claude",
+            "cli": "~/.local/share/mise/installs/claude/2.1.267/bin/claude",
             "command": "claude",
             "installed": True,
             "default_model": "anthropic/claude-opus-4 (via 9Router)",
@@ -361,7 +362,7 @@ def build_agent_registry():
             "name": "Codex",
             "type": "openai-agent",
             "repo": "https://github.com/openai/codex",
-            "cli": "/home/adarshjii/.local/share/mise/installs/codex/latest/bin/codex",
+            "cli": "~/.local/share/mise/installs/codex/latest/bin/codex",
             "command": "codex",
             "installed": True,
             "default_model": "cl/openai/gpt-5.6-sol",

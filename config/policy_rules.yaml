@@ -1,0 +1,142 @@
+# AEGIS Policy Rules — YAML Representation
+#
+# This file mirrors the deterministic rules in:
+#   src/aegis/l5_execution/policy/rules.py
+#
+# It exists as the human-readable/auditable source of truth.
+# Phase A: documentation only — the PolicyEngine still reads from rules.py.
+# Phase E: PolicyEngine will load from this file directly.
+#
+# Format:
+#   rules:
+#     - id: <unique rule id>
+#       action: <match pattern>  # supports wildcards: shell.* matches all shell actions
+#       decision: ALLOW | DENY | NEEDS_APPROVAL | SANDBOX_REQUIRED
+#       conditions:            # all conditions must be true
+#         risk_level: low | medium | high | critical
+#         privacy_tier: p0 | p1 | p2 | p3
+#         user_confirmed: true | false
+#       reason: <human-readable explanation>
+#       tier: T1 | T2 | T3 | T4  # sandbox tier hint (only for SANDBOX_REQUIRED)
+
+rules:
+
+  # ── Read-only filesystem operations ─────────────────────────────────────
+  - id: fs-read-allow
+    action: "fs.read"
+    decision: ALLOW
+    reason: "Read-only filesystem access is always permitted"
+
+  - id: file-search-allow
+    action: "file.search"
+    decision: ALLOW
+    reason: "File search is read-only and safe"
+
+  # ── Filesystem write / delete ────────────────────────────────────────────
+  - id: fs-write-sandbox
+    action: "fs.write"
+    decision: SANDBOX_REQUIRED
+    tier: T1
+    reason: "Filesystem writes are sandboxed to the working directory"
+
+  - id: fs-delete-approval
+    action: "fs.delete"
+    decision: NEEDS_APPROVAL
+    reason: "Permanent deletion requires explicit user approval"
+
+  # ── Git operations ───────────────────────────────────────────────────────
+  - id: git-read-allow
+    action: "git.status"
+    decision: ALLOW
+    reason: "git status is read-only"
+
+  - id: git-read-log-allow
+    action: "git.log"
+    decision: ALLOW
+    reason: "git log is read-only"
+
+  - id: git-commit-sandbox
+    action: "git.commit"
+    decision: SANDBOX_REQUIRED
+    tier: T1
+    reason: "Git commits are sandboxed; user can review before push"
+
+  - id: git-push-approval
+    action: "git.push"
+    decision: NEEDS_APPROVAL
+    reason: "Remote push requires explicit user approval"
+
+  # ── Shell execution ──────────────────────────────────────────────────────
+  - id: builtin-shell-sandbox
+    action: "shell.exec"
+    decision: NEEDS_APPROVAL
+    reason: >
+      Shell execution can invoke arbitrary commands. Requires approval
+      even in non-critical risk contexts. (Fixed: B-L5-001)
+
+  # ── Network / HTTP ───────────────────────────────────────────────────────
+  - id: net-get-sandbox
+    action: "net.get"
+    decision: SANDBOX_REQUIRED
+    tier: T2
+    reason: "HTTP GET requests are sandboxed; no data exfiltration risk"
+
+  - id: net-post-approval
+    action: "net.post"
+    decision: NEEDS_APPROVAL
+    reason: "HTTP POST can transmit data; requires explicit approval"
+
+  # ── Docker ───────────────────────────────────────────────────────────────
+  - id: docker-run-approval
+    action: "docker.run"
+    decision: NEEDS_APPROVAL
+    reason: "Container execution requires explicit approval"
+
+  - id: docker-build-sandbox
+    action: "docker.build"
+    decision: SANDBOX_REQUIRED
+    tier: T2
+    reason: "Docker build is sandboxed in the working directory"
+
+  # ── Browser ──────────────────────────────────────────────────────────────
+  - id: browser-navigate-sandbox
+    action: "browser.navigate"
+    decision: SANDBOX_REQUIRED
+    tier: T3
+    reason: "Browser is sandboxed; no local filesystem access"
+
+  # ── Code analysis ────────────────────────────────────────────────────────
+  - id: code-analyse-allow
+    action: "code.analyse"
+    decision: ALLOW
+    reason: "Code analysis is read-only"
+
+  # ── Data transformation ──────────────────────────────────────────────────
+  - id: data-transform-sandbox
+    action: "data.transform"
+    decision: SANDBOX_REQUIRED
+    tier: T1
+    reason: "Data transforms may produce output files; sandboxed"
+
+  # ── Report generation ────────────────────────────────────────────────────
+  - id: report-generate-sandbox
+    action: "report.generate"
+    decision: SANDBOX_REQUIRED
+    tier: T1
+    reason: "Reports write to filesystem; sandboxed"
+
+  # ── Privacy-first override: P0 data ─────────────────────────────────────
+  - id: p0-net-deny
+    action: "net.*"
+    decision: DENY
+    conditions:
+      privacy_tier: p0
+    reason: >
+      P0 data (highest privacy) must NEVER be transmitted over network.
+      This rule overrides all other network rules when privacy tier is P0.
+
+  # ── Catch-all: unknown actions ───────────────────────────────────────────
+  - id: unknown-action-deny
+    action: "*"
+    decision: DENY
+    reason: "Deny-by-default: unknown actions are not permitted"

@@ -36,10 +36,10 @@ Every single subsystem has been tested with deterministic automated benchmarks a
 
 ## 3. Obsidian Graph Root Files Filtering (Resolved)
 
-- **Requirement:** Exclude root-level files in `/home/adarshjii/ObsidianVault/` (such as `BUILD_LOG.md`, `MASTER_TODO.md`, `MEMORY_SCHEMA.md`) from appearing as nodes in the Obsidian Graph visualization, while keeping default data files intact in the vault.
+- **Requirement:** Exclude root-level files in `$HOME/ObsidianVault/` (such as `BUILD_LOG.md`, `MASTER_TODO.md`, `MEMORY_SCHEMA.md`) from appearing as nodes in the Obsidian Graph visualization, while keeping default data files intact in the vault.
 - **Implementation in `src/components/ObsidianGraph.tsx`:**
   - Files are filtered with `files.filter((file) => file.path.includes('/'))` before generating graph nodes and links.
-  - All default data files remain completely intact in `/home/adarshjii/ObsidianVault/`, accessible via the Vault Explorer and API.
+  - All default data files remain completely intact in `$HOME/ObsidianVault/`, accessible via the Vault Explorer and API.
   - Production build recompiled cleanly with `npm run build` (code 0).
 
 ---

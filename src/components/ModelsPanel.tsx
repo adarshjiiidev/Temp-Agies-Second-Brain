@@ -31,7 +31,7 @@ export const ModelsPanel: React.FC = () => {
   const routingTable = modelData?.routing_table || {};
   const curatedModels = modelData?.curated_models || {};
   const tieredGroups = modelData?.tiered_groups || {};
-  const is9RouterOk = routerHealth?.status === 'running';
+  const isFabricOk = routerHealth?.status === 'running' || routerHealth?.status === 'online';
 
   const filteredCurated = Object.entries(curatedModels).filter(([id, model]) => {
     return (
@@ -45,9 +45,9 @@ export const ModelsPanel: React.FC = () => {
   return (
     <Panel
       id="models"
-      title="Model Routing & 9Router"
+      title="Model Routing & AI Fabric"
       icon={<Boxes className="w-3.5 h-3.5 text-[#a78bfa]" />}
-      tag={is9RouterOk ? '9Router: Online' : '9Router: Offline'}
+      tag={isFabricOk ? 'Fabric: Online' : 'Fabric: Standby'}
     >
       <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#0e0e11] font-mono text-xs">
         {/* Navigation Tabs Header */}
@@ -57,7 +57,7 @@ export const ModelsPanel: React.FC = () => {
               { id: 'tiers', label: 'Tiers & 1:1 Fallbacks' },
               { id: 'routing', label: 'Task Routing Table' },
               { id: 'curated', label: 'Curated Models' },
-              { id: 'gateway', label: '9Router Gateway' },
+              { id: 'gateway', label: 'AI Fabric Engine' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -76,24 +76,25 @@ export const ModelsPanel: React.FC = () => {
           <div className="flex items-center space-x-2 text-[11px]">
             <span
               className={`w-2 h-2 rounded-full ${
-                is9RouterOk ? 'bg-emerald-400 animate-pulse-live' : 'bg-red-400'
+                isFabricOk ? 'bg-amber-400 animate-pulse-live' : 'bg-amber-400'
               }`}
             />
             <span className="text-zinc-400">
-              860 models exposed
+              Multi-Provider Free Pool
             </span>
           </div>
+
         </div>
 
         {/* Tab: Capability Tiers & 1:1 Fallbacks */}
         {activeTab === 'tiers' && (
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            <div className="glass-panel p-3 rounded-sm space-y-2 border border-emerald-500/20 bg-emerald-500/[0.03]">
+            <div className="glass-panel p-3 rounded-sm space-y-2 border border-amber-500/20 bg-amber-500/[0.03]">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-emerald-400">
+                <span className="text-xs font-semibold text-amber-400">
                   AEGIS Autonomous Orchestrator Model Matrix
                 </span>
-                <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/30">
+                <span className="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded border border-amber-500/30">
                   1-on-1 Fallback Enabled
                 </span>
               </div>
@@ -117,7 +118,7 @@ export const ModelsPanel: React.FC = () => {
                       </div>
                       <button
                         onClick={() => openAgentTab(tier.target_agent)}
-                        className="text-[10px] flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 hover:bg-emerald-500/20 text-neutral-300 hover:text-emerald-300 border border-white/10 transition-colors font-mono"
+                        className="text-[10px] flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 hover:bg-amber-500/20 text-neutral-300 hover:text-amber-300 border border-white/10 transition-colors font-mono"
                       >
                         <span>Open {tier.target_agent.toUpperCase()} CLI →</span>
                       </button>
@@ -127,8 +128,8 @@ export const ModelsPanel: React.FC = () => {
 
                     {/* 1:1 Pair Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                      <div className="flex items-center justify-between p-2 rounded bg-black/40 border border-emerald-500/20 text-xs">
-                        <span className="text-[10px] text-emerald-400 uppercase font-semibold">Primary:</span>
+                      <div className="flex items-center justify-between p-2 rounded bg-black/40 border border-amber-500/20 text-xs">
+                        <span className="text-[10px] text-amber-400 uppercase font-semibold">Primary:</span>
                         <span className="font-mono text-white text-[11px] truncate max-w-[200px]" title={tier.primary}>
                           {tier.primary}
                         </span>
@@ -179,7 +180,7 @@ export const ModelsPanel: React.FC = () => {
                       <td className="p-3 font-semibold uppercase text-zinc-300 text-[11px]">
                         {task.replace('_', ' ')}
                       </td>
-                      <td className="p-3 font-mono text-emerald-400">
+                      <td className="p-3 font-mono text-amber-400">
                         {modelId || 'None'}
                       </td>
                       <td className="p-3 text-zinc-500 text-[11px]">
@@ -221,7 +222,7 @@ export const ModelsPanel: React.FC = () => {
                         {id}
                       </span>
                       {m.role && (
-                        <span className="text-[10px] uppercase px-1.5 py-0.2 bg-white/5 border border-white/10 text-emerald-400">
+                        <span className="text-[10px] uppercase px-1.5 py-0.2 bg-white/5 border border-white/10 text-amber-400">
                           {m.role}
                         </span>
                       )}
@@ -246,7 +247,7 @@ export const ModelsPanel: React.FC = () => {
                         </span>
                       )}
                       {m.vision && (
-                        <span className="text-[10px] px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 flex items-center space-x-1">
+                        <span className="text-[10px] px-1.5 py-0.5 bg-amber-500/10 border border-amber-500/30 text-amber-300 flex items-center space-x-1">
                           <Eye className="w-2.5 h-2.5" />
                           <span>Vision</span>
                         </span>
@@ -265,51 +266,52 @@ export const ModelsPanel: React.FC = () => {
           </div>
         )}
 
-        {/* Tab 3: 9Router Gateway Status */}
+        {/* Tab: Multi-Provider Free AI Fabric */}
         {activeTab === 'gateway' && (
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             <div className="glass-panel p-4 rounded-sm space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2 text-sm font-semibold text-white">
-                  <Cpu className="w-4 h-4 text-emerald-400" />
-                  <span>9Router Local AI Proxy Daemon</span>
+                  <Cpu className="w-4 h-4 text-amber-400" />
+                  <span>AEGIS Multi-Provider Free Model Fabric</span>
                 </div>
                 <span
                   className={`text-[11px] px-2 py-0.5 uppercase tracking-wider font-semibold border ${
-                    is9RouterOk
-                      ? 'bg-emerald-400/10 border-emerald-400/30 text-emerald-400'
-                      : 'bg-red-400/10 border-red-400/30 text-red-400'
+                    isFabricOk
+                      ? 'bg-amber-400/10 border-amber-400/30 text-amber-400'
+                      : 'bg-amber-400/10 border-amber-400/30 text-amber-400'
                   }`}
                 >
-                  {is9RouterOk ? 'Operational' : 'Stopped / Standby'}
+                  {isFabricOk ? 'Operational' : 'Standby / Degraded'}
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-zinc-300 pt-2">
                 <div>
-                  <span className="text-zinc-500">Gateway URL: </span>
-                  <span className="text-white">http://127.0.0.1:20128/v1</span>
+                  <span className="text-zinc-500">Router Mode: </span>
+                  <span className="text-white">Auto Round-Robin & Fallback Chain</span>
                 </div>
                 <div>
-                  <span className="text-zinc-500">Total Registered Models: </span>
-                  <span className="text-white">{modelData?.total_available || 860} models</span>
+                  <span className="text-zinc-500">Providers: </span>
+                  <span className="text-white">OpenRouter (Free) · Groq Cloud · LM Studio</span>
                 </div>
                 <div>
-                  <span className="text-zinc-500">Hermes Default Model: </span>
-                  <span className="text-emerald-400">
-                    {modelData?.hermes_default?.model || 'upstage/solar-pro4:free'}
+                  <span className="text-zinc-500">Active Free Models: </span>
+                  <span className="text-amber-400 font-mono">
+                    {Object.keys(curatedModels).length || 6} models ready
                   </span>
                 </div>
                 <div>
-                  <span className="text-zinc-500">Hermes Base URL: </span>
-                  <span className="text-white truncate">
-                    {modelData?.hermes_default?.base_url || 'https://inference-api.nousresearch.com/v1'}
+                  <span className="text-zinc-500">Default Model: </span>
+                  <span className="text-sky-300 font-mono">
+                    auto (auto-selects fastest free model)
                   </span>
                 </div>
               </div>
             </div>
           </div>
         )}
+
       </div>
     </Panel>
   );

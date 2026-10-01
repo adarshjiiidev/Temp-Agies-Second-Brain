@@ -22,6 +22,7 @@ from backend.logger import get_logger
 from backend.vision_engine import vision_engine
 from backend.computer_control import computer_control
 from backend.browser_tool import browser_tool
+from backend.governance import governance_engine
 
 log = get_logger("agent_moe")
 
@@ -53,6 +54,8 @@ class AgentMoeFabric:
     # ── Tool Implementations ──────────────────────────────────────────────────
 
     def tool_fs_read(self, path: str, limit: int = 500) -> dict:
+        if not governance_engine.authorize("filesystem_read", "agent_moe", {"path": path}):
+            return {"success": False, "error": "Governance denied: filesystem_read"}
         p = Path(path)
         if not p.is_absolute():
             p = self.workspace / p
@@ -65,6 +68,8 @@ class AgentMoeFabric:
             return {"success": False, "error": str(e)}
 
     def tool_fs_write(self, path: str, content: str) -> dict:
+        if not governance_engine.authorize("filesystem_write", "agent_moe", {"path": path}):
+            return {"success": False, "error": "Governance denied: filesystem_write"}
         p = Path(path)
         if not p.is_absolute():
             p = self.workspace / p
@@ -76,6 +81,8 @@ class AgentMoeFabric:
             return {"success": False, "error": str(e)}
 
     def tool_terminal_run(self, command: str, cwd: Optional[str] = None, timeout: int = 30) -> dict:
+        if not governance_engine.authorize("terminal_run", "agent_moe", {"command": command, "cwd": cwd}):
+            return {"success": False, "error": "Governance denied: terminal_run"}
         target_cwd = cwd or str(self.workspace)
         try:
             res = subprocess.run(command, shell=True, capture_output=True, text=True, cwd=target_cwd, timeout=timeout)
@@ -158,7 +165,7 @@ class AgentMoeFabric:
         if any(k in g_lower for k in ["project", "repo", "architecture"]):
             return {"type": "tool", "target": "project_inspect", "role": "Planner"}
 
-        return {"type": "agent", "target": "gemini/gemini-3.8-flash", "role": "Synthesizer"}
+        return {"type": "agent", "target": cfg.MODEL_DEFAULT, "role": "Synthesizer"}
 
     def execute_plan(self, subtasks: List[dict]) -> dict:
         """Execute a list of delegated subtasks with bounded budgets."""

@@ -1,0 +1,32 @@
+id: tradeoff_narration_v1
+version: "1.0.0"
+description: >
+  Generate plain-English tradeoff analysis and recommendations when
+  comparing multiple plan candidates. Used by the L6 TradeoffAnalyzer AI path.
+output_schema: aegis.l6_planning.reasoning.schemas.TradeoffNarrationOutput
+min_context_tokens: 4096
+task_type: chat
+eval_metrics:
+  - narration_clarity
+  - recommendation_soundness
+tags: [l6, planning, decision]
+template: |
+  You are the Tradeoff Analysis module of AEGIS.
+  Analyse the following plan scores and generate a clear explanation of
+  the tradeoffs and a concrete recommendation.
+
+  PLAN SCORES:
+  {scores_json}
+
+  SCORING DIMENSIONS: quality, speed, cost, risk, privacy, success_probability
+
+  Return a JSON object matching this schema EXACTLY:
+  {schema}
+
+  Rules:
+  - summary: 1–2 sentences for a non-technical user explaining the tradeoff
+  - recommendation: which plan to choose and the primary reason (≤2 sentences)
+  - key_differences: top 3 concrete differences between plans (not generic)
+  - confidence: how clear-cut the recommendation is (0.0=toss-up, 1.0=obvious)
+
+  Return ONLY valid JSON. No explanation text outside the JSON.

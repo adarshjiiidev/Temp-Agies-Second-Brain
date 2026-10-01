@@ -20,44 +20,49 @@
 │                                                                            │
 │  server.py ──────── config.py (cfg) ─── AegisConfig singleton             │
 │       │                                                                    │
-│       ├── knowledge_graph.py  (58 nodes, registry-driven)                 │
-│       ├── memory_engine.py    (TF-IDF ranked vault search)                │
-│       ├── agent_moe.py        (capability fabric, tool dispatch)           │
-│       ├── agent_pty.py        (PTY multiplexer, 5+ agents)                │
-│       ├── agent_runner.py     (non-interactive agent dispatch)             │
-│       ├── task_planner.py     (goal decomposition)                        │
-│       ├── proactive_monitor.py (project health, drift detection)           │
-│       ├── research_engine.py  (web research, synthesis)                   │
-│       ├── vision_engine.py    (screen OCR, camera)                        │
-│       ├── computer_control.py (keyboard, clipboard, system actions)       │
-│       ├── browser_tool.py     (headless Chrome DOM + screenshot)           │
-│       ├── screen_intel.py     (active window, desktop context)            │
-│       ├── aegis_health.py     (diagnostics, service health)               │
-│       ├── security.py         (token auth, path guards)                   │
-│       ├── code_sandbox.py     (safe Python execution)                     │
-│       ├── audio_engine.py     (TTS/STT stubs)                             │
-│       ├── deepseek_harness.py (DeepSeek-V3 reasoning interface)           │
-│       ├── openclaw_harness.py (OpenClaw SSE streaming)                    │
-│       ├── model_router.py     (model selection + fallback)                │
-│       └── logger.py           (rotating logs → ~/.temporary-aegis/logs/)  │
+│       ├── knowledge_graph.py   (Relational graph & unified search)         │
+│       ├── memory_engine.py     (TF-IDF ranked vault search & memory)       │
+│       ├── agent_moe.py         (Capability fabric, 9 tools, 8 roles)       │
+│       ├── agent_pty.py         (PTY multiplexer, persistent agent sessions)│
+│       ├── agent_runner.py      (Universal CLI agent harness runner)        │
+│       ├── agent_supervisor.py  (Agent lifecycle & heartbeat monitoring)   │
+│       ├── governance.py        (Deterministic capability & tool gating)    │
+│       ├── task_planner.py      (Long-horizon goal decomposition)           │
+│       ├── proactive_monitor.py (Git drift, health, resource telemetry)     │
+│       ├── research_engine.py   (Web research & vault synthesis)            │
+│       ├── vision_engine.py     (Screen OCR & camera frame capture)         │
+│       ├── camera_registry.py   (Camera discovery vs auth state machine)    │
+│       ├── vision_pipeline.py   (Local event detection & retention)         │
+│       ├── computer_control.py  (Keyboard simulation & clipboard sync)      │
+│       ├── browser_tool.py      (Headless Chrome DOM & screenshot)          │
+│       ├── screen_intel.py      (Active window & desktop telemetry)         │
+│       ├── linux_intelligence.py(Host hardware, kernel & resource intel)    │
+│       ├── project_intelligence.py (Workspace git & tree analyzer)          │
+│       ├── skill_registry.py    (Dynamic Hermes & Aegis skill discovery)    │
+│       ├── turboquant_store.py  (Vector storage for memory/research)        │
+│       ├── context_router.py    (Multi-layer context assembly)              │
+│       ├── aegis_health.py      (System diagnostics & health checks)        │
+│       ├── security.py          (Token auth, safe_path, rate limits)        │
+│       ├── code_sandbox.py      (Safe Python/subprocess sandbox)            │
+│       ├── audio_engine.py      (Audio status & microphone killswitch)      │
+│       ├── model_router.py      (Dynamic model selection & fallback)        │
+│       └── logger.py            (Structured rotating logs → ~/.temporary-aegis/logs/)
 └───────────────────────────────┬────────────────────────────────────────────┘
                                 │
           ┌─────────────────────┼────────────────────────┐
           ▼                     ▼                        ▼
 ┌──────────────────┐  ┌──────────────────┐   ┌───────────────────────────────┐
 │  9Router (:20128)│  │  OpenClaw (SSE)  │   │  DeepSeek-V3 (local API)      │
-│  Gemini gateway  │  │  Claude-native   │   │  MoE reasoning                │
-│  Model matrix:   │  │  OpenClaw harness│   │  deepseek_harness.py          │
-│  • gemini-3.8-f  │  │  ~/.openclaw/    │   └───────────────────────────────┘
-│  • gemini-3.7-f  │  │  workspace/      │
-│  • gemini-3.6-f  │  └──────────────────┘
-│  • gemini-3.5-l  │
-└──────────────────┘
+│  Model Gateway   │  │  Claude-native   │   │  MoE reasoning                │
+│  Free pool + fallback  ~/.openclaw/    │   │  repos/DeepSeek-V3            │
+│  matrix: nex/glm/gemma workspace/      │   └───────────────────────────────┘
+└──────────────────┘  └──────────────────┘
           │
           ├── OpenCode PTY  (~/.opencode/bin/opencode)
-          ├── Hermes PTY    (~/.hermes/profiles/agies/)
-          ├── Codex PTY     (openai-codex via PATH)
-          └── Bash PTY      (/usr/bin/bash --login)
+          ├── Hermes PTY    (~/.local/bin/hermes --profile agies)
+          ├── Codex PTY     (~/.local/share/mise/installs/codex)
+          ├── Claude Code   (~/.local/share/mise/installs/claude)
+          └── Bash PTY      (/usr/bin/bash)
 ```
 
 ---
@@ -66,25 +71,36 @@
 
 ### Frontend → Backend API Calls
 
-| Frontend Component | API Endpoint | Method | Purpose |
+| Frontend Component | API Endpoint | Method / Protocol | Purpose |
 |---|---|---|---|
-| `ChatPanel.tsx` | `/api/chat` | POST | Main AI chat (streams SSE) |
-| `ChatPanel.tsx` | `/api/memory/search` | GET | TF-IDF vault search |
-| `AgentTabs.tsx` | `/api/agent/pty/start` | POST | Start PTY session |
-| `AgentTabs.tsx` | `/api/agent/pty/input` | POST | Send input to agent |
-| `AgentTabs.tsx` | `/api/agent/pty/output` | GET (SSE) | Stream agent output |
-| `ObsidianGraph.tsx` | `/api/knowledge-graph` | GET | 58-node dynamic graph |
-| `VaultExplorer.tsx` | `/api/vault` | GET | Vault file tree |
-| `VaultExplorer.tsx` | `/api/files/read` | GET | Read vault note |
-| `ModelsPanel.tsx` | `/api/models` | GET | 9Router model list |
-| `PCMonitor.tsx` | `/api/diagnostics/deep` | GET | System health |
-| `SkillsPanel.tsx` | `/api/skills` | GET | Skill registry |
-| `ToolsPanel.tsx` | `/api/tools` | GET | Tool registry |
-| `GlobalSearchModal.tsx` | `/api/search/unified` | GET | Cross-system search |
-| `TopBar.tsx` | `/api/health` | GET | Quick health ping |
-| `QuickActions.tsx` | `/api/run-script` | POST | Execute system script |
-| `QuickActions.tsx` | `/api/browser/extract` | POST | Browse URL |
-| `QuickActions.tsx` | `/api/browser/screenshot` | POST | Capture webpage |
+| `ChatPanel.tsx` | `/api/chat` | POST (JSON / SSE) | Main AI chat with model selection & context injection |
+| `ChatPanel.tsx` | `/api/memory/search` | GET | TF-IDF ranked vault search |
+| `ChatPanel.tsx` | `/api/chat/session` | GET | Establishes authenticated chat session |
+| `AgentTabs.tsx` | `/ws/agent/{name}` | WebSocket | Interactive PTY streaming I/O with resize & ANSI support |
+| `AgentTabs.tsx` | `/api/agents` | GET | Discovers registered agents from AGENT_REGISTRY |
+| `AgentTabs.tsx` | `/api/agent/{name}/start` | POST | Explicitly spawns agent process |
+| `AgentTabs.tsx` | `/api/agent/{name}/stop` | POST | Terminates agent process |
+| `AgentTabs.tsx` | `/api/agent/{name}/restart`| POST | Restarts agent process |
+| `AgentTabs.tsx` | `/api/agent/{name}/status` | GET | Queries running/idle status |
+| `ObsidianGraph.tsx` | `/api/obsidian-graph` | GET | Live Obsidian vault link graph (MOCs, projects, areas) |
+| `GlobalSearchModal.tsx`| `/api/graph` | GET | Structured Knowledge Graph nodes & edges |
+| `VaultExplorer.tsx` | `/api/vault` | GET | Vault hierarchy tree |
+| `VaultExplorer.tsx` | `/api/file/{path}` | GET | Reads full markdown vault note |
+| `ModelsPanel.tsx` | `/api/models` | GET | 9Router model catalog and tier definitions |
+| `PCMonitor.tsx` | `/api/pc-state` | GET / WS (`/ws`) | Live host CPU, RAM, disk, process list, port bindings |
+| `PCMonitor.tsx` | `/api/diagnostics/deep` | GET | Deep subsystem diagnostic report across all 16 domains |
+| `SkillsPanel.tsx` | `/api/skills` | GET | Dynamic skill registry (Hermes + Aegis skills) |
+| `ToolsPanel.tsx` | `/api/tools` | GET | Universal tool registry from TOOL_REGISTRY.json |
+| `GlobalSearchModal.tsx`| `/api/search/unified` | GET | Relational search across graph nodes + vault notes |
+| `TopBar.tsx` | `/api/health` | GET | Fast ping health verification |
+| `TopBar.tsx` | `/api/health/full` | GET | Full composite service health |
+| `QuickActions.tsx` | `/api/run-script` | POST | Executes allowlisted system maintenance scripts |
+| `QuickActions.tsx` | `/api/browser/extract` | GET / POST | Headless Chrome DOM text extraction |
+| `QuickActions.tsx` | `/api/browser/screenshot` | GET / POST | Headless Chrome full-page screenshot |
+| `QuickActions.tsx` | `/api/vision/status` | GET | Integrated camera hardware status & hard deny check |
+| `QuickActions.tsx` | `/api/audio/status` | GET | Microphone device status & policy gate check |
+| `QuickActions.tsx` | `/api/screen/intel` | GET | Active desktop window & screen OCR intelligence |
+| `QuickActions.tsx` | `/api/intelligence` | GET | God Mode host telemetry + project summary |
 
 ### Backend → External Services
 

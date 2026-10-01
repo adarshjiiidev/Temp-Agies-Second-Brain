@@ -101,7 +101,7 @@ export const GlobalSearchModal: React.FC = () => {
                       className="w-full text-left p-2 rounded-xs hover:bg-white/10 transition-os flex items-center justify-between group"
                     >
                       <div className="flex items-center space-x-2 truncate">
-                        <FileText className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <FileText className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                         <div className="truncate">
                           <div className="text-white text-xs font-medium truncate">{note.name}</div>
                           <div className="text-[10px] text-zinc-500 truncate">{note.path}</div>

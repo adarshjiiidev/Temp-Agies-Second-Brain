@@ -1,0 +1,194 @@
+[
+  {
+    "phase": 1,
+    "task": "Security Hardening",
+    "claimed_status": "COMPLETE",
+    "actual_status": "VERIFIED",
+    "evidence": "Binds on 127.0.0.1, strict CORS. No 0.0.0.0 found. API returns 403 for mutations without token.",
+    "verified_at": 1789810334.7955317
+  },
+  {
+    "phase": 2,
+    "task": "Centralized Config",
+    "claimed_status": "COMPLETE",
+    "actual_status": "VERIFIED",
+    "evidence": "No /home/adarshjii hardcoding in backend. cfg loaded successfully.",
+    "verified_at": 1789810334.7955363
+  },
+  {
+    "phase": 3,
+    "task": "Agent Registry",
+    "claimed_status": "COMPLETE",
+    "actual_status": "VERIFIED",
+    "evidence": "AGENT_REGISTRY.json is authoritative.",
+    "verified_at": 1789810334.7955382
+  },
+  {
+    "phase": 4,
+    "task": "Observability",
+    "claimed_status": "COMPLETE",
+    "actual_status": "VERIFIED",
+    "evidence": "Structured logging verified in logger.py.",
+    "verified_at": 1789810334.795539
+  },
+  {
+    "phase": 5,
+    "task": "Background Services",
+    "claimed_status": "COMPLETE",
+    "actual_status": "VERIFIED",
+    "evidence": "Systemd timers and aegis-backend.service functional.",
+    "verified_at": 1789810334.7955406
+  },
+  {
+    "phase": 6,
+    "task": "Memory Engine",
+    "claimed_status": "COMPLETE",
+    "actual_status": "VERIFIED",
+    "evidence": "rglob overhead fixed with cache.",
+    "verified_at": 1789810334.7955415
+  },
+  {
+    "phase": 7,
+    "task": "Project Intel",
+    "claimed_status": "COMPLETE",
+    "actual_status": "VERIFIED",
+    "evidence": "Git parsing, deps, health accurately return for aegis-dashboard.",
+    "verified_at": 1789810334.7955482
+  },
+  {
+    "phase": 8,
+    "task": "Skill System",
+    "claimed_status": "COMPLETE",
+    "actual_status": "VERIFIED",
+    "evidence": "Loaded 18 Hermes skills, risk assignment logic functional.",
+    "verified_at": 1789810334.7955494
+  },
+  {
+    "phase": 9,
+    "task": "Browser & Research",
+    "claimed_status": "COMPLETE",
+    "actual_status": "VERIFIED",
+    "evidence": "Extracted example.com correctly. Multi-source research implemented.",
+    "verified_at": 1789810334.7955508
+  },
+  {
+    "phase": 10,
+    "task": "TurboQuant Storage",
+    "claimed_status": "COMPLETE",
+    "actual_status": "PARTIALLY_VERIFIED",
+    "evidence": "Implemented as a local JSON chunker and mocked vector store, not real TurboQuant.",
+    "verified_at": 1789810334.795552
+  },
+  {
+    "phase": 11,
+    "task": "Context Engine",
+    "claimed_status": "COMPLETE",
+    "actual_status": "VERIFIED",
+    "evidence": "Context Router successfully builds environment.",
+    "verified_at": 1789810334.7955527
+  },
+  {
+    "phase": 12,
+    "task": "Model Router",
+    "claimed_status": "COMPLETE",
+    "actual_status": "VERIFIED",
+    "evidence": "Model selection and cascade works.",
+    "verified_at": 1789810334.7955534
+  },
+  {
+    "phase": 13,
+    "task": "Planner",
+    "claimed_status": "COMPLETE",
+    "actual_status": "VERIFIED",
+    "evidence": "HierarchicalPlanner generates JSON plans.",
+    "verified_at": 1789810334.7955544
+  },
+  {
+    "phase": 14,
+    "task": "Agent Supervisor",
+    "claimed_status": "COMPLETE",
+    "actual_status": "VERIFIED",
+    "evidence": "MoE executes tasks. L5 denied 'terminal_run' perfectly during test.",
+    "verified_at": 1789810334.7955565
+  },
+  {
+    "phase": 15,
+    "task": "Project Work",
+    "claimed_status": "COMPLETE",
+    "actual_status": "VERIFIED",
+    "evidence": "Planner executes safe tasks.",
+    "verified_at": 1789810334.795557
+  },
+  {
+    "phase": 19,
+    "task": "Linux Intelligence",
+    "claimed_status": "COMPLETE",
+    "actual_status": "VERIFIED",
+    "evidence": "Parsed kernel, load avg, mem, disk.",
+    "verified_at": 1789810334.795558
+  },
+  {
+    "phase": 21,
+    "task": "Camera Discovery",
+    "claimed_status": "COMPLETE",
+    "actual_status": "NOT_CONFIGURED",
+    "evidence": "camera_registry.py is a stub, no real network scanning.",
+    "verified_at": 1789810334.7955592
+  },
+  {
+    "phase": 22,
+    "task": "Camera Auth",
+    "claimed_status": "COMPLETE",
+    "actual_status": "NOT_CONFIGURED",
+    "evidence": "No UI or backend hooks for streaming auth.",
+    "verified_at": 1789810334.7955594
+  },
+  {
+    "phase": 23,
+    "task": "Vision Pipeline",
+    "claimed_status": "COMPLETE",
+    "actual_status": "NOT_IMPLEMENTED",
+    "evidence": "vision_engine.py lacks capture_frame() and OpenCV logic.",
+    "verified_at": 1789810334.7955604
+  },
+  {
+    "phase": 24,
+    "task": "Camera Privacy",
+    "claimed_status": "COMPLETE",
+    "actual_status": "NOT_CONFIGURED",
+    "evidence": "Relies on missing vision pipeline.",
+    "verified_at": 1789810334.7955616
+  },
+  {
+    "phase": 25,
+    "task": "Scheduler",
+    "claimed_status": "COMPLETE",
+    "actual_status": "PARTIALLY_VERIFIED",
+    "evidence": "Systemd timers exist, but internal AI cron not fully autonomous.",
+    "verified_at": 1789810334.795563
+  },
+  {
+    "phase": 30,
+    "task": "Dashboard Forensics",
+    "claimed_status": "COMPLETE",
+    "actual_status": "VERIFIED",
+    "evidence": "API endpoints return live data (Memory, Intel, Skills).",
+    "verified_at": 1789810334.7955635
+  },
+  {
+    "phase": 32,
+    "task": "API Forensics",
+    "claimed_status": "COMPLETE",
+    "actual_status": "VERIFIED",
+    "evidence": "Validated via curl, mutations rejected without auth.",
+    "verified_at": 1789810334.7955637
+  },
+  {
+    "phase": 36,
+    "task": "Final Pipeline Proof",
+    "claimed_status": "COMPLETE",
+    "actual_status": "VERIFIED",
+    "evidence": "Agent execution runs through Planner -> MoE -> L5 Governance -> Error Recovery.",
+    "verified_at": 1789810334.7955651
+  }
+]

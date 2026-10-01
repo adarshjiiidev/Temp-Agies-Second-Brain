@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { api, PCState, RouterHealth, realtimeSocket, ScriptRunResult } from './api';
 
-export type PanelId = 'chat' | 'vault' | 'graph' | 'agents' | 'pc' | 'skills' | 'models' | 'tools' | 'activity' | 'quickactions';
+export type PanelId = 'home' | 'chat' | 'vault' | 'graph' | 'agents' | 'pc' | 'skills' | 'models' | 'tools' | 'activity' | 'quickactions' | 'tasks' | 'system' | 'voice' | 'doctor';
 
 export interface ActivityEvent {
   id: string;
@@ -65,35 +65,9 @@ interface OSContextType {
 
 const OSContext = createContext<OSContextType | null>(null);
 
-const INITIAL_ACTIVITIES: ActivityEvent[] = [
-  {
-    id: 'act-1',
-    type: 'system',
-    title: 'AEGIS OS Kernel Initialized',
-    description: 'Systemd timers active: PC snapshot daily, ChatGPT ingest daily, Pattern learning weekly.',
-    timestamp: new Date(Date.now() - 3600000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    status: 'ok',
-  },
-  {
-    id: 'act-2',
-    type: 'snapshot',
-    title: 'Daily PC Snapshot Verification',
-    description: 'Hardware state and process metrics recorded to Obsidian memory logs.',
-    timestamp: new Date(Date.now() - 1800000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    status: 'ok',
-  },
-  {
-    id: 'act-3',
-    type: 'system',
-    title: 'Hermes Profile Loaded',
-    description: 'agies profile mounted with 18 skills, 20 tools, and unified memory schema.',
-    timestamp: new Date(Date.now() - 900000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    status: 'ok',
-  },
-];
-
 export const OSProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [openPanels, setOpenPanels] = useState<Record<PanelId, boolean>>({
+    home: true,
     chat: true,
     vault: true,
     graph: false,
@@ -104,6 +78,10 @@ export const OSProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     tools: false,
     activity: false,
     quickactions: false,
+    tasks: false,
+    system: false,
+    voice: false,
+    doctor: false,
   });
 
   const [activePanel, setActivePanel] = useState<PanelId | null>('chat');
@@ -127,7 +105,7 @@ export const OSProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [routerHealth, setRouterHealth] = useState<RouterHealth | null>(null);
   const [isSocketConnected, setIsSocketConnected] = useState(false);
 
-  const [activities, setActivities] = useState<ActivityEvent[]>(INITIAL_ACTIVITIES);
+  const [activities, setActivities] = useState<ActivityEvent[]>([]);
   const [isSearchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -235,11 +213,11 @@ export const OSProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // Initial load & periodic health checks
   useEffect(() => {
     refreshPCState();
-    api.get9RouterHealth().then(setRouterHealth).catch(() => setRouterHealth({ status: 'stopped' }));
+    api.getModelHealth().then(setRouterHealth).catch(() => setRouterHealth({ status: 'stopped' }));
 
     const pcInterval = setInterval(refreshPCState, 30000);
     const healthInterval = setInterval(() => {
-      api.get9RouterHealth().then(setRouterHealth).catch(() => setRouterHealth({ status: 'stopped' }));
+      api.getModelHealth().then(setRouterHealth).catch(() => setRouterHealth({ status: 'stopped' }));
     }, 45000);
 
     // WebSocket subscription

@@ -20,10 +20,11 @@
 
 | Service | Port | Unit | Status |
 |---|---|---|---|
-| AEGIS Dashboard (Next.js) | :2981 | `aegis-frontend.service` | ✅ Active |
+| AEGIS Dashboard (Vite SPA) | :2981 / :5173 | `aegis-frontend.service` / Vite | ✅ Active |
 | AEGIS Backend (FastAPI) | :8787 | `aegis-backend.service` | ✅ Active |
 | 9Router (Gemini gateway) | :20128 | external | ✅ Active |
 | Consolidation timer | — | `aegis-consolidate.timer` | ✅ Active (15 min) |
+| Consolidation daily timer | — | `aegis-consolidate-daily.timer` | ✅ Active (daily 3PM) |
 | Snapshot timer | — | `aegis-snapshot.timer` | ✅ Active (daily) |
 | ChatGPT ingest timer | — | `aegis-ingest-chatgpt.timer` | ✅ Active (on-demand) |
 
@@ -35,7 +36,7 @@
 ~/ (cfg.HOME)
 ├── aegis-dashboard/                  ← This repository (dashboard + backend)
 │   ├── src/components/               ← UI components (18 files)
-│   ├── backend/                      ← Python API (22 modules)
+│   ├── backend/                      ← Python API (28 modules)
 │   ├── registries/                   ← AGENT, TOOL, MODEL, SKILL registries
 │   ├── docs/                         ← All architecture documentation (this file)
 │   └── tests/                        ← End-to-end mission tests
@@ -52,13 +53,14 @@
 │
 ├── .temporary-aegis/                 ← AEGIS state dir (cfg.AEGIS_DIR)
 │   ├── config/
-│   │   └── aegis_api_token           ← 256-bit auth token (chmod 600)
+│   │   ├── aegis_api_token           ← 256-bit auth token (chmod 600)
+│   │   └── cameras.json              ← Camera authorization registry
 │   ├── logs/
 │   │   └── aegis.log                 ← Rotating backend log (5MB × 3)
 │   ├── scripts/                      ← Systemd timer scripts
 │   ├── pc-state/                     ← Daily system snapshots
 │   ├── experiences.json              ← Task outcomes + decisions journal
-│   └── SKILL_REGISTRY.json           ← 27 discovered skills
+│   └── events/                       ← Local vision/motion event logs
 │
 ├── Projects/                         ← Main workspace
 │   ├── Aegis/                        ← Rust/Python adaptive AI OS
@@ -87,27 +89,35 @@
 | Module | File | Role |
 |---|---|---|
 | **Central Config** | `backend/config.py` | Single source of truth for all paths, ports, models |
-| **API Server** | `backend/server.py` | FastAPI with CORS, auth, all endpoints (55KB) |
-| **Security** | `backend/security.py` | X-AEGIS-Token, safe_path(), input validation |
-| **Logger** | `backend/logger.py` | Rotating log to `~/.temporary-aegis/logs/aegis.log` |
-| **Knowledge Graph** | `backend/knowledge_graph.py` | 58-node dynamic graph from registries |
-| **Memory Engine** | `backend/memory_engine.py` | TF-IDF vault search, temporal memory |
-| **Agent MoE** | `backend/agent_moe.py` | Tool dispatch, worker roles, capability discovery |
-| **Agent PTY** | `backend/agent_pty.py` | PTY multiplexer for all interactive agents |
-| **Agent Runner** | `backend/agent_runner.py` | Non-interactive agent dispatch |
-| **Task Planner** | `backend/task_planner.py` | Goal decomposition (uses MODEL_REASONING) |
-| **Proactive Monitor** | `backend/proactive_monitor.py` | Git drift, service health, disk checks |
-| **Research Engine** | `backend/research_engine.py` | Web research + synthesis |
-| **Vision Engine** | `backend/vision_engine.py` | Screen OCR (grim+tesseract), camera (gated) |
-| **Computer Control** | `backend/computer_control.py` | wtype, wl-copy/paste, system actions |
-| **Browser Tool** | `backend/browser_tool.py` | Headless Chrome DOM extract + screenshot |
-| **Screen Intel** | `backend/screen_intel.py` | Active window, desktop context |
-| **Model Router** | `backend/model_router.py` | 9Router client + model selection |
-| **AEGIS Health** | `backend/aegis_health.py` | Deep diagnostics, service status |
+| **API Server** | `backend/server.py` | FastAPI with CORS, auth, all endpoints (71KB) |
+| **Security** | `backend/security.py` | X-AEGIS-Token, safe_path(), command allowlist, rate limits |
+| **Governance Engine** | `backend/governance.py` | Deterministic tool execution and capability gating |
+| **Logger** | `backend/logger.py` | Rotating structured log to `~/.temporary-aegis/logs/aegis.log` |
+| **Knowledge Graph** | `backend/knowledge_graph.py` | Dynamic relational graph & unified search engine |
+| **Memory Engine** | `backend/memory_engine.py` | TF-IDF ranked vault search, temporal memory, causal records |
+| **Agent MoE** | `backend/agent_moe.py` | Operational capability fabric (9 tools, 8 worker roles) |
+| **Agent PTY** | `backend/agent_pty.py` | PTY multiplexer for all interactive agent terminals |
+| **Agent Runner** | `backend/agent_runner.py` | Universal CLI agent harness runner |
+| **Agent Supervisor** | `backend/agent_supervisor.py` | Process monitoring, heartbeats, and restart policies |
+| **Task Planner** | `backend/task_planner.py` | Hierarchical goal decomposition & experience logging |
+| **Proactive Monitor** | `backend/proactive_monitor.py` | Git drift, service health, test results, disk checks |
+| **Research Engine** | `backend/research_engine.py` | Multi-source web research & vault synthesis |
+| **Vision Engine** | `backend/vision_engine.py` | Screen OCR (grim+tesseract), camera snapshot (gated) |
+| **Camera Registry** | `backend/camera_registry.py` | Discovered vs authorized camera state machine |
+| **Vision Pipeline** | `backend/vision_pipeline.py` | Local event detection & retention policy |
+| **Computer Control** | `backend/computer_control.py` | wtype keystroke simulation, wl-copy/paste |
+| **Browser Tool** | `backend/browser_tool.py` | Headless Chrome DOM extraction & screenshot |
+| **Screen Intel** | `backend/screen_intel.py` | Active window & desktop context telemetry |
+| **Linux Intelligence** | `backend/linux_intelligence.py` | Host kernel, CPU, RAM, disk, and load telemetry |
+| **Project Intelligence**| `backend/project_intelligence.py`| Multi-workspace git commits, branch status, file trees |
+| **Skill Registry** | `backend/skill_registry.py` | Dynamic discovery of Hermes and Aegis skills |
+| **Context Router** | `backend/context_router.py` | Multi-layer context assembly (Global, Domain, Project, Task, Live) |
+| **TurboQuant Store** | `backend/turboquant_store.py` | Vector store for memory and research embedding chunks |
+| **Model Router** | `backend/model_router.py` | 9Router client, round-robin pooling & fallback chain |
+| **AEGIS Health** | `backend/aegis_health.py` | Deep diagnostics across all 16 subsystems |
 | **Code Sandbox** | `backend/code_sandbox.py` | Safe Python execution (allowlist-restricted) |
-| **Audio Engine** | `backend/audio_engine.py` | TTS/STT interface (stubs + real backends) |
-| **OpenClaw Harness** | `backend/openclaw_harness.py` | Claude via OpenClaw SSE stream |
-| **DeepSeek Harness** | `backend/deepseek_harness.py` | DeepSeek-V3 reasoning + thinking tokens |
+| **Audio Engine** | `backend/audio_engine.py` | Microphone hardware status & hardware killswitch |
+| **OpenRouter Chat** | `backend/openrouter_chat.py` | OpenRouter secondary cloud model provider fallback |
 
 ---
 

@@ -15,12 +15,17 @@ import shutil
 import hashlib
 import argparse
 from datetime import datetime, timezone
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
+import sys
+_repo_root = Path(__file__).resolve().parent
+if str(_repo_root) not in sys.path:
+    sys.path.insert(0, str(_repo_root))
+from backend.config import cfg
 
 # ── PATH CONFIGURATION ────────────────────────────────────────────────────────
 
-HOME = Path("/home/adarshjii")
+HOME = Path.home()
 OBSIDIAN_VAULT = HOME / "ObsidianVault"
 AGIES_DIR = OBSIDIAN_VAULT / "agies"
 HERMES_AGIES_DIR = HOME / ".hermes" / "profiles" / "agies"
@@ -89,19 +94,12 @@ def quick_hash(path: Path) -> str:
 
 # ── BRAIN TRANSCRIPT PARSER ───────────────────────────────────────────────────
 
-PROJECT_KEYWORDS = {
-    "aegis-dashboard": ["aegis-dashboard", "vite", "react", "dashboard", "chatpanel", "xterm", "pty", "9router", "obsidiangraph"],
-    "aegis-python": ["aegis-python", "layer", "l1", "l2", "l3", "l4", "l5", "l6", "l7", "adaptive ai os", "kernel", "rust crate"],
-    "chrome-extra": ["chrome-extra", "chrome extension", "manifest.json", "browser agent"],
-    "world-viewer": ["world-viewer", "electron", "globe", "cesium", "3d viewer"],
-    "repusense": ["repusense", "github repo", "analysis", "code metrics"],
-}
-
 def detect_projects(text: str) -> list[str]:
     text_lower = text.lower()
     matches = []
-    for proj, kws in PROJECT_KEYWORDS.items():
-        if any(kw in text_lower for kw in kws):
+    # Dynamic project keyword detection based on active configured projects
+    for proj in cfg.PROJECTS.keys():
+        if proj.lower() in text_lower or proj.replace("-", "").lower() in text_lower:
             matches.append(proj)
     return matches or ["aegis-dashboard"]
 

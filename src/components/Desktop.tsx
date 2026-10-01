@@ -12,18 +12,28 @@ import { QuickActions } from './QuickActions';
 import { GlobalSearchModal } from './GlobalSearchModal';
 import { CodexModal } from './CodexModal';
 import { AgentTabs } from './AgentTabs';
+import { HomePanel } from './HomePanel';
+import { TaskBoardPanel } from './TaskBoardPanel';
+import { SystemGraphPanel } from './SystemGraphPanel';
+import { VoicePanel } from './VoicePanel';
+import { DoctorPanel } from './DoctorPanel';
 
 export const Desktop: React.FC = () => {
   const { openPanels, activePanel, maximizedPanel, focusPanel } = useOS();
 
   // Panels list for secondary small panels
   const secondaryPanels: { id: PanelId; component: React.ReactNode }[] = [
+    { id: 'home', component: <HomePanel /> },
     { id: 'graph', component: <ObsidianGraph /> },
     { id: 'pc', component: <PCMonitor /> },
     { id: 'skills', component: <SkillsPanel /> },
     { id: 'models', component: <ModelsPanel /> },
     { id: 'tools', component: <ToolsPanel /> },
     { id: 'activity', component: <ActivityFeed /> },
+    { id: 'tasks', component: <TaskBoardPanel /> },
+    { id: 'system', component: <SystemGraphPanel /> },
+    { id: 'voice', component: <VoicePanel /> },
+    { id: 'doctor', component: <DoctorPanel /> },
   ];
 
   const activeSecondary = secondaryPanels.filter((p) => openPanels[p.id]);
@@ -37,6 +47,7 @@ export const Desktop: React.FC = () => {
       {/* If any panel is maximized, it takes full canvas */}
       {maximizedPanel ? (
         <div className="w-full h-full">
+          {maximizedPanel === 'home' && <HomePanel />}
           {maximizedPanel === 'chat' && <ChatPanel />}
           {maximizedPanel === 'agents' && <AgentTabs />}
           {maximizedPanel === 'vault' && <VaultExplorer />}
@@ -46,6 +57,10 @@ export const Desktop: React.FC = () => {
           {maximizedPanel === 'models' && <ModelsPanel />}
           {maximizedPanel === 'tools' && <ToolsPanel />}
           {maximizedPanel === 'activity' && <ActivityFeed />}
+          {maximizedPanel === 'tasks' && <TaskBoardPanel />}
+          {maximizedPanel === 'system' && <SystemGraphPanel />}
+          {maximizedPanel === 'voice' && <VoicePanel />}
+          {maximizedPanel === 'doctor' && <DoctorPanel />}
         </div>
       ) : (
         // Standard Desktop Tiling Grid
@@ -73,7 +88,7 @@ export const Desktop: React.FC = () => {
                     onClick={() => focusPanel('agents')}
                     className={`px-3 py-1 rounded transition-colors ${
                       activePanel === 'agents'
-                        ? 'bg-white/15 text-emerald-400 font-medium'
+                        ? 'bg-white/15 text-amber-400 font-medium'
                         : 'text-neutral-400 hover:text-white'
                     }`}
                   >

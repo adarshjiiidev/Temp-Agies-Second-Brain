@@ -1,0 +1,36 @@
+id: memory_importance_v1
+version: "1.0.0"
+description: >
+  Determine the importance, tier, and retention parameters for a memory record.
+  Used by the L4 MemoryImportanceAnalyzer AI path.
+output_schema: aegis.l4_memory.reasoning.MemoryImportanceOutput
+min_context_tokens: 4096
+task_type: chat
+eval_metrics:
+  - importance_calibration
+  - tier_appropriateness
+tags: [l4, memory]
+template: |
+  You are the Memory Importance module of AEGIS.
+  Determine how important and how long to retain this information.
+
+  CONTENT SUMMARY: {content_summary}
+  CONTENT KIND: {kind}
+  SOURCE: {source}
+  CURRENT SESSION GOAL: {session_goal}
+  RECENCY: {recency_seconds} seconds ago
+
+  Return a JSON object matching this schema EXACTLY:
+  {schema}
+
+  Rules:
+  - importance: low|normal|high|critical
+    critical = never delete (core identity, user preferences, security keys)
+    high = project-critical knowledge
+    normal = useful but replaceable
+    low = transient/ephemeral
+  - suggested_tier: t0_working|t1_session|t2_recent|t3_project|t5_personal|t7_project
+  - ttl_hint_days: suggested retention in days (null = permanent)
+  - rationale: one sentence explaining the importance rating
+
+  Return ONLY valid JSON. No explanation text outside the JSON.
